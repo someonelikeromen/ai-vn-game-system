@@ -1,0 +1,80 @@
+---
+description: 无限武库游戏机制与数据结构规范
+globs: src/features/**/*.js
+alwaysApply: false
+---
+
+# 游戏机制规范
+
+## 星级系统 (0-17★)
+
+| 星级 | 称号 | 破坏力基准 |
+|:---:|:---:|:---|
+| 0★ | 凡人 | 人类上限 |
+| 1★ | 爆墙 | 完全摧毁单体墙壁 |
+| 2★ | 爆屋 | 完全摧毁单栋建筑 |
+| 3★ | 爆楼 | 完全摧毁楼宇/高层建筑群 |
+| 4★ | 爆街 | 完全摧毁街区 |
+| 5★ | 爆城 | 完全摧毁城市 |
+| 6★ | 爆国 | 完全摧毁国家级地理范围 |
+| 7★ | 大陆 | 完全摧毁大洲/大陆 |
+| 8★ | 地表 | 完全清洗行星地表 |
+| 9★ | 行星 | 完全毁灭岩石行星 |
+| 10★ | 恒星 | 完全毁灭恒星至太阳系 |
+| 11★ | 星系 | 完全毁灭超星系团 |
+| 12★ | 宇宙 | 无限逼近对完整宇宙的毁灭 |
+| 13★ | 单体 | 对完整无限大单一宇宙的毁灭 |
+| 14★ | 超单体 | 可对可数数量的多宇宙干涉 |
+| 15★ | 多元 | 对无限多宇宙同时干涉/毁灭 |
+| 16★ | 超多元 | 随念头创毁多元宇宙 |
+| 17★ | 叙事层 | 干涉叙事，超越一切框架（系统保留，不可兑换）|
+
+> **基准**：0★ 标准成年健康男性 = 所有属性 = 1。属性值 X = 标准人类的 X 倍。
+
+## statData 核心结构
+
+```javascript
+{
+  CharacterSheet: {
+    UserPanel: { Name, Title, Appearance, Personality, Origin },
+    CoreSystem: { Attributes: {STR,DUR,VIT,REC,AGI,REF,PER,MEN,SOL,CHA}, Tier, SubSystems },
+    DynamicStatus: { HP, EnergyPools },
+    Resources: { Points, StarMedals },
+    Loadout: { PassiveAbilities, PowerSources, ApplicationTechniques, Inventory, MechanizedUnits },
+    KnowledgeBase: { Database },
+    AchievementSystem: { Milestones },
+    ShopInventory: [],
+  },
+  Arsenal: { WorldAnchors, NarrativeGrants, GachaState, GachaPending },
+  Multiverse: { CurrentWorldName, Archives },
+  CompanionRoster: { ActiveCompanions },
+  SocialWeb: {},
+}
+```
+
+## [value, label] 元组惯例
+
+statData中的值通常以 `[值, 标签]` 格式存储：
+```javascript
+cs.CoreSystem.Tier.NormalTier = [5, 'Tier 5 (城市)']
+cs.Resources.Points = 1000  // 积分是纯数值
+cs.CoreSystem.Attributes.STR = [12.5, '力量']
+```
+
+## UpdateVariable 执行方式
+
+通过 `vm.runInNewContext` 执行，只暴露 `_` 对象：
+```javascript
+// LLM输出格式：
+<UpdateVariable>
+_.add('CharacterSheet.Resources.Points', 500);
+_.insert('CharacterSheet.Loadout.PassiveAbilities', {...});
+</UpdateVariable>
+```
+
+## NarrativeGrant 流程
+
+1. AI输出中包含 `<SystemGrant>` 标签
+2. `parseSystemGrantTags()` 解析标签
+3. `processNarrativeGrantsAsync()` 后台调用商城LLM生成物品
+4. 生成的物品自动以0价格应用到会话

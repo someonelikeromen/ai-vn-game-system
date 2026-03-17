@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>主角生成 · 无限武库</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="character.css"/>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<header class="char-header">
+  <div class="char-header-left">
+    <a href="/" class="char-back-btn">← 主界面</a>
+    <a href="/shop" class="char-back-btn">🏪 商城</a>
+    <h1 class="char-title">✦ 主角生成器</h1>
+  </div>
+</header>
+
+<!-- ── Main Layout ─────────────────────────────────────────────────────────── -->
+<div class="char-layout">
+
+  <!-- LEFT: Mode Panel -->
+  <aside class="char-sidebar">
+
+    <!-- Mode Tabs -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="quiz"       id="tabQuiz">📝 问卷</button>
+      <button class="mode-tab"        data-mode="background" id="tabBg">📖 背景</button>
+      <button class="mode-tab"        data-mode="archive"    id="tabArchive">🗂 档案库</button>
+    </div>
+
+    <!-- ── QUIZ MODE ── -->
+    <section id="quizPanel" class="mode-panel active">
+      <div class="char-type-row">
+        <label class="field-label">角色类型</label>
+        <div class="char-type-btns" id="quizCharType">
+          <button class="char-type-btn active" data-type="本土">🏠 本土角色</button>
+          <button class="char-type-btn"        data-type="穿越者">🌀 穿越者</button>
+        </div>
+        <p class="hint-text" id="quizCharTypeHint">角色生于本世界，熟悉当地规则与文化。</p>
+      </div>
+
+      <!-- Traversal method block — only shown for 穿越者 -->
+      <div id="quizTraversalBlock" class="traversal-block" style="display:none">
+        <label class="field-label">穿越方式</label>
+        <div class="traversal-presets" id="quizTraversalPresets">
+          <button class="traversal-btn active" data-method="isekai">🔄 异世界转生</button>
+          <button class="traversal-btn" data-method="rebirth">♻️ 重生</button>
+          <button class="traversal-btn" data-method="possession">🫧 夺舍/融合</button>
+          <button class="traversal-btn" data-method="summoning">⚡ 召唤/降临</button>
+          <button class="traversal-btn" data-method="system">💻 系统穿越</button>
+          <button class="traversal-btn" data-method="custom">✏️ 自定义</button>
+        </div>
+        <p class="hint-text" id="quizTraversalHint">以完整记忆转生至本世界，保有异世界记忆。</p>
+        <textarea id="quizTraversalDesc" class="char-textarea traversal-desc" rows="2"
+          placeholder="描述你的穿越方式…（选择「自定义」后填写）" style="display:none"></textarea>
+      </div>
+
+      <div class="panel-intro">
+        <p>由 AI 生成 10-20 个情境问题，通过你的真实回答推断人格特质。</p>
+        <p class="hint-text">答案没有对错，越真实越好。</p>
+      </div>
+
+      <div class="quiz-controls">
+        <label class="field-label">问题数量
+          <input type="range" id="questionCount" min="10" max="20" value="15" class="range-input">
+          <span id="questionCountLabel">15</span>
+        </label>
+        <button id="btnGenQuestions" class="btn-primary">
+          <span class="btn-icon">🎲</span> 生成评估问题
+        </button>
+      </div>
+
+      <div id="quizStream" class="stream-preview" style="display:none"></div>
+      <div id="questionList" class="question-list" style="display:none"></div>
+
+      <div id="quizSubmitRow" class="submit-row" style="display:none">
+        <button id="btnGenFromQuiz" class="btn-primary">
+          <span class="btn-icon">⚡</span> 根据回答生成人物
+        </button>
+      </div>
+    </section>
+
+    <!-- ── BACKGROUND MODE ── -->
+    <section id="bgPanel" class="mode-panel" style="display:none">
+      <div class="char-type-row">
+        <label class="field-label">角色类型</label>
+        <div class="char-type-btns" id="bgCharType">
+          <button class="char-type-btn active" data-type="本土">🏠 本土角色</button>
+          <button class="char-type-btn"        data-type="穿越者">🌀 穿越者</button>
+        </div>
+        <p class="hint-text" id="bgCharTypeHint">角色生于本世界，熟悉当地规则与文化。</p>
+      </div>
+
+      <!-- Traversal method block — only shown for 穿越者 -->
+      <div id="bgTraversalBlock" class="traversal-block" style="display:none">
+        <label class="field-label">穿越方式</label>
+        <div class="traversal-presets" id="bgTraversalPresets">
+          <button class="traversal-btn active" data-method="isekai">🔄 异世界转生</button>
+          <button class="traversal-btn" data-method="rebirth">♻️ 重生</button>
+          <button class="traversal-btn" data-method="possession">🫧 夺舍/融合</button>
+          <button class="traversal-btn" data-method="summoning">⚡ 召唤/降临</button>
+          <button class="traversal-btn" data-method="system">💻 系统穿越</button>
+          <button class="traversal-btn" data-method="custom">✏️ 自定义</button>
+        </div>
+        <p class="hint-text" id="bgTraversalHint">以完整记忆转生至本世界，保有异世界记忆。</p>
+        <textarea id="bgTraversalDesc" class="char-textarea traversal-desc" rows="2"
+          placeholder="描述你的穿越方式…（选择「自定义」后填写）" style="display:none"></textarea>
+      </div>
+
+      <div class="panel-intro">
+        <p>描述角色的过去经历、身份背景，AI 会推断性格与外貌。</p>
+        <p class="hint-text">不必面面俱到，留白处由 AI 合理填充。</p>
+      </div>
+
+      <textarea
+        id="bgInput"
+        class="char-textarea"
+        placeholder="例：&#10;一个在小镇长大的孤儿，十岁时目睹了村庄被军队焚毁。靠做小偷为生，但有奇怪的道德底线，从不偷老人和儿童。对权贵有深入骨髓的不信任，但渴望有个安全的地方属于自己。&#10;&#10;或者：&#10;现代都市上班族，27岁女性，在大公司做平面设计师。"
+        rows="10"
+      ></textarea>
+
+      <div class="prefs-row">
+        <div class="pref-group">
+          <label class="field-label">性别偏好</label>
+          <div class="radio-group">
+            <label><input type="radio" name="gender" value="random" checked> 随机</label>
+            <label><input type="radio" name="gender" value="男"> 男</label>
+            <label><input type="radio" name="gender" value="女"> 女</label>
+            <label><input type="radio" name="gender" value="其他"> 其他</label>
+          </div>
+        </div>
+        <div class="pref-group">
+          <label class="field-label">年龄范围（可留空）</label>
+          <input type="text" id="ageRange" class="char-input" placeholder="如 20-30 或 25岁">
+        </div>
+        <div class="pref-group">
+          <label class="field-label">姓名（可留空由AI取名）</label>
+          <input type="text" id="nameInput" class="char-input" placeholder="角色姓名">
+        </div>
+      </div>
+
+      <div class="submit-row">
+        <button id="btnGenFromBg" class="btn-primary">
+          <span class="btn-icon">⚡</span> 生成人物档案
+        </button>
+      </div>
+    </section>
+
+    <!-- ── ARCHIVE MODE ── -->
+    <section id="archivePanel" class="mode-panel" style="display:none">
+      <div class="archive-toolbar">
+        <h3 class="archive-title">已保存的角色</h3>
+        <button id="btnArchiveRefresh" class="btn-ghost btn-sm">↺ 刷新</button>
+      </div>
+      <div id="archiveList" class="archive-list">
+        <p class="archive-empty">暂无保存的角色档案。<br>生成角色后点击「存入档案库」即可保存。</p>
+      </div>
+    </section>
+
+    <!-- Stream preview for bg mode -->
+    <div id="bgStream" class="stream-preview" style="display:none"></div>
+
+    <!-- Spinner -->
+    <div id="genSpinner" class="gen-spinner" style="display:none">
+      <div class="spinner-ring"></div>
+      <span id="spinnerText">生成中…</span>
+    </div>
+
+    <div id="genError" class="gen-error" style="display:none"></div>
+
+  </aside>
+
+  <!-- RIGHT: Result Panel -->
+  <main class="char-result" id="resultPanel" style="display:none">
+    <div class="result-header">
+      <h2 class="result-title">✦ 角色档案</h2>
+      <div class="result-actions">
+        <button id="btnRegenerate" class="btn-ghost btn-sm">↺ 重新生成</button>
+        <button id="btnSaveArchive" class="btn-ghost btn-sm">🗂 存入档案库</button>
+        <button id="btnApply" class="btn-primary btn-sm" disabled>✓ 应用到存档</button>
+      </div>
+    </div>
+
+    <div class="char-card">
+      <!-- Identity Row -->
+      <div class="card-section">
+        <div class="card-row triple">
+          <div class="field-block">
+            <label class="field-label">姓名</label>
+            <input type="text" id="fName" class="card-input name-input" placeholder="姓名">
+          </div>
+          <div class="field-block">
+            <label class="field-label">性别</label>
+            <input type="text" id="fGender" class="card-input" placeholder="性别">
+          </div>
+          <div class="field-block">
+            <label class="field-label">年龄</label>
+            <input type="text" id="fAge" class="card-input" placeholder="年龄">
+          </div>
+        </div>
+        <div class="card-row triple">
+          <div class="field-block">
+            <label class="field-label">称号/绰号</label>
+            <input type="text" id="fTitle" class="card-input" placeholder="无">
+          </div>
+          <div class="field-block">
+            <label class="field-label">身高</label>
+            <input type="text" id="fHeight" class="card-input" placeholder="如 175cm">
+          </div>
+          <div class="field-block">
+            <label class="field-label">体重</label>
+            <input type="text" id="fWeight" class="card-input" placeholder="如 65kg">
+          </div>
+        </div>
+        <div class="card-row">
+          <div class="field-block full">
+            <label class="field-label">职业/身份</label>
+            <input type="text" id="fIdentity" class="card-input" placeholder="职业或社会身份">
+          </div>
+        </div>
+        <div class="card-row">
+          <div class="field-block full">
+            <label class="field-label">阵营</label>
+            <input type="text" id="fAlignment" class="card-input" placeholder="如 中立·善">
+          </div>
+        </div>
+      </div>
+
+      <!-- Appearance -->
+      <div class="card-section">
+        <h3 class="section-title">外貌与着装</h3>
+        <div class="card-row">
+          <div class="field-block full">
+            <label class="field-label">外貌描述</label>
+            <textarea id="fAppearance" class="card-textarea" rows="4" placeholder="外貌特征、体型、气质…"></textarea>
+          </div>
+        </div>
+        <div class="card-row">
+          <div class="field-block full">
+            <label class="field-label">惯常着装</label>
+            <textarea id="fClothing" class="card-textarea" rows="2" placeholder="着装风格…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personality -->
+      <div class="card-section">
+        <h3 class="section-title">性格</h3>
+        <div class="card-row">
+          <div class="field-block full">
+            <label class="field-label">核心标签</label>
+            <div id="fTraits" class="tag-editor" data-field="traits"></div>
+          </div>
+        </div>
+        <div class="card-row">
+          <div class="field-block full">
+            <label class="field-label">性格分析</label>
+            <textarea id="fPersonality" class="card-textarea" rows="5" placeholder="【日常状态】…&#10;【压力反应】…&#10;【人际关系】…&#10;【内在驱动】…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deep Psychology -->
+      <div class="card-section">
+        <h3 class="section-title">内心世界</h3>
+        <div class="card-row triple-tags">
+          <div class="field-block">
+            <label class="field-label">⚠ 缺陷</label>
+            <div id="fFlaws" class="tag-editor" data-field="flaws"></div>
+          </div>
+          <div class="field-block">
+            <label class="field-label">✦ 渴望</label>
+            <div id="fDesires" class="tag-editor" data-field="desires"></div>
+          </div>
+          <div class="field-block">
+            <label class="field-label">☽ 恐惧</label>
+            <div id="fFears" class="tag-editor" data-field="fears"></div>
+          </div>
+        </div>
+        <div class="card-row">
+          <div class="field-block full">
+            <label class="field-label">行为习惯</label>
+            <div id="fQuirks" class="tag-editor" data-field="quirks"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Background -->
+      <div class="card-section">
+        <h3 class="section-title">背景故事</h3>
+        <div class="card-row">
+          <div class="field-block full">
+            <textarea id="fBackground" class="card-textarea" rows="5" placeholder="背景故事…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Psychological Dimensions -->
+      <div class="card-section" id="dimSection" style="display:none">
+        <h3 class="section-title dim-title">⚖ 心理维度
+          <span class="dim-subtitle">由AI根据性格推导 · 可手动调整</span>
+        </h3>
+        <div class="dim-category" id="dimSocial">
+          <div class="dim-cat-label">社交</div>
+        </div>
+        <div class="dim-category" id="dimEmotional">
+          <div class="dim-cat-label">情感</div>
+        </div>
+        <div class="dim-category" id="dimCognitive">
+          <div class="dim-cat-label">认知</div>
+        </div>
+        <div class="dim-category" id="dimValues">
+          <div class="dim-cat-label">价值观</div>
+        </div>
+      </div>
+
+      <!-- Context Modes -->
+      <div class="card-section" id="contextSection" style="display:none">
+        <h3 class="section-title">🎭 情境行为模式</h3>
+        <div id="fContextModes" class="context-modes-list"></div>
+      </div>
+
+      <!-- Trigger Patterns -->
+      <div class="card-section" id="triggerSection" style="display:none">
+        <h3 class="section-title">⚡ 触发模式</h3>
+        <div id="fTriggerPatterns" class="trigger-list"></div>
+      </div>
+
+      <!-- Attributes -->
+      <div class="card-section" id="statsSection" style="display:none">
+        <h3 class="section-title">⚔ 初始属性</h3>
+        <div id="fAttributes" class="attr-grid"></div>
+      </div>
+
+      <!-- Energy Pools -->
+      <div class="card-section" id="poolsSection" style="display:none">
+        <h3 class="section-title">⚡ 能量池</h3>
+        <div id="fPools" class="pools-list"></div>
+      </div>
+
+      <!-- Passive Abilities -->
+      <div class="card-section" id="passivesSection" style="display:none">
+        <h3 class="section-title">✦ 被动能力</h3>
+        <div id="fPassives" class="ability-list"></div>
+      </div>
+
+      <!-- Power Sources -->
+      <div class="card-section" id="powerSection" style="display:none">
+        <h3 class="section-title">🔥 力量来源</h3>
+        <div id="fPower" class="ability-list"></div>
+      </div>
+
+      <!-- Techniques -->
+      <div class="card-section" id="techSection" style="display:none">
+        <h3 class="section-title">⚙ 技能招式</h3>
+        <div id="fTech" class="ability-list"></div>
+      </div>
+
+      <!-- Mechanized Units -->
+      <div class="card-section" id="mechsSection" style="display:none">
+        <h3 class="section-title">🤖 机体/法宝/召唤物</h3>
+        <div id="fMechs" class="ability-list"></div>
+      </div>
+
+      <!-- Starting Items -->
+      <div class="card-section" id="itemsSection" style="display:none">
+        <h3 class="section-title">🎒 随身物品</h3>
+        <div id="fItems" class="item-list"></div>
+      </div>
+
+      <!-- Knowledge -->
+      <div class="card-section" id="knowledgeSection" style="display:none">
+        <h3 class="section-title">📚 知识储备</h3>
+        <div id="fKnowledge" class="knowledge-list"></div>
+      </div>
+
+      <!-- Apply Row -->
+      <div class="card-section apply-section">
+        <h3 class="section-title">应用到存档</h3>
+        <div class="apply-row">
+          <select id="applySession" class="char-select" style="flex:1">
+            <option value="">— 选择存档 —</option>
+          </select>
+          <button id="btnApplyBottom" class="btn-primary">✓ 应用角色数据</button>
+          <button id="btnNewSession"  class="btn-ghost">＋ 新建存档并应用</button>
+        </div>
+        <p id="applyStatus" class="apply-status" style="display:none"></p>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<!-- ── Toast ───────────────────────────────────────────────────────────────── -->
+<div id="toast" class="char-toast" style="display:none"></div>
+
+<script src="character.js"></script>
+</body>
+</html>

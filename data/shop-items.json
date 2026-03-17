@@ -1,0 +1,141 @@
+[
+  {
+    "id": "5ee34170-555c-4246-8cbc-d4612458e625",
+    "createdAt": "2026-02-22T16:22:47.100Z",
+    "redeemed": false,
+    "redeemedAt": null,
+    "redeemedSessionId": null,
+    "name": "随机世界锚点 · 超限区",
+    "type": "WorldTraverse",
+    "tier": 99,
+    "pricePoints": 5000000,
+    "requiredMedals": [
+      {
+        "stars": 13,
+        "count": 1
+      }
+    ],
+    "description": "抽取一个 超限区（Tier 14-14+★）的随机世界坐标。消耗 5,000,000 积分，需要 1枚13★徽章。兑换后从已储备的世界档案库中随机抽取。",
+    "systemEvaluation": "基础穿越锚点·超限区，按《无限武库》卷一1.6.1定价标准定价。",
+    "effects": {},
+    "sourceDescription": "Tier 14-14+",
+    "baseAnchor": true,
+    "tierRange": "beyond",
+    "system": true
+  },
+  {
+    "id": "78f2e3cc-cfe1-40ac-b25b-92b2bbf5c81c",
+    "createdAt": "2026-02-22T16:22:47.100Z",
+    "redeemed": false,
+    "redeemedAt": null,
+    "redeemedSessionId": null,
+    "name": "随机世界锚点 · 星系/宇宙区",
+    "type": "WorldTraverse",
+    "tier": 13,
+    "pricePoints": 1000000,
+    "requiredMedals": [
+      {
+        "stars": 10,
+        "count": 1
+      }
+    ],
+    "description": "抽取一个 星系/宇宙区（Tier 11-13★）的随机世界坐标。消耗 1,000,000 积分，需要 1枚10★徽章。兑换后从已储备的世界档案库中随机抽取。",
+    "systemEvaluation": "基础穿越锚点·星系/宇宙区，按《无限武库》卷一1.6.1定价标准定价。",
+    "effects": {},
+    "sourceDescription": "Tier 11-13",
+    "baseAnchor": true,
+    "tierRange": "galactic",
+    "system": true
+  },
+  {
+    "id": "ad9aa76b-3322-4ac4-a0fe-09dec76af092",
+    "createdAt": "2026-02-22T16:22:47.099Z",
+    "redeemed": false,
+    "redeemedAt": null,
+    "redeemedSessionId": null,
+    "name": "随机世界锚点 · 行星/恒星区",
+    "type": "WorldTraverse",
+    "tier": 10,
+    "pricePoints": 500000,
+    "requiredMedals": [
+      {
+        "stars": 8,
+        "count": 1
+      }
+    ],
+    "description": "抽取一个 行星/恒星区（Tier 9-10★）的随机世界坐标。消耗 500,000 积分，需要 1枚8★徽章。兑换后从已储备的世界档案库中随机抽取。",
+    "systemEvaluation": "基础穿越锚点·行星/恒星区，按《无限武库》卷一1.6.1定价标准定价。",
+    "effects": {},
+    "sourceDescription": "Tier 9-10",
+    "baseAnchor": true,
+    "tierRange": "stellar",
+    "system": true
+  },
+  {
+    "id": "45539997-a4df-42f9-aab9-570f990c35ac",
+    "createdAt": "2026-02-22T16:22:47.099Z",
+    "redeemed": false,
+    "redeemedAt": null,
+    "redeemedSessionId": null,
+    "name": "随机世界锚点 · 高危区",
+    "type": "WorldTraverse",
+    "tier": 8,
+    "pricePoints": 50000,
+    "requiredMedals": [
+      {
+        "stars": 5,
+        "count": 1
+      }
+    ],
+    "description": "抽取一个 高危区（Tier 6-8★）的随机世界坐标。消耗 50,000 积分，需要 1枚5★徽章。兑换后从已储备的世界档案库中随机抽取。",
+    "systemEvaluation": "基础穿越锚点·高危区，按《无限武库》卷一1.6.1定价标准定价。",
+    "effects": {},
+    "sourceDescription": "Tier 6-8",
+    "baseAnchor": true,
+    "tierRange": "high",
+    "system": true
+  },
+  {
+    "id": "94d2f2f4-61ac-4750-bde5-3ea6d7afb8a8",
+    "createdAt": "2026-02-22T16:22:47.098Z",
+    "redeemed": false,
+    "redeemedAt": null,
+    "redeemedSessionId": null,
+    "name": "随机世界锚点 · 中危区",
+    "type": "WorldTraverse",
+    "tier": 5,
+    "pricePoints": 5000,
+    "requiredMedals": [
+      {
+        "stars": 2,
+        "count": 1
+      }
+    ],
+    "description": "抽取一个 中危区（Tier 3-5★）的随机世界坐标。消耗 5,000 积分，需要 1枚2★徽章。兑换后从已储备的世界档案库中随机抽取。",
+    "systemEvaluation": "基础穿越锚点·中危区，按《无限武库》卷一1.6.1定价标准定价。",
+    "effects": {},
+    "sourceDescription": "Tier 3-5",
+    "baseAnchor": true,
+    "tierRange": "mid",
+    "system": true
+  },
+  {
+    "id": "21224dc3-c2ae-455f-aa62-0e70f58ddda9",
+    "createdAt": "2026-02-22T16:22:47.098Z",
+    "redeemed": false,
+    "redeemedAt": null,
+    "redeemedSessionId": null,
+    "name": "随机世界锚点 · 低危区",
+    "type": "WorldTraverse",
+    "tier": 2,
+    "pricePoints": 1000,
+    "requiredMedals": [],
+    "description": "抽取一个 低危区（Tier 0-2★）的随机世界坐标。消耗 1,000 积分，需要 无徽章需求。兑换后从已储备的世界档案库中随机抽取。",
+    "systemEvaluation": "基础穿越锚点·低危区，按《无限武库》卷一1.6.1定价标准定价。",
+    "effects": {},
+    "sourceDescription": "Tier 0-2",
+    "baseAnchor": true,
+    "tierRange": "low",
+    "system": true
+  }
+]

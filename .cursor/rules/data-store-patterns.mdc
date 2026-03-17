@@ -1,0 +1,74 @@
+---
+description: features层Store文件读写规范与标准模式
+globs: src/features/**/*Store.js
+alwaysApply: false
+---
+
+# 数据存储规范
+
+所有 `*Store.js` 文件遵循统一的JSON文件读写模式（无ORM，无数据库）。
+
+## 标准目录结构
+
+```javascript
+const DATA_DIR  = path.join(__dirname, '..', '..', '..', 'data');
+const DATA_FILE = path.join(DATA_DIR, 'xxx.json');
+
+function ensureDir() {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+```
+
+## 标准读写函数
+
+```javascript
+function loadAll() {
+  ensureDir();
+  if (!fs.existsSync(DATA_FILE)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
+  } catch (_) {
+    return [];  // 解析失败安全返回空
+  }
+}
+
+function saveAll(items) {
+  ensureDir();
+  fs.writeFileSync(DATA_FILE, JSON.stringify(items, null, 2), 'utf-8');
+}
+```
+
+## CRUD 模式
+
+```javascript
+function addItem(data) {
+  const items = loadAll();
+  const item = { id: uuid(), createdAt: new Date().toISOString(), ...data };
+  items.unshift(item);  // 最新在前
+  saveAll(items);
+  return item;
+}
+
+function getItem(id)         { return loadAll().find(i => i.id === id) || null; }
+function updateItem(id, upd) { /* loadAll → findIndex → merge → saveAll */ }
+function deleteItem(id)      { /* loadAll → filter → saveAll → return bool */ }
+```
+
+## UUID 生成
+
+```javascript
+// 使用内置UUID实现，不引入外部依赖
+function uuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+```
+
+## 注意事项
+
+- 读写均为同步操作（单进程，无需文件锁）
+- 写入用 `JSON.stringify(data, null, 2)` 保持可读格式
+- 不抛出读取异常，返回安全默认值（`[]` 或 `{}`）
+- `module.exports` 只导出公共CRUD函数，不暴露内部 `loadAll`/`saveAll`

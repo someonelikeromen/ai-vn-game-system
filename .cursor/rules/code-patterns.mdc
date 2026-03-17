@@ -1,0 +1,75 @@
+---
+description: 项目代码规范与模式，适用于所有JS文件
+globs: src/**/*.js
+alwaysApply: false
+---
+
+# 代码规范
+
+## 模块导出模式
+
+```javascript
+// ✅ 每个模块顶部 'use strict'
+'use strict';
+
+// ✅ 单一导出对象（不要混用 module.exports 和 exports.xxx）
+module.exports = { funcA, funcB };
+```
+
+## 路由模块模式
+
+每个路由文件导出 `registerRoutes(app, deps)` 函数：
+
+```javascript
+'use strict';
+const log = require('../core/logger');
+
+function registerRoutes(app, deps) {
+  const { sessionMgr, getConfig, buildLLMConfig } = deps;
+
+  app.get('/api/xxx', (req, res) => { ... });
+  app.post('/api/xxx', async (req, res) => { ... });
+}
+
+module.exports = { registerRoutes };
+```
+
+## 错误处理模式
+
+```javascript
+// ✅ 路由处理器统一错误模式
+app.get('/api/xxx/:id', (req, res) => {
+  try {
+    const result = doSomething(req.params.id);
+    if (!result) return res.status(404).json({ error: 'Not found' });
+    res.json(result);
+  } catch (e) {
+    log.error('GET /api/xxx/:id error', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+```
+
+## SSE流式响应模式
+
+```javascript
+res.setHeader('Content-Type', 'text/event-stream');
+res.setHeader('Cache-Control', 'no-cache');
+res.setHeader('Connection', 'keep-alive');
+res.flushHeaders();
+
+const send = (event, data) => {
+  if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+};
+```
+
+## 日志规范
+
+```javascript
+// 使用对应的专用日志方法
+log.info('...')      // 一般信息
+log.error('...', e)  // 错误（附带异常对象）
+log.shop('TYPE', '...') // 商城操作
+log.session('TYPE', '...') // 会话操作
+log.llm({...})       // LLM调用记录
+```

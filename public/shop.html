@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>系统商城 · 无限武库</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="shop.css"/>
+</head>
+<body>
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header class="shop-header">
+  <div class="shop-header-left">
+    <button id="shopBackBtn" class="shop-back-btn" onclick="goBackToGame()">← 返回游戏</button>
+    <a href="/character" class="shop-back-btn">✦ 主角生成</a>
+    <h1 class="shop-title">🏪 系统商城 · 无限武库</h1>
+  </div>
+  <div class="shop-header-right">
+    <span id="apiIndicator" class="api-indicator" title="当前商城 API">⚙ 加载中…</span>
+    <a href="/settings#shop-api" class="btn btn-ghost btn-sm" style="text-decoration:none" id="btnShopSettings">🔧 商城API</a>
+    <label class="shop-label">当前存档：</label>
+    <select id="sessionSelect" class="shop-select">
+      <option value="">— 不关联存档 —</option>
+    </select>
+    <span id="sessionInfo" class="session-info"></span>
+    <button id="btnCartToggle" class="btn btn-ghost btn-sm cart-toggle-btn" title="购物车">
+      🛒 购物车 <span id="cartBadge" class="cart-badge" style="display:none">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- ── Quick Config Bar ────────────────────────────────────────────────────── -->
+<div class="shop-config-bar">
+  <span class="config-bar-label">🔖 兑换快照</span>
+  <select id="charStateMode" class="shop-select-sm" title="兑换成功后，是否将当前角色状态（属性/装备/技能）附加到 prefill 并存入兑换记录">
+    <option value="off">关闭</option>
+    <option value="snapshot">摘要（属性+星级）</option>
+    <option value="full">完整（+基盘/被动/技法/装备列表）</option>
+  </select>
+  <span class="config-bar-sep"></span>
+  <span class="config-bar-hint" id="charStateModeHint"></span>
+</div>
+
+<!-- ── Main Tab Nav ────────────────────────────────────────────────────────── -->
+<nav class="shop-tab-nav">
+  <button class="shop-tab-btn active" data-tab="items">🏪 商品列表</button>
+  <button class="shop-tab-btn" data-tab="gacha">🎰 抽卡召唤</button>
+</nav>
+
+<!-- ── Main Layout ────────────────────────────────────────────────────────── -->
+<div class="shop-layout">
+
+  <!-- LEFT: Generate Panel -->
+  <aside class="shop-sidebar" id="shopSidebar">
+    <section class="gen-panel">
+      <h2 class="gen-title">⚙️ 兑换项生成</h2>
+      <p class="gen-hint">描述你想要的能力、血统、物品或知识，AI 将按<em>三轮评估协议</em>进行客观定价</p>
+
+      <textarea
+        id="genInput"
+        class="gen-textarea"
+        placeholder="例：&#10;投影魔术 (Tracing) - 来自 Fate/stay night 的衛宫士郎&#10;&#10;或：&#10;查克拉体系 - 火影忍者基础体系&#10;&#10;可以包括来源作品、具体效果说明等"
+        rows="8"
+      ></textarea>
+
+      <!-- World selector -->
+      <div class="gen-world-row">
+        <label class="gen-opt-label gen-world-label">🌐 来源世界</label>
+        <select id="genWorldSelect" class="shop-select gen-world-select">
+          <option value="">— 选择来源世界 —</option>
+        </select>
+        <span id="genWorldHint" class="gen-world-hint"></span>
+      </div>
+
+      <div class="gen-options-row">
+        <label class="gen-opt-label" title="生成多个评估结果（1-5）">
+          数量
+          <input id="genCount" type="number" min="1" max="5" value="1" class="gen-count-input">
+        </label>
+        <label class="gen-opt-label" title="逐字流式输出，关闭后等待完整响应">
+          <input id="toggleStream" type="checkbox" checked>
+          流式输出
+        </label>
+      </div>
+
+      <div class="gen-actions">
+        <button id="btnGenerate" class="btn btn-primary btn-gen">✨ 生成评估</button>
+        <button id="btnClear" class="btn btn-ghost">清空</button>
+      </div>
+
+      <!-- Generation status -->
+      <div id="genStatus" class="gen-status" style="display:none">
+        <div class="gen-progress">
+          <div class="gen-spinner"></div>
+          <span id="genStatusText">AI 评估中…</span>
+        </div>
+        <div id="genStream" class="gen-stream"></div>
+      </div>
+    </section>
+
+    <!-- Filter / Sort -->
+    <section class="filter-panel">
+      <h3 class="filter-title">筛选</h3>
+      <div class="filter-row">
+        <label>类型：</label>
+        <select id="filterType" class="shop-select-sm">
+          <option value="">全部</option>
+          <option value="PassiveAbility">被动能力</option>
+          <option value="PowerSource">基盘能力</option>
+          <option value="ApplicationTechnique">应用技巧</option>
+          <option value="Inventory">物品</option>
+          <option value="Knowledge">知识</option>
+          <option value="WorldTraverse">穿越</option>
+          <option value="Companion">同伴/召唤体</option>
+          <option value="Mech">机体/机器人</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <label>星级：</label>
+        <select id="filterTier" class="shop-select-sm">
+          <option value="">全部</option>
+          <option value="0">0★ 常人</option>
+          <option value="1">1★ 爆墙</option>
+          <option value="2">2★ 爆屋</option>
+          <option value="3">3★ 爆楼</option>
+          <option value="4">4★ 爆街</option>
+          <option value="5">5★ 爆城</option>
+          <option value="6">6★ 爆国</option>
+          <option value="7">7★ 大陆</option>
+          <option value="8">8★ 地表</option>
+          <option value="9">9★ 行星</option>
+          <option value="10">10★ 恒星</option>
+          <option value="11">11★ 星系</option>
+          <option value="12">12★ 宇宙</option>
+          <option value="13">13★ 单体</option>
+          <option value="14">14★ 超单体</option>
+          <option value="15">15★ 多元</option>
+          <option value="16">16★ 超多元</option>
+          <option value="17">17★ 叙事层</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <label>来源世界：</label>
+        <select id="filterWorld" class="shop-select-sm">
+          <option value="">全部</option>
+        </select>
+      </div>
+      <button id="btnApplyFilter" class="btn btn-ghost btn-sm">应用</button>
+    </section>
+
+    <!-- World Anchor Panel -->
+    <section class="filter-panel world-anchor-panel">
+      <h3 class="filter-title">🌐 世界档案生成</h3>
+      <p class="gen-hint" style="font-size:11px;margin-bottom:10px">生成世界档案并加入对应危险区档案库。在右侧点击"随机穿越锚点"卡片查看并兑换。</p>
+      <input id="worldNameInput" type="text" class="gen-textarea" style="height:36px;padding:6px 10px;min-height:unset;resize:none" placeholder="输入世界名称，如 Fate/stay night">
+      <textarea id="worldContextInput" class="gen-textarea" style="min-height:60px;margin-top:6px" placeholder="补充说明（可选）：特定时间线、特定弧段、版本等" rows="3"></textarea>
+      <div style="margin-top:6px">
+        <label style="font-size:11px;color:#aaa;display:block;margin-bottom:3px">关联角色（用于生成本地身份）</label>
+        <select id="worldCharProfileSelect" class="shop-select-sm" style="width:100%">
+          <option value="">-- 不关联（生成普通本地居民）--</option>
+          <option value="__session__">当前存档角色</option>
+        </select>
+      </div>
+      <div class="gen-actions" style="margin-top:8px">
+        <button id="btnGenWorldAnchor" class="btn btn-primary btn-gen" style="background:#3a5a7a">🌐 生成并加入档案库</button>
+      </div>
+      <div id="worldAnchorStatus" class="gen-status" style="display:none">
+        <div class="gen-progress">
+          <div class="gen-spinner"></div>
+          <span id="worldAnchorStatusText">生成中…</span>
+        </div>
+        <div id="worldAnchorStream" class="gen-stream" style="max-height:80px"></div>
+      </div>
+
+      <!-- Archive pool overview -->
+      <div class="archive-pool-panel-wrap">
+        <h4 class="archive-pool-title">📦 档案库</h4>
+        <div id="archivePoolPanel" class="archive-pool-panel"></div>
+      </div>
+    </section>
+  </aside>
+
+  <!-- RIGHT: Items Grid (tab=items) -->
+  <main class="shop-main" id="shopMainItems">
+    <div class="items-header">
+      <span id="itemCount" class="items-count">0 个项目</span>
+      <select id="sortSelect" class="shop-select-sm">
+        <option value="newest">最新优先</option>
+        <option value="tier-asc">星级升序</option>
+        <option value="tier-desc">星级降序</option>
+        <option value="price-asc">价格升序</option>
+        <option value="price-desc">价格降序</option>
+      </select>
+    </div>
+
+    <div id="itemsGrid" class="items-grid">
+      <div class="items-empty" id="emptyState">
+        <div class="empty-icon">🏪</div>
+        <p>商城尚无兑换项</p>
+        <p class="muted">在左侧输入描述，生成第一个兑换项目</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT: Gacha Panel (tab=gacha) -->
+  <main class="shop-main gacha-main" id="shopMainGacha" style="display:none">
+    <div class="gacha-header">
+      <h2 class="gacha-title">🎰 无限武库 · 召唤系统</h2>
+      <p class="gacha-hint">每次召唤前系统将自动生成10件新物品补充池子，再从全部物品中随机抽取</p>
+      <div class="gacha-balance">
+        <span class="gacha-bal-pts">积分：<strong id="gachaBalPoints">—</strong></span>
+        <span id="gachaMedalList" class="gacha-bal-medals"></span>
+      </div>
+    </div>
+
+    <!-- Pool Grid -->
+    <div id="gachaPoolGrid" class="gacha-pool-grid">
+      <div class="gacha-loading">加载中…</div>
+    </div>
+
+    <!-- Draw Controls -->
+    <div id="gachaControls" class="gacha-controls" style="display:none">
+      <div class="gacha-selected-pool" id="gachaSelectedLabel">未选择池子</div>
+      <div class="gacha-btn-row">
+        <button id="btnGachaDraw1" class="btn gacha-draw-btn gacha-draw-1">单抽 ×1</button>
+        <button id="btnGachaDraw10" class="btn gacha-draw-btn gacha-draw-10">十连 ×10</button>
+      </div>
+      <div id="gachaCostInfo" class="gacha-cost-info"></div>
+    </div>
+
+    <!-- Draw Status -->
+    <div id="gachaStatus" class="gacha-status" style="display:none">
+      <div class="gen-progress">
+        <div class="gen-spinner"></div>
+        <span id="gachaStatusText">LLM 补充生成中…</span>
+      </div>
+    </div>
+
+    <!-- Draw Results -->
+    <div id="gachaResults" class="gacha-results" style="display:none">
+      <div class="gacha-results-header">
+        <h3>🎁 抽取结果</h3>
+        <button class="btn btn-ghost btn-sm" id="btnGachaClearResults">清除</button>
+      </div>
+      <div id="gachaResultList" class="gacha-result-list"></div>
+    </div>
+
+    <!-- Pending Items -->
+    <div id="gachaPendingSection" class="gacha-pending-section" style="display:none">
+      <h3 class="gacha-pending-title">📦 待领取 <span id="gachaPendingCount" class="gacha-pending-badge">0</span></h3>
+      <div id="gachaPendingList" class="gacha-pending-list"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Shop API Settings Modal removed — use /settings#shop-api -->
+
+<!-- ── Cart Panel ─────────────────────────────────────────────────────────── -->
+<div id="cartPanel" class="cart-panel" style="display:none">
+  <div class="cart-header panel-handle" style="cursor:move;user-select:none">
+    <h3>🛒 购物车</h3>
+    <button id="btnCartClose" class="btn btn-ghost btn-xs">✕</button>
+  </div>
+  <div id="cartList" class="cart-list">
+    <p class="cart-empty">购物车是空的</p>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-total">
+      总计：<span id="cartTotal">0</span> 积分
+    </div>
+    <div class="redeem-session-row" style="margin-top:8px">
+      <label>兑换到存档：</label>
+      <select id="cartSessionSelect" class="shop-select" style="flex:1">
+        <option value="">— 选择存档 —</option>
+      </select>
+    </div>
+    <button id="btnCartCheckout" class="btn btn-success" style="width:100%;margin-top:8px">✓ 批量兑换全部</button>
+  </div>
+</div>
+
+<!-- ── Item Detail Modal ──────────────────────────────────────────────────── -->
+<div id="detailModal" class="modal" style="display:none">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script src="panel.js"></script>
+<script src="shop.js"></script>
+</body>
+</html>

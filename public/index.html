@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-VN System · 无限武库</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Topbar ──────────────────────────────────────────────────────── -->
+  <header id="topbar">
+    <h1>⚔ 无限武库</h1>
+    <span id="session-name" class="session-name-label">未选择场景</span>
+    <div class="topbar-sep"></div>
+
+    <!-- Nav group -->
+    <div class="topbar-nav-group">
+      <button class="btn" id="btn-stat-toggle" title="查看角色状态面板">📊 状态</button>
+      <button class="btn" id="btn-shop" title="前往商城">🏪 商城</button>
+      <a href="/character" class="btn" style="text-decoration:none" title="角色档案库">✦ 主角</a>
+      <a href="/preset" class="btn" style="text-decoration:none" title="提示词预设">📝 预设</a>
+    </div>
+
+    <div class="topbar-divider"></div>
+
+    <!-- Action group -->
+    <button class="btn primary" id="btn-new-game" title="开始新游戏">＋ 新游戏</button>
+    <a href="/settings" class="btn" style="text-decoration:none" title="系统设置">⚙ 设置</a>
+  </header>
+
+  <!-- ── Left Sidebar — Sessions ──────────────────────────────────────── -->
+  <aside id="sidebar-left">
+    <div class="sidebar-header">
+      历史存档
+      <button class="btn" id="btn-sidebar-new" title="新建游戏" style="padding:2px 8px;font-size:11px">＋</button>
+    </div>
+    <div id="session-list"></div>
+  </aside>
+
+  <!-- ── Main Content ──────────────────────────────────────────────────── -->
+  <main id="main">
+    <div id="chat-area">
+      <div id="welcome-screen">
+        <div class="welcome-icon">⚔</div>
+        <h2>无限武库 · AI 驱动游戏系统</h2>
+        <p>点击「新游戏」选择场景开始，或在左侧选择历史存档继续游戏。</p>
+        <p style="color:var(--text3);font-size:12px">请先在「设置」中配置角色卡、预设和 API 密钥。</p>
+        <div class="welcome-actions">
+          <button class="btn primary" id="btn-welcome-start">＋ 开始新游戏</button>
+          <button class="btn" id="btn-welcome-settings">⚙ 系统设置</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="options-panel"></div>
+
+    <div id="input-area">
+      <textarea id="input-box" placeholder="输入你的行动或对话…" rows="1" disabled></textarea>
+      <button id="stop-btn" style="display:none">⏹ 停止</button>
+      <button id="send-btn" disabled>发送 ↵</button>
+    </div>
+  </main>
+
+</div>
+
+<!-- ── Stat Floating Window ──────────────────────────────────────────── -->
+<div id="stat-float" class="stat-float" style="display:none">
+  <div id="stat-float-header" class="stat-float-header">
+    <div class="sf-header-left">
+      <span class="sf-sys-label">SYSTEM_MONITOR</span>
+      <span class="sf-online-dot"></span>
+      <span class="sf-char-name" id="sf-char-name">—</span>
+    </div>
+    <div class="stat-float-btns">
+      <button class="stat-float-btn" id="btn-stat-refresh" title="刷新数据">↺</button>
+      <button class="stat-float-btn" id="btn-stat-close" title="关闭">✕</button>
+    </div>
+  </div>
+  <div id="stat-tabs-bar" class="stat-tabs-bar"></div>
+  <div id="stat-float-body" class="stat-float-body">
+    <div class="hud-empty">开始游戏后显示角色状态</div>
+  </div>
+</div>
+
+<!-- ── Danmu Layer ──────────────────────────────────────────────────────── -->
+<div id="danmu-layer"></div>
+
+<!-- ── Toast Container ─────────────────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ── Modals ──────────────────────────────────────────────────────────── -->
+
+<!-- Settings Modal removed — use /settings page instead -->
+
+<!-- New Game Modal (multi-step wizard) -->
+<div id="modal-new-game" class="modal-overlay" style="display:none">
+  <div class="modal modal-wide">
+
+    <!-- Step indicator -->
+    <div class="wizard-steps">
+      <div class="wizard-step active" data-step="1"><span class="step-num">1</span><span class="step-label">选择角色</span></div>
+      <div class="wizard-divider"></div>
+      <div class="wizard-step" data-step="2"><span class="step-num">2</span><span class="step-label">初始世界</span></div>
+      <div class="wizard-divider"></div>
+      <div class="wizard-step" data-step="3"><span class="step-num">3</span><span class="step-label">存档设置</span></div>
+    </div>
+
+    <!-- ── Step 1: Character Selection ── -->
+    <div id="ng-step-1" class="ng-step">
+      <div class="ng-step-header">
+        <h3 class="ng-step-title">选择主角</h3>
+        <a href="/character" target="_blank" class="btn" style="font-size:12px;text-decoration:none;padding:5px 12px">＋ 生成新角色</a>
+      </div>
+
+      <div class="ng-char-type-row">
+        <span class="ng-label">角色类型：</span>
+        <div class="ng-type-btns">
+          <button class="ng-type-btn active" data-type="本土">🏠 本土角色</button>
+          <button class="ng-type-btn"        data-type="穿越者">🌀 穿越者</button>
+        </div>
+        <span class="ng-type-hint" id="ng-type-hint">角色生于本世界，熟悉当地规则与文化。</span>
+      </div>
+
+      <!-- Traversal method — only shown for 穿越者 -->
+      <div id="ng-traversal-block" style="display:none;flex-direction:column;gap:8px;padding:12px 14px;background:rgba(100,200,255,.04);border:1px solid rgba(100,200,255,.15);border-radius:var(--radius);margin-bottom:4px">
+        <span class="ng-label">穿越方式：</span>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="ng-traversal-presets">
+          <button class="traversal-btn active" data-method="isekai">🔄 异世界转生</button>
+          <button class="traversal-btn" data-method="rebirth">♻️ 重生</button>
+          <button class="traversal-btn" data-method="possession">🫧 夺舍/融合</button>
+          <button class="traversal-btn" data-method="summoning">⚡ 召唤/降临</button>
+          <button class="traversal-btn" data-method="system">💻 系统穿越</button>
+          <button class="traversal-btn" data-method="custom">✏️ 自定义</button>
+        </div>
+        <span style="font-size:11px;color:var(--text3)" id="ng-traversal-hint">以完整记忆转生至本世界，保有异世界记忆，可能附带转生祝福。</span>
+        <textarea id="ng-traversal-desc" rows="2"
+          placeholder="描述你的穿越方式…（选择「自定义」后填写）"
+          style="display:none;resize:vertical;font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:7px 10px;font-family:inherit"></textarea>
+      </div>
+
+      <div class="ng-section-label">从档案库选择 <span class="ng-optional">（可跳过，游戏后再配置角色）</span></div>
+      <div id="ng-char-list" class="ng-char-list">
+        <div class="ng-loading">加载中…</div>
+      </div>
+
+      <div class="ng-step-actions">
+        <button class="btn" id="btn-cancel-new-game">取消</button>
+        <button class="btn primary" id="btn-ng-next-1">下一步 →</button>
+      </div>
+    </div>
+
+    <!-- ── Step 2: World Selection ── -->
+    <div id="ng-step-2" class="ng-step" style="display:none">
+      <div class="ng-step-header">
+        <h3 class="ng-step-title">选择初始世界</h3>
+        <button class="btn" id="btn-ng-toggle-gen" style="font-size:12px;padding:5px 12px">＋ 生成新世界</button>
+      </div>
+
+      <div id="ng-world-gen" class="ng-world-gen" style="display:none">
+        <div class="ng-gen-row">
+          <input type="text" id="ng-world-name-input" class="ng-gen-input" placeholder="世界/IP名称，如「火影忍者」「赛博朋克2077」">
+          <input type="text" id="ng-world-ctx-input"  class="ng-gen-input" placeholder="附加说明（可选）" style="flex:1">
+          <button class="btn primary" id="btn-ng-gen-world" style="white-space:nowrap;padding:5px 14px">生成</button>
+        </div>
+        <div id="ng-world-gen-status" class="ng-gen-status" style="display:none">
+          <span id="ng-world-gen-text">生成中…</span>
+          <div id="ng-world-gen-stream" class="ng-gen-stream" style="display:none"></div>
+        </div>
+      </div>
+
+      <div class="ng-section-label">
+        从世界档案选择 <span class="ng-optional">（可多选；跳过则使用默认背景）</span>
+        <button class="btn" id="btn-ng-world-random" style="margin-left:auto;padding:3px 10px;font-size:11px">🎲 随机</button>
+      </div>
+      <div id="ng-world-list" class="ng-world-list">
+        <div class="ng-loading">加载中…</div>
+      </div>
+
+      <div class="ng-step-actions">
+        <button class="btn" id="btn-ng-back-2">← 上一步</button>
+        <button class="btn primary" id="btn-ng-next-2">下一步 →</button>
+      </div>
+    </div>
+
+    <!-- ── Step 3: Session Setup ── -->
+    <div id="ng-step-3" class="ng-step" style="display:none">
+      <div class="ng-step-header">
+        <h3 class="ng-step-title">存档设置</h3>
+      </div>
+
+      <div id="ng-summary" class="ng-summary"></div>
+
+      <div class="form-row" style="margin-top:12px">
+        <label>存档名称</label>
+        <input type="text" id="new-game-name" placeholder="我的冒险">
+      </div>
+
+      <div class="form-row" style="margin-top:10px">
+        <label>开场输入 <span style="font-size:11px;opacity:.6">（可选，作为第一条 &lt;input&gt; 内容；留空则使用「游戏开始」）</span></label>
+        <textarea id="ng-first-input" rows="3" placeholder="例：我看向四周，打量这个陌生的世界……" style="resize:vertical;font-size:13px;font-family:inherit"></textarea>
+      </div>
+
+      <div class="ng-step-actions">
+        <button class="btn" id="btn-ng-back-3">← 上一步</button>
+        <button class="btn primary" id="btn-confirm-new-game">✦ 开始游戏</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="panel.js"></script>
+<script src="app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Welcome settings button → navigate to settings page
+    const btnWelcomeSettings = document.getElementById('btn-welcome-settings');
+    if (btnWelcomeSettings) {
+      btnWelcomeSettings.addEventListener('click', () => {
+        window.location.href = '/settings';
+      });
+    }
+  });
+</script>
+</body>
+</html>

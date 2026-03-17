@@ -1,0 +1,50 @@
+---
+description: AI-VN 游戏系统项目架构总览，始终适用
+alwaysApply: true
+---
+
+# AI-VN 无限武库游戏系统架构
+
+## 分层目录结构
+
+```
+src/
+  core/          核心层 — 基础设施（日志、配置、会话、LLM客户端）
+  content/       内置内容层 — 世界书、预设提示词、正则规则（程序内置，不依赖外部文件）
+  engine/        引擎层 — 变量引擎、正则管道、提示词构建、游戏循环
+  features/      功能层 — shop/gacha/character/world 各自独立子目录
+  routes/        路由层 — 每个功能域一个路由文件
+```
+
+## 核心模块职责
+
+| 文件 | 职责 |
+|---|---|
+| `src/core/config.js` | 配置读写 + LLM配置构建 + 游戏资产加载 |
+| `src/core/logger.js` | 日志系统（日志文件 + 控制台） |
+| `src/core/session.js` | 会话持久化（内存Map + JSON磁盘） |
+| `src/core/llmClient.js` | OpenAI兼容HTTP客户端（无外部依赖） |
+| `src/core/sessionLock.js` | 会话并发锁（Promise链互斥） |
+| `src/content/index.js` | 导出内置世界书、预设、正则（getBuiltinCharCard / getBuiltinPreset） |
+| `src/engine/varEngine.js` | 变量/状态引擎（路径操作 + VM执行 + 自动计算） |
+| `src/engine/regexPipeline.js` | 正则规则管道（用户输入/AI输出变换） |
+| `src/engine/promptBuilder.js` | LLM消息数组构建（上下文窗口装配） |
+| `src/engine/gameLoop.js` | 游戏回合主循环（runStreamTurn + NarrativeGrant处理） |
+
+## 导入规范
+
+```javascript
+// ✅ 使用新路径
+const log = require('../core/logger');
+const { getConfig } = require('../core/config');
+const { runStreamTurn } = require('../engine/gameLoop');
+
+// ❌ 不要使用旧的扁平路径
+const log = require('./logger');  // 旧路径已废弃
+```
+
+## 内置内容原则
+
+- 世界书条目、预设提示词、正则规则 **必须内置在代码中**，不依赖外部SillyTavern JSON文件
+- 外部文件仅作可选覆盖（通过config.charCardPath / presetPath）
+- 内容修改通过Web UI或直接编辑 `src/content/` 下的JS文件

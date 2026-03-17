@@ -1,0 +1,58 @@
+---
+description: 内置内容层规范，适用于src/content/目录
+globs: src/content/**/*.js
+alwaysApply: false
+---
+
+# 内置内容层规范
+
+`src/content/` 替代了外部SillyTavern JSON文件，是游戏规则的**唯一真实来源**。
+
+## 世界书条目格式 (worldbook.js)
+
+每个条目必须符合以下结构：
+
+```javascript
+{
+  id: 1,
+  comment: '条目说明',
+  keys: ['触发关键词'],
+  content: '条目内容（注入到提示词）',
+  enabled: true,
+  constant: true,        // true = 始终注入（不需要关键词触发）
+  extPosition: 0,        // 0=worldInfoBefore, 1=worldInfoAfter, 4=用户消息末尾
+  depth: 0,              // depth:0 = 最后一条用户消息，depth:4 = 倒数第4条消息
+  insertionOrder: 100,   // 注入顺序（越小越靠前）
+  role: 0,               // 0=system, 1=user, 2=assistant
+}
+```
+
+## 预设提示词格式 (presets.js)
+
+```javascript
+{
+  identifier: 'unique-id',
+  name: '提示词名称',
+  enabled: true,
+  content: '提示词内容（支持{{char}}、{{user}}模板变量）',
+  role: 'system',           // 'system' | 'assistant'
+  marker: false,            // true = 系统标记位（无内容，仅控制注入位置）
+  injectionPosition: 0,
+  injectionDepth: 4,
+}
+```
+
+## 关键标记符 (marker: true)
+
+这些标记符控制内容注入位置，**不得删除**：
+- `worldInfoBefore` — 角色描述之前注入世界书
+- `worldInfoAfter` — 角色描述之后注入世界书
+- `charDescription` — 角色描述注入点
+- `nsfw` — **关键枢纽**：此后所有system提示词进入最后一条用户消息
+
+## 修改内容的注意事项
+
+- `nsfw` 标记符之前的内容 → 系统消息
+- `nsfw` 标记符之后的内容 → 最后一条用户消息（格式指令、CoT等）
+- `role: 'assistant'` 的提示词 → 助手预填充
+- UpdateVariable条目必须有 `extPosition: 4, depth: 0`，且内容包含 `UpdateVariable`

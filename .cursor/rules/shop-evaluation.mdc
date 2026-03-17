@@ -1,0 +1,68 @@
+---
+description: 商城评估协议、物品类型与LLM响应JSON结构规范
+globs: src/features/shop/**/*.js
+alwaysApply: false
+---
+
+# 商城评估规范
+
+## 三轮评估协议（Anti-Feat）
+
+`shopEngine.js` 通过 `shopPrompt.js` 驱动，要求LLM执行严格的三轮协议：
+
+1. **基础定级** — 仅依据原作可验证的实战表现（Feats）确定星级，旁白/称号/排行权重为零
+2. **价格修正** — 根据角色当前积分、徽章、已有装备综合调整定价
+3. **最终裁定** — 输出完整 JSON，含 `systemEvaluation` 记录完整推理过程
+
+## LLM 响应 JSON 结构
+
+```json
+{
+  "name": "物品名称",
+  "type": "PassiveAbility|PowerSource|ApplicationTechnique|Inventory|Knowledge|Companion|Mech",
+  "tier": 5,
+  "pricePoints": 5000,
+  "requiredMedals": [{ "star": 5, "count": 1 }],
+  "description": "物品描述",
+  "systemEvaluation": "完整三轮评估推理文本",
+  "sourceWorld": "来源世界（可选）",
+  "effects": {
+    "attributeDeltas": { "STR": 0.5, "AGI": 1.2 },
+    "newEnergyPools": [{ "name": "灵力", "value": 1000, "max": 1000, "description": "..." }],
+    "passiveAbilities": [{ "name": "...", "type": "Passive", "description": "..." }],
+    "powerSources": [{ "name": "...", "type": "PowerSource", "description": "...", "aptitude": "S", "initialRealm": "初入门" }],
+    "applicationTechniques": [{ "name": "...", "schoolName": "...", "description": "...", "subTechniques": [] }],
+    "inventoryItems": [{ "name": "...", "type": "Equipment", "description": "...", "quantity": 1 }],
+    "knowledgeNodes": [{ "topic": "...", "summary": "...", "details": "..." }],
+    "companions": [...],
+    "mechs": [...],
+    "itemOperations": [{ "action": "replace", "target": "旧物品名" }]
+  }
+}
+```
+
+## 物品类型说明
+
+| type | 对应 statData 路径 |
+|:---|:---|
+| `PassiveAbility` | `Loadout.PassiveAbilities` |
+| `PowerSource` | `Loadout.PowerSources` |
+| `ApplicationTechnique` | `Loadout.ApplicationTechniques` |
+| `Inventory` | `Loadout.Inventory.Equipped` |
+| `Knowledge` | `KnowledgeBase.Database.RootNodes` |
+| `Companion` | `CompanionRoster.ActiveCompanions` |
+| `Mech` | `Loadout.MechanizedUnits` |
+| `WorldTraverse` | ❌ **禁止** 通过gacha生成，由专属系统管理 |
+
+## buildApplyScript 工作原理
+
+`shopEngine.js` 的 `buildApplyScript(item)` 将 `effects` 对象转换为 varEngine `_` API 调用：
+- `effects.attributeDeltas` → `_.add('CharacterSheet.CoreSystem.Attributes.XXX[0]', delta)`
+- `effects.passiveAbilities` → `_.insert('CharacterSheet.Loadout.PassiveAbilities', {...})`
+- `effects.powerSources` → 自动创建 `GeneratedPool` 并 `_.insert('CharacterSheet.DynamicStatus.EnergyPools', ...)`
+
+## 解析响应
+
+- 优先提取 ` ```json ... ``` ` 块
+- 回退：匹配包含 `"tier"` 字段的最外层 `{...}`
+- Gacha批量生成期望返回 JSON **数组**

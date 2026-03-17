@@ -1,0 +1,72 @@
+---
+description: 前端原生JS SPA规范，适用于public/目录
+globs: public/**/*.js
+alwaysApply: false
+---
+
+# 前端代码规范
+
+`public/` 使用原生 HTML + Vanilla JS，无构建工具、无框架。
+
+## 文件组织
+
+每个功能页对应三个文件：
+- `xxx.html` — 结构
+- `xxx.js` — 业务逻辑（顶部 `'use strict'`）
+- `xxx.css` — 样式（或复用 `style.css`）
+
+## 全局状态模式
+
+```javascript
+'use strict';
+const state = {
+  currentSessionId: null,
+  isLoading: false,
+  // ...
+};
+
+const $ = (id) => document.getElementById(id);
+```
+
+## API 调用模式
+
+```javascript
+async function apiPost(url, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+```
+
+## SSE 接收模式（游戏主循环）
+
+```javascript
+const es = new EventSource(`/api/sessions/${id}/message?input=...`);
+es.addEventListener('chunk', e => {
+  const { text } = JSON.parse(e.data);
+  appendText(text);
+});
+es.addEventListener('done', e => {
+  const { statData } = JSON.parse(e.data);
+  es.close();
+  updateHUD(statData);
+});
+es.onerror = () => es.close();
+```
+
+## Toast / 通知
+
+```javascript
+function showToast(msg, type = 'info') {
+  // 短暂显示后自动移除，不阻塞交互
+}
+```
+
+## 会话 ID 传递
+
+- 当前会话 ID 存储于 `sessionStorage`（刷新丢失）或 URL 参数
+- 跨页导航用 `window.location.href = '/shop.html?sid=...'`
