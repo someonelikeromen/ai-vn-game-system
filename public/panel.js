@@ -45,8 +45,14 @@
     if (opts.storageKey) {
       const saved = loadState(opts.storageKey);
       if (saved) {
-        el.style.left   = saved.left   + 'px';
-        el.style.top    = saved.top    + 'px';
+        // 确保保存的位置仍在视口内
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const w  = saved.width  || 340;
+        const h  = saved.height || 300;
+        const left = clamp(saved.left, 0, vw - Math.min(w, vw));
+        const top  = clamp(saved.top,  0, vh - Math.min(h, vh));
+        el.style.left   = left + 'px';
+        el.style.top    = top  + 'px';
         el.style.right  = 'auto';
         el.style.bottom = 'auto';
         if (saved.width)  el.style.width  = saved.width  + 'px';
@@ -59,14 +65,17 @@
     if (handle) {
       let dragging = false, startX, startY, origLeft, origTop;
 
-      handle.addEventListener('mousedown', (e) => {
-        // Skip if clicking a button inside the handle
-        if (e.target !== handle && e.target.closest('button')) return;
+      function startDrag(clientX, clientY, target) {
+        // Skip if clicking a button (but NOT the drag-hint icon)
+        if (!target.classList.contains('sf-drag-hint') &&
+            target !== handle &&
+            target.closest('button,select,input,a')) return false;
         // Skip if clicking a resize handle
-        if (e.target.classList.contains('panel-resize-handle')) return;
+        if (target.classList.contains('panel-resize-handle')) return false;
+
         dragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
+        startX = clientX;
+        startY = clientY;
         const rect = el.getBoundingClientRect();
         origLeft = rect.left;
         origTop  = rect.top;
@@ -74,28 +83,54 @@
         el.style.bottom = 'auto';
         el.style.left   = origLeft + 'px';
         el.style.top    = origTop  + 'px';
+        el.style.transition = 'none'; // 拖动时关闭过渡
         document.body.style.userSelect = 'none';
-        e.preventDefault();
-      });
+        handle.style.cursor = 'grabbing';
+        return true;
+      }
 
-      document.addEventListener('mousemove', (e) => {
+      function moveDrag(clientX, clientY) {
         if (!dragging) return;
         const vw = window.innerWidth, vh = window.innerHeight;
         const w  = el.offsetWidth,    h  = el.offsetHeight;
-        const newLeft = clamp(origLeft + (e.clientX - startX), 0, vw - w);
-        const newTop  = clamp(origTop  + (e.clientY - startY), 0, vh - h);
+        const newLeft = clamp(origLeft + (clientX - startX), 0, vw - w);
+        const newTop  = clamp(origTop  + (clientY - startY), 0, vh - h);
         el.style.left = newLeft + 'px';
         el.style.top  = newTop  + 'px';
         _persist(el, opts);
-      });
+      }
 
-      document.addEventListener('mouseup', () => {
+      function endDrag() {
         if (dragging) {
           dragging = false;
+          el.style.transition = '';
           document.body.style.userSelect = '';
+          handle.style.cursor = '';
           _persist(el, opts);
         }
+      }
+
+      // Mouse events
+      handle.addEventListener('mousedown', (e) => {
+        if (startDrag(e.clientX, e.clientY, e.target)) {
+          e.preventDefault();
+        }
       });
+      document.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+      document.addEventListener('mouseup',   endDrag);
+
+      // Touch events (移动端支持)
+      handle.addEventListener('touchstart', (e) => {
+        const t = e.touches[0];
+        if (startDrag(t.clientX, t.clientY, e.target)) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      document.addEventListener('touchmove', (e) => {
+        const t = e.touches[0];
+        moveDrag(t.clientX, t.clientY);
+      }, { passive: true });
+      document.addEventListener('touchend', endDrag);
     }
 
     // ── Resize ────────────────────────────────────────────────────────────────
@@ -106,10 +141,9 @@
 
   function _persist(el, opts) {
     if (!opts.storageKey) return;
-    const rect = el.getBoundingClientRect();
     const state = {
-      left:   Math.round(parseFloat(el.style.left) || rect.left),
-      top:    Math.round(parseFloat(el.style.top)  || rect.top),
+      left:   Math.round(parseFloat(el.style.left) || 0),
+      top:    Math.round(parseFloat(el.style.top)  || 0),
       width:  Math.round(el.offsetWidth),
       height: Math.round(el.offsetHeight),
     };
@@ -151,6 +185,7 @@
         el.style.bottom = 'auto';
         el.style.left   = startLeft + 'px';
         el.style.top    = startTop  + 'px';
+        el.style.transition = 'none';
         document.body.style.userSelect = 'none';
         document.body.style.cursor = _cursor(dir);
       });
@@ -171,6 +206,7 @@
       document.addEventListener('mouseup', () => {
         if (active) {
           active = false;
+          el.style.transition = '';
           document.body.style.userSelect = '';
           document.body.style.cursor = '';
           _persist(el, opts);

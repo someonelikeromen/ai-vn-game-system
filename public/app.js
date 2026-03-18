@@ -101,6 +101,10 @@ function timeAgo(ts) {
 }
 
 function toast(msg, type = 'info', duration = 3000) {
+  if (window.UIFeedback) {
+    window.UIFeedback.toast(msg, { type, duration });
+    return;
+  }
   const el = document.createElement('div');
   el.className = `toast ${type}`;
   el.textContent = msg;
@@ -122,10 +126,15 @@ async function api(method, path, body) {
 // ─── Session List ─────────────────────────────────────────────────────────────
 
 async function refreshSessionList() {
+  if (window.UIFeedback) {
+    sessionList.innerHTML = window.UIFeedback.renderLoadingLines(4);
+  }
   const sessions = await api('GET', '/sessions');
   sessionList.innerHTML = '';
   if (!sessions.length) {
-    sessionList.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3);text-align:center">暂无存档</div>';
+    sessionList.innerHTML = window.UIFeedback
+      ? window.UIFeedback.renderEmpty('暂无存档，点击左上角「＋」创建一个新游戏。')
+      : '<div style="padding:10px;font-size:12px;color:var(--text3);text-align:center">暂无存档</div>';
     return;
   }
   sessions.forEach((s) => {
@@ -149,7 +158,14 @@ async function refreshSessionList() {
 }
 
 async function deleteSession(id, name) {
-  if (!confirm(`删除存档「${name}」？此操作不可撤销。`)) return;
+  const ok = window.UIFeedback
+    ? await window.UIFeedback.confirmDanger({
+        title: '删除存档',
+        message: `确定删除「${name}」吗？此操作不可撤销。`,
+        confirmText: '确认删除',
+      })
+    : confirm(`删除存档「${name}」？此操作不可撤销。`);
+  if (!ok) return;
   try {
     await api('DELETE', `/sessions/${id}`);
     if (state.currentSessionId === id) {
@@ -482,6 +498,13 @@ async function readSSEStream(fetchRes, streamMsg) {
           if (phase === 3 && status === 'start') {
             // Phase 3 is about to start streaming — remove the phase bar
             removePhaseBar();
+          } else if (phase === 3 && status === 'retry') {
+            // Phase 3 retry: clear previously streamed narrative and show retry indicator
+            state.streamingText = '';
+            hasNarrativeText = false;
+            bubble.innerHTML = '';
+            phaseBar = null; // ref is stale after innerHTML clear
+            updatePhaseBar(3, `${label}（第${payload.attempt}次重试）`, 'active');
           } else if (phase === 4 && status === 'start') {
             showPhase4Banner(label, false);
           } else if (phase === 4 && status === 'done') {
@@ -1454,7 +1477,14 @@ function renderStatFloat(statData) {
       btn.addEventListener('click', async () => {
         const pendingId = btn.dataset.pendingId;
         const sessionId = state.currentSessionId;
-        if (!sessionId || !confirm('确定丢弃此物品？\n丢弃后将退还一次单抽费用。')) return;
+        const ok = window.UIFeedback
+          ? await window.UIFeedback.confirmDanger({
+              title: '丢弃待领取物品',
+              message: '确定丢弃此物品吗？\n丢弃后将退还一次单抽费用。',
+              confirmText: '确认丢弃',
+            })
+          : confirm('确定丢弃此物品？\n丢弃后将退还一次单抽费用。');
+        if (!sessionId || !ok) return;
         btn.disabled = true;
         try {
           const resp = await fetch(`/api/sessions/${sessionId}/gacha/pending/${pendingId}`, { method: 'DELETE' });
@@ -2267,6 +2297,7 @@ PanelManager.make(statFloat, {
 // ─── Shop Navigation ──────────────────────────────────────────────────────────
 
 $('btn-shop').addEventListener('click', () => {
+  stopGeneration();
   const id = state.currentSessionId;
   window.location.href = id ? `/shop?session=${encodeURIComponent(id)}` : '/shop';
 });

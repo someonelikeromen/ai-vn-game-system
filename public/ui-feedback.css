@@ -1,0 +1,102 @@
+/* Shared feedback components: toast, confirm, states */
+
+#ui-toast-stack {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.ui-toast {
+  min-width: 220px;
+  max-width: 420px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border, #334155);
+  background: color-mix(in srgb, var(--bg2, #0f172a) 86%, #000 14%);
+  color: var(--text, #e2e8f0);
+  line-height: 1.5;
+  pointer-events: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  animation: ui-toast-in 0.18s ease;
+}
+
+.ui-toast.success { border-color: var(--success, #22c55e); color: var(--success, #22c55e); }
+.ui-toast.error { border-color: var(--danger, #ef4444); color: var(--danger, #ef4444); }
+.ui-toast.info { border-color: var(--accent2, #38bdf8); }
+
+@keyframes ui-toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ui-confirm-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 2300;
+  background: rgba(0, 0, 0, 0.66);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.ui-confirm-box {
+  width: min(92vw, 500px);
+  border-radius: 14px;
+  border: 1px solid var(--border, #334155);
+  background: var(--bg2, #0f172a);
+  color: var(--text, #e2e8f0);
+  padding: 16px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55);
+}
+
+.ui-confirm-box h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.ui-confirm-box p {
+  font-size: 13px;
+  color: var(--text2, #94a3b8);
+  white-space: pre-wrap;
+}
+
+.ui-confirm-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ui-state-loading {
+  display: grid;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.ui-skeleton-line {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(120, 140, 170, 0.12), rgba(120, 140, 170, 0.24), rgba(120, 140, 170, 0.12));
+  background-size: 220% 100%;
+  animation: ui-shimmer 1.2s linear infinite;
+}
+
+@keyframes ui-shimmer {
+  from { background-position: 220% 0; }
+  to { background-position: -20% 0; }
+}
+
+.ui-empty {
+  padding: 16px 12px;
+  border: 1px dashed var(--border, #334155);
+  border-radius: 10px;
+  color: var(--text2, #94a3b8);
+  text-align: center;
+  font-size: 13px;
+}

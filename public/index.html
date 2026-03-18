@@ -6,6 +6,8 @@
   <title>AI-VN System · 无限武库</title>
   <script src="theme.js"></script>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="ui-humanized.css">
+  <link rel="stylesheet" href="ui-feedback.css">
 </head>
 <body>
 <div id="app">
@@ -28,7 +30,7 @@
 
     <!-- Action group -->
     <button class="btn primary" id="btn-new-game" title="开始新游戏">＋ 新游戏</button>
-    <a href="/settings" class="btn" style="text-decoration:none" title="系统设置">⚙ 设置</a>
+    <a href="/hub" class="btn" style="text-decoration:none" title="控制台">🧭 控制台</a>
   </header>
 
   <!-- ── Left Sidebar — Sessions ──────────────────────────────────────── -->
@@ -47,10 +49,10 @@
         <div class="welcome-icon">⚔</div>
         <h2>无限武库 · AI 驱动游戏系统</h2>
         <p>点击「新游戏」选择场景开始，或在左侧选择历史存档继续游戏。</p>
-        <p style="color:var(--text3);font-size:12px">请先在「设置」中配置角色卡、预设和 API 密钥。</p>
+        <p style="color:var(--text3);font-size:12px">建议先在「控制台」完成接口配置，再开始游玩。</p>
         <div class="welcome-actions">
           <button class="btn primary" id="btn-welcome-start">＋ 开始新游戏</button>
-          <button class="btn" id="btn-welcome-settings">⚙ 系统设置</button>
+          <button class="btn" id="btn-welcome-settings">🧭 打开控制台</button>
         </div>
       </div>
     </div>
@@ -69,6 +71,7 @@
 <!-- ── Stat Floating Window ──────────────────────────────────────────── -->
 <div id="stat-float" class="stat-float" style="display:none">
   <div id="stat-float-header" class="stat-float-header">
+    <span class="sf-drag-hint" title="拖动移动面板">⠿</span>
     <div class="sf-header-left">
       <span class="sf-sys-label">SYSTEM_MONITOR</span>
       <span class="sf-online-dot"></span>
@@ -213,14 +216,15 @@
 </div>
 
 <script src="panel.js"></script>
+<script src="ui-feedback.js"></script>
 <script src="app.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Welcome settings button → navigate to settings page
+    // Welcome control button → navigate to hub page
     const btnWelcomeSettings = document.getElementById('btn-welcome-settings');
     if (btnWelcomeSettings) {
       btnWelcomeSettings.addEventListener('click', () => {
-        window.location.href = '/settings';
+        window.location.href = '/hub';
       });
     }
   });

@@ -12,6 +12,11 @@ async function api(method, path, body) {
 }
 
 function toast(msg, type = 'ok', dur = 3000) {
+  if (window.UIFeedback) {
+    const map = { ok: 'success', err: 'error' };
+    window.UIFeedback.toast(msg, { type: map[type] || 'info', duration: dur });
+    return;
+  }
   const el = $('st-toast');
   el.textContent = msg;
   el.className = type;
@@ -122,8 +127,6 @@ async function loadConfig() {
     $('mp-config').style.opacity = mp.enabled !== false ? '1' : '0.4';
     $('mp-config').style.pointerEvents = mp.enabled !== false ? '' : 'none';
 
-    $('cfg-charcard').value      = cfg.charCardPath   || '';
-    $('cfg-preset').value        = cfg.presetPath     || '';
     $('cfg-username').value      = cfg.userName       || '';
     $('cfg-alignment').value     = cfg.userAlignment  || '';
     $('cfg-traits').value        = cfg.userTraits     || '';
@@ -159,8 +162,6 @@ async function saveConfig() {
       ragTopK:          parseInt($('cfg-rag-topk').value)     || 8,
     },
 
-    charCardPath:    $('cfg-charcard').value.trim(),
-    presetPath:      $('cfg-preset').value.trim(),
     userName:        $('cfg-username').value.trim(),
     userAlignment:   $('cfg-alignment').value.trim(),
     userTraits:      $('cfg-traits').value.trim(),
@@ -251,40 +252,101 @@ function syncThemeCards(theme) {
     c.classList.toggle('selected', c.dataset.theme === theme);
   });
 }
-function syncFontOpts(size) {
-  document.querySelectorAll('.st-font-opt').forEach(o => {
-    o.classList.toggle('selected', o.dataset.size === size);
-  });
+// ── Appearance: Font size sliders ─────────────────────────────────────────────
+
+/**
+ * 获取某个 group 当前的 px 值
+ */
+function _getFontPx(group) {
+  if (group === 'ui')   return window.UITheme.getFontPx();
+  if (group === 'chat') return window.UITheme.getChatPx();
+  if (group === 'stat') return window.UITheme.getStatPx();
+  return 14;
 }
 
-document.querySelectorAll('.st-theme-card').forEach(card => {
-  card.addEventListener('click', () => {
-    const theme    = card.dataset.theme;
-    const fontSize = window.UITheme.getFontSize();
-    window.UITheme.applyTheme(theme, fontSize);
-    syncThemeCards(theme);
+/**
+ * 将三个 group 的最新 px 值应用到 UITheme
+ */
+function _applyFontChange(changedGroup, newPx) {
+  const theme  = window.UITheme.getTheme();
+  const uiPx   = changedGroup === 'ui'   ? newPx : window.UITheme.getFontPx();
+  const chatPx = changedGroup === 'chat' ? newPx : window.UITheme.getChatPx();
+  const statPx = changedGroup === 'stat' ? newPx : window.UITheme.getStatPx();
+  window.UITheme.applyTheme(theme, uiPx, chatPx, statPx);
+}
+
+/**
+ * 同步某个 group 的滑块、数字输入和预览
+ */
+function syncFontControls(group, px) {
+  const slider  = document.getElementById('fontSlider-' + group);
+  const input   = document.getElementById('fontInput-'  + group);
+  const preview = document.getElementById('fontPreview-' + group);
+  if (slider)  slider.value = px;
+  if (input)   input.value  = px;
+  if (preview) preview.style.fontSize = px + 'px';
+}
+
+// Wire up each font group
+['ui', 'chat', 'stat'].forEach(group => {
+  const slider  = document.getElementById('fontSlider-' + group);
+  const input   = document.getElementById('fontInput-'  + group);
+
+  function onFontChange(rawVal) {
+    const px = Math.max(8, Math.min(38, parseInt(rawVal, 10) || 8));
+    syncFontControls(group, px);
+    _applyFontChange(group, px);
+    // Update slider fill via CSS custom property
+    if (slider) slider.style.setProperty('--val', px);
+  }
+
+  if (slider) {
+    slider.addEventListener('input', () => onFontChange(slider.value));
+  }
+  if (input) {
+    input.addEventListener('input',  () => onFontChange(input.value));
+    input.addEventListener('change', () => {
+      // Clamp on blur/enter
+      const px = Math.max(8, Math.min(38, parseInt(input.value, 10) || 8));
+      syncFontControls(group, px);
+      _applyFontChange(group, px);
+    });
+  }
+});
+
+// Reset buttons
+document.querySelectorAll('.st-font-reset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const group = btn.dataset.group;
+    const def   = parseInt(btn.dataset.default, 10) || 14;
+    syncFontControls(group, def);
+    _applyFontChange(group, def);
   });
 });
 
-document.querySelectorAll('.st-font-opt').forEach(opt => {
-  opt.addEventListener('click', () => {
-    const size  = opt.dataset.size;
-    const theme = window.UITheme.getTheme();
-    window.UITheme.applyTheme(theme, size);
-    syncFontOpts(size);
+document.querySelectorAll('.st-theme-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const theme = card.dataset.theme;
+    window.UITheme.applyTheme(theme, window.UITheme.getFontPx(), window.UITheme.getChatPx(), window.UITheme.getStatPx());
+    syncThemeCards(theme);
   });
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadConfig();
 syncThemeCards(window.UITheme.getTheme());
-syncFontOpts(window.UITheme.getFontSize());
+['ui', 'chat', 'stat'].forEach(g => {
+  const px = g === 'ui' ? window.UITheme.getFontPx() : g === 'chat' ? window.UITheme.getChatPx() : window.UITheme.getStatPx();
+  syncFontControls(g, px);
+  const s = document.getElementById('fontSlider-' + g);
+  if (s) s.style.setProperty('--val', px);
+});
 
 // Handle hash navigation from external links
 const hash = location.hash.replace('#', '');
 if (hash) {
   const mapped = {
-    'shop-api':   'shop',
+    'shop-api':   'api',
     'api':        'api',
     'appearance': 'appearance',
     'multiphase': 'multiphase',

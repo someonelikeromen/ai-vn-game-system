@@ -14,7 +14,7 @@ const sessionMgr   = require('../core/session');
 const { buildContextWindow, buildPhase1Messages, buildPhase3Messages, buildPhase4Messages } = require('./promptBuilder');
 const { processForPrompt, processUserInput, fullDisplayPipeline } = require('./regexPipeline');
 const { createCompletion }                                 = require('../core/llmClient');
-const { processUpdateVariables, buildStatSnapshot, runAutoCalc, syncWorldIdentity } = require('./varEngine');
+const { processUpdateVariables, buildStatSnapshot, runAutoCalc, syncWorldIdentity, propagateWorldTime } = require('./varEngine');
 const { loadGameAssets, getUserPersona, applySessionCharName, syncSessionCharProfile, buildLLMConfig, buildShopLLMConfig, getConfig } = require('../core/config');
 const { retrieveFromStatData, extractCombatData } = require('./ragEngine');
 const shopStore  = require('../features/shop/shopStore');
@@ -131,9 +131,9 @@ async function runSinglePhaseTurn(session, userContent, req, res) {
   let clientAborted = false;
   const reqStartMs  = Date.now();
   req.on('close', () => {
-    if (llmNodeReq && !clientAborted && Date.now() - reqStartMs > 200) {
+    if (!clientAborted && Date.now() - reqStartMs > 200) {
       clientAborted = true;
-      llmNodeReq.destroy();
+      if (llmNodeReq) llmNodeReq.destroy();
     }
   });
 
@@ -172,7 +172,7 @@ async function runSinglePhaseTurn(session, userContent, req, res) {
 
     await createCompletion(llmConfig, messages, {
       stream:    true,
-      onRequest: (nReq) => { llmNodeReq = nReq; },
+      onRequest: (nReq) => { llmNodeReq = nReq; if (clientAborted) nReq.destroy(); },
       onChunk:   (delta, accumulated) => {
         if (prefill && !accumulated.startsWith('<think>')) {
           fullResponse = prefill + accumulated;
@@ -187,7 +187,7 @@ async function runSinglePhaseTurn(session, userContent, req, res) {
     }
   } else {
     const rawResponse = await createCompletion(llmConfig, messages, {
-      onRequest: (nReq) => { llmNodeReq = nReq; },
+      onRequest: (nReq) => { llmNodeReq = nReq; if (clientAborted) nReq.destroy(); },
     });
     fullResponse = (prefill && !rawResponse.startsWith('<think>')) ? prefill + rawResponse : rawResponse;
     if (!clientAborted) send('chunk', { delta: fullResponse });
@@ -197,12 +197,15 @@ async function runSinglePhaseTurn(session, userContent, req, res) {
   log.llm({ model: llmConfig.model, baseUrl: llmConfig.baseUrl, msgCount: messages.length, stream: useStream, durationMs, responseChars: fullResponse.length });
   log.chatResp(session.id, fullResponse, durationMs);
 
+  if (clientAborted) { if (!res.writableEnded) res.end(); return; }
+
   // Snapshot statData BEFORE variable processing (for reprocess-vars feature)
   const statSnapshotBefore = JSON.parse(JSON.stringify(session.statData));
 
   // Process UpdateVariable blocks
   const templateVars = { userName: userPersona.name, charName: charCard.name };
   processUpdateVariables(fullResponse, session.statData, templateVars);
+  propagateWorldTime(session.statData);
   runAutoCalc(session.statData);
   syncSessionCharProfile(session);
 
@@ -305,14 +308,19 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
     if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
   };
 
+  // Retry / quality thresholds
+  const MAX_RETRIES  = 3;
+  const MIN_P1_CHARS = 50;
+  const MIN_P3_CHARS = 100;
+
   // Abort support
   let clientAborted = false;
   const reqStartMs  = Date.now();
   let   llmNodeReq  = null;
   req.on('close', () => {
-    if (llmNodeReq && !clientAborted && Date.now() - reqStartMs > 200) {
+    if (!clientAborted && Date.now() - reqStartMs > 200) {
       clientAborted = true;
-      llmNodeReq.destroy();
+      if (llmNodeReq) llmNodeReq.destroy();
     }
   });
 
@@ -333,36 +341,82 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
   const contextHistory = [...anchorHistory, ...recentHistory];
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // PHASE 1 — Planning
+  // PHASE 1 — Planning  (up to MAX_RETRIES retries)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   send('phase', { phase: 1, label: '规划大纲', status: 'start' });
 
   let phase1Result = { outline: [], logQueryTerms: [], reqCharUpdate: false, reqItemUpdate: '', reqCombatEnemies: [] };
-  try {
+  {
     const p1Messages = buildPhase1Messages(preset, charCard, session.statData, prevHistory, userPersona, processedInput);
     log.chatReq(session.id + ':p1', p1Messages);
-    const t0p1 = Date.now();
-    const p1Raw = await createCompletion(phase1Config, p1Messages, {
-      stream: false,
-      onRequest: (nReq) => { llmNodeReq = nReq; },
-    });
-    log.llm({ model: phase1Config.model, baseUrl: phase1Config.baseUrl, msgCount: p1Messages.length, stream: false, durationMs: Date.now() - t0p1, responseChars: p1Raw.length, phase: 1 });
-    log.chatResp(session.id + ':p1', p1Raw, Date.now() - t0p1);
 
-    // Extract JSON from response (may be wrapped in ```json ... ```)
-    const jsonMatch = p1Raw.match(/```(?:json)?\s*([\s\S]*?)```/) || p1Raw.match(/(\{[\s\S]*\})/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[1].trim());
-      phase1Result = {
-        outline:           Array.isArray(parsed.outline)           ? parsed.outline           : [],
-        logQueryTerms:     Array.isArray(parsed.logQueryTerms)     ? parsed.logQueryTerms     : [],
-        reqCharUpdate:     Boolean(parsed.reqCharUpdate),
-        reqItemUpdate:     String(parsed.reqItemUpdate  || ''),
-        reqCombatEnemies:  Array.isArray(parsed.reqCombatEnemies)  ? parsed.reqCombatEnemies  : [],
-      };
+    let p1Done = false;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      if (clientAborted) break;
+      if (attempt > 0) log.info(`[PHASE1] Retry ${attempt}/${MAX_RETRIES}`);
+
+      let p1Raw = '';
+      try {
+        const t0p1 = Date.now();
+        p1Raw = await createCompletion(phase1Config, p1Messages, {
+          stream: false,
+          onRequest: (nReq) => { llmNodeReq = nReq; if (clientAborted) nReq.destroy(); },
+        });
+        const durP1 = Date.now() - t0p1;
+        log.llm({ model: phase1Config.model, baseUrl: phase1Config.baseUrl, msgCount: p1Messages.length, stream: false, durationMs: durP1, responseChars: p1Raw.length, phase: 1 });
+        log.chatResp(session.id + ':p1', p1Raw, durP1);
+      } catch (err) {
+        log.warn(`[PHASE1] Attempt ${attempt + 1}/${MAX_RETRIES + 1} error: ${err.message}`);
+        if (attempt < MAX_RETRIES) continue;
+        log.error('[PHASE1] All attempts failed, aborting turn.');
+        if (!res.writableEnded) res.end();
+        return;
+      }
+
+      if (clientAborted) break;
+
+      if (p1Raw.length < MIN_P1_CHARS) {
+        log.warn(`[PHASE1] Response too short (${p1Raw.length} chars) on attempt ${attempt + 1}/${MAX_RETRIES + 1}`);
+        if (attempt < MAX_RETRIES) continue;
+        log.error('[PHASE1] All attempts too short, aborting turn.');
+        if (!res.writableEnded) res.end();
+        return;
+      }
+
+      const jsonMatch = p1Raw.match(/```(?:json)?\s*([\s\S]*?)```/) || p1Raw.match(/(\{[\s\S]*\})/);
+      if (!jsonMatch) {
+        log.warn(`[PHASE1] No JSON found on attempt ${attempt + 1}/${MAX_RETRIES + 1}`);
+        if (attempt < MAX_RETRIES) continue;
+        log.error('[PHASE1] No valid JSON in all attempts, aborting turn.');
+        if (!res.writableEnded) res.end();
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(jsonMatch[1].trim());
+        phase1Result = {
+          outline:          Array.isArray(parsed.outline)          ? parsed.outline          : [],
+          logQueryTerms:    Array.isArray(parsed.logQueryTerms)    ? parsed.logQueryTerms    : [],
+          reqCharUpdate:    Boolean(parsed.reqCharUpdate),
+          reqItemUpdate:    String(parsed.reqItemUpdate  || ''),
+          reqCombatEnemies: Array.isArray(parsed.reqCombatEnemies) ? parsed.reqCombatEnemies : [],
+        };
+        p1Done = true;
+        break;
+      } catch (parseErr) {
+        log.warn(`[PHASE1] JSON parse failed on attempt ${attempt + 1}/${MAX_RETRIES + 1}: ${parseErr.message}`);
+        if (attempt < MAX_RETRIES) continue;
+        log.error('[PHASE1] JSON parse failed all attempts, aborting turn.');
+        if (!res.writableEnded) res.end();
+        return;
+      }
     }
-  } catch (err) {
-    log.error('Phase 1 failed, continuing with empty context:', err.message);
+
+    if (!p1Done && !clientAborted) {
+      log.error('[PHASE1] Exited retry loop without success, aborting turn.');
+      if (!res.writableEnded) res.end();
+      return;
+    }
   }
 
   send('phase', { phase: 1, label: '规划大纲', status: 'done', outline: phase1Result.outline });
@@ -387,7 +441,7 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
   if (clientAborted) { if (!res.writableEnded) res.end(); return; }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // PHASE 3 — Main Narrative Generation (streaming)
+  // PHASE 3 — Main Narrative Generation (streaming, up to MAX_RETRIES retries)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   send('phase', { phase: 3, label: '生成叙事', status: 'start' });
 
@@ -397,28 +451,68 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
   );
   log.chatReq(session.id + ':p3', p3Messages);
 
-  const lastMsgP3  = p3Messages[p3Messages.length - 1];
-  const prefillP3  = lastMsgP3?.role === 'assistant' ? (lastMsgP3.content || '') : '';
-
-  if (prefillP3 && !clientAborted) send('chunk', { delta: prefillP3 });
+  const lastMsgP3 = p3Messages[p3Messages.length - 1];
+  const prefillP3 = lastMsgP3?.role === 'assistant' ? (lastMsgP3.content || '') : '';
 
   let phase3Response = '';
-  const t0p3 = Date.now();
-  await createCompletion(llmConfig, p3Messages, {
-    stream:    true,
-    onRequest: (nReq) => { llmNodeReq = nReq; },
-    onChunk:   (delta, accumulated) => {
-      phase3Response = (prefillP3 && !accumulated.startsWith('<think>'))
-        ? prefillP3 + accumulated
-        : accumulated;
-      if (!clientAborted) send('chunk', { delta });
-    },
-  });
-  if (prefillP3 && !phase3Response.startsWith('<think>') && !phase3Response.startsWith(prefillP3)) {
-    phase3Response = prefillP3 + phase3Response;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (clientAborted) break;
+
+    if (attempt > 0) {
+      // Tell frontend to clear streamed text and show retry indicator
+      send('phase', { phase: 3, label: '生成叙事', status: 'retry', attempt });
+      log.info(`[PHASE3] Retry ${attempt}/${MAX_RETRIES} (prev: ${phase3Response.length} chars)`);
+    }
+
+    if (prefillP3 && !clientAborted) send('chunk', { delta: prefillP3 });
+
+    let attemptResponse = '';
+    const t0p3 = Date.now();
+    try {
+      await createCompletion(llmConfig, p3Messages, {
+        stream:    true,
+        onRequest: (nReq) => { llmNodeReq = nReq; if (clientAborted) nReq.destroy(); },
+        onChunk:   (delta, accumulated) => {
+          attemptResponse = (prefillP3 && !accumulated.startsWith('<think>'))
+            ? prefillP3 + accumulated
+            : accumulated;
+          if (!clientAborted) send('chunk', { delta });
+        },
+      });
+    } catch (err) {
+      log.warn(`[PHASE3] Attempt ${attempt + 1}/${MAX_RETRIES + 1} error: ${err.message}`);
+      if (attempt < MAX_RETRIES) continue;
+      log.error('[PHASE3] All attempts failed, aborting turn.');
+      if (!res.writableEnded) res.end();
+      return;
+    }
+
+    if (prefillP3 && !attemptResponse.startsWith('<think>') && !attemptResponse.startsWith(prefillP3)) {
+      attemptResponse = prefillP3 + attemptResponse;
+    }
+    const durP3 = Date.now() - t0p3;
+    log.llm({ model: llmConfig.model, baseUrl: llmConfig.baseUrl, msgCount: p3Messages.length, stream: true, durationMs: durP3, responseChars: attemptResponse.length, phase: 3 });
+    log.chatResp(session.id + ':p3', attemptResponse, durP3);
+
+    if (clientAborted) break;
+
+    if (attemptResponse.length < MIN_P3_CHARS) {
+      log.warn(`[PHASE3] Response too short (${attemptResponse.length} chars) on attempt ${attempt + 1}/${MAX_RETRIES + 1}`);
+      if (attempt < MAX_RETRIES) continue;
+      log.error('[PHASE3] All attempts too short, aborting turn.');
+      if (!res.writableEnded) res.end();
+      return;
+    }
+
+    phase3Response = attemptResponse;
+    break;
   }
-  log.llm({ model: llmConfig.model, baseUrl: llmConfig.baseUrl, msgCount: p3Messages.length, stream: true, durationMs: Date.now() - t0p3, responseChars: phase3Response.length, phase: 3 });
-  log.chatResp(session.id + ':p3', phase3Response, Date.now() - t0p3);
+
+  if (!phase3Response && !clientAborted) {
+    log.error('[PHASE3] Exited retry loop without valid response, aborting turn.');
+    if (!res.writableEnded) res.end();
+    return;
+  }
 
   send('phase', { phase: 3, label: '生成叙事', status: 'done' });
 
@@ -431,11 +525,13 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
 
   let phase4Response = '';
   try {
-    const MAX_P4_RETRIES = 2;
+    const MAX_P4_RETRIES = MAX_RETRIES;
     const p4BaseMessages  = buildPhase4Messages(charCard, session.statData, phase3Response);
     const t0p4 = Date.now();
 
     for (let attempt = 0; attempt <= MAX_P4_RETRIES; attempt++) {
+      if (clientAborted) break;
+
       // On retry: attach partial response as assistant prefill + ask to continue
       const p4Messages = (attempt === 0 || !phase4Response)
         ? p4BaseMessages
@@ -452,7 +548,7 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
       let finishReason  = 'stop';
       await createCompletion(phase4Config, p4Messages, {
         stream:         true,
-        onRequest:      (nReq) => { llmNodeReq = nReq; },
+        onRequest:      (nReq) => { llmNodeReq = nReq; if (clientAborted) nReq.destroy(); },
         onFinishReason: (fr)   => { finishReason = fr; },
         onChunk:        (_delta, accumulated) => {
           chunkText = accumulated;
@@ -493,6 +589,8 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
 
   send('phase', { phase: 4, label: '更新状态', status: 'done' });
 
+  if (clientAborted) { if (!res.writableEnded) res.end(); return; }
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // FINALIZE — combine Phase 3 + Phase 4, process variables, save
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -503,6 +601,7 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
   // Process UpdateVariable from Phase 4 (and ignore any stray ones in Phase 3)
   const templateVars = { userName: userPersona.name, charName: charCard.name };
   processUpdateVariables(phase4Response, session.statData, templateVars);
+  propagateWorldTime(session.statData);
   runAutoCalc(session.statData);
   syncSessionCharProfile(session);
 

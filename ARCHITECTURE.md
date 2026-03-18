@@ -1,7 +1,7 @@
 # 无限武库 游戏系统 — 程序架构说明文档
 
-> 最后更新：2026-03-14  
-> 适用版本：当前代码库（内容层内置 + 运行时编辑器支持 + 抽卡系统 + 世界身份继承）
+> 最后更新：2026-03-18  
+> 适用版本：当前代码库（内容层内置 + 运行时编辑器支持 + 抽卡系统 + 世界身份继承 + 控制台分流 + 人性化统一 UI 皮肤 + 世界时间轴同步系统 + 回归主世界兑换）
 
 ---
 
@@ -326,6 +326,28 @@ messages[N]    assistant  prefill            — role:'assistant' prompts
 - `worldArchiveStore.js`：`data/world-archives.json` 读写，含 `detectTierRange()`
 - `worldEngine.js`：`applyWorldArchiveToSession(session, archive, opts)` — 将世界档案写入 session
   - `opts.inheritIdentity`：是否继承世界身份（false 时 WorldIdentity=null，Location 使用通用描述）
+  - 创建的 archiveEntry 包含完整 `TimeFlow`（`type:ratio, ratioToBase:'1:1'`）和 `Time.TotalSeconds=0`
+
+### 世界时间轴同步系统
+
+**数据字段**（均在 `statData.Multiverse` 下）：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `BaselineSeconds` | float | 基准时间轴累计秒数，服务端维护 |
+| `OriginWorldKey` | string | 主世界名称，首次 use-anchor 时自动设定 |
+| `CurrentWorldElapsedSeconds` | int (临时) | Phase 4 LLM 写入的触发字段，服务端读后删除 |
+| `Archive.Time.TotalSeconds` | float | 该世界累计秒数，服务端维护 |
+| `Archive.Time.Clock` | `["HH:MM:SS","Time"]` | 由服务端从 TotalSeconds 计算，LLM 禁止写入 |
+| `Archive.Time.JustEntered` | bool (临时) | use-anchor/return-home 写入，Phase 4 后删除 |
+| `Archive.TimeFlow.ratioToBase` | string | `"BASE:WORLD"` 格式，如 `"1:3"` |
+
+**数据流**：
+1. Phase 4 LLM：估算当前世界流逝秒数（精确到秒），输出 `CurrentWorldElapsedSeconds`，可选更新叙事 `Time.Date`
+2. `propagateWorldTime(statData)`（`varEngine.js`）：在 `processUpdateVariables` 之后调用；读取秒数→更新当前世界 TotalSeconds/Clock→计算 baseElapsed→传播到所有背景世界
+3. 变量回退：所有时间字段在 `statData` 中，`statSnapshotBefore` 快照自动覆盖
+
+**回归主世界**：`POST /api/shop/return-home`（`gameRoutes.js`），消耗 20,000 积分，切换 `CurrentWorldName = OriginWorldKey`，设置 `JustEntered=true`。商城页侧边栏显示固定卡片。
 
 ### 角色生成子系统 `features/character/`
 
@@ -383,11 +405,32 @@ function registerAllRoutes(app, deps) {
 
 | 文件 | 功能 |
 |---|---|
-| `index.html` / `app.js` | 主游戏界面（HUD、消息流、新建存档向导） |
-| `shop.html` / `shop.js` | 商城界面（评估、兑换、世界锚点 + 身份选择弹窗） |
-| `character.html` / `character.js` | 角色生成界面 |
-| `preset.html` / `preset.js` | 预设编辑器（提示词开关/排序/内容编辑 + 正则规则管理） |
-| `worldbook.html` / `worldbook.js` | 世界书编辑器（条目开关/排序/内容编辑） |
+| `index.html` / `app.js` | 主游戏界面（对话、状态栏、新建存档向导） |
+| `hub.html` / `hub.js` / `hub.css` | 控制台入口（一体化接口配置 + 页面分工导航） |
+| `shop.html` / `shop.js` | 商城界面（评估、兑换、抽卡、世界锚点；详情页双栏可读布局） |
+| `character.html` / `character.js` | 角色生成界面（档案列表接入统一骨架/空状态，高风险删除走统一确认弹窗） |
+| `preset.html` / `preset.js` | 预设编辑器（提示词开关/排序/内容编辑 + 正则规则管理；删除/离开/重载确认接入统一确认弹窗） |
+| `ui-humanized.css` | 全站统一覆盖层（字体、按钮、状态栏、弹窗可读性） |
+| `ui-feedback.js` / `ui-feedback.css` | 全站反馈层（统一 toast、危险操作确认弹窗、加载骨架/空状态） |
+
+### UI 设计风格（人性化统一皮肤）
+
+前端在保留深色基础上，新增 `ui-humanized.css` 作为统一覆盖层，核心目标是降低“终端感”，提升新手可读性与跨页面一致性：
+
+| 维度 | 规范值 |
+|---|---|
+| 字体 | 统一使用中文友好的 UI 字体栈（`Microsoft YaHei UI`/`PingFang SC`/`Segoe UI`） |
+| 状态栏 | `stat-float` 与主界面字体/间距同步，不再使用独立终端字体 |
+| 弹窗 | 商城详情弹窗宽度提升至 `min(96vw, 1040px)`，避免信息展示不全 |
+| 按钮 | 全站按钮圆角与交互反馈统一（更大点击面积） |
+| 页面分工 | 配置与导航集中到 `/hub`，游戏页聚焦“对话与状态” |
+| 反馈系统 | 统一 `UIFeedback`：已覆盖主页/设置/商城/角色/预设的 toast + 高风险 confirm + 骨架/空状态模板 |
+
+### 设置页职责重组（`settings.html`）
+
+- `接口与模型` 面板统一承载：主接口配置 + 商城接口覆盖（可选）
+- 通过“继承主接口”的默认策略实现傻瓜化配置：只填主接口即可开局
+- 多阶段、外观、其他信息保留独立面板，避免与接口配置混杂
 
 ### 世界身份继承 UI（app.js + shop.js）
 

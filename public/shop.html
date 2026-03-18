@@ -7,6 +7,8 @@
   <script src="theme.js"></script>
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="shop.css"/>
+  <link rel="stylesheet" href="ui-humanized.css"/>
+  <link rel="stylesheet" href="ui-feedback.css"/>
 </head>
 <body>
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
@@ -18,7 +20,7 @@
   </div>
   <div class="shop-header-right">
     <span id="apiIndicator" class="api-indicator" title="当前商城 API">⚙ 加载中…</span>
-    <a href="/settings#shop-api" class="btn btn-ghost btn-sm" style="text-decoration:none" id="btnShopSettings">🔧 商城API</a>
+    <a href="/hub" class="btn btn-ghost btn-sm" style="text-decoration:none" id="btnShopSettings">🧭 控制台</a>
     <label class="shop-label">当前存档：</label>
     <select id="sessionSelect" class="shop-select">
       <option value="">— 不关联存档 —</option>
@@ -179,6 +181,23 @@
         <div id="archivePoolPanel" class="archive-pool-panel"></div>
       </div>
     </section>
+
+    <!-- Return Home Panel -->
+    <section class="filter-panel return-home-panel" id="returnHomePanel" style="display:none">
+      <h3 class="filter-title">🏠 回归主世界</h3>
+      <p class="gen-hint" style="font-size:11px;margin-bottom:8px">
+        主世界：<strong id="originWorldName">—</strong><br>
+        当前世界：<span id="currentWorldName">—</span>
+      </p>
+      <div class="return-home-cost">
+        <span class="return-home-price">20,000 积分</span>
+        <span class="return-home-balance">余额：<span id="returnHomeBalance">0</span></span>
+      </div>
+      <button id="btnReturnHome" class="btn btn-primary" style="width:100%;margin-top:8px">
+        传送回主世界
+      </button>
+      <div id="returnHomeMsg" class="gen-hint" style="margin-top:6px;display:none"></div>
+    </section>
   </aside>
 
   <!-- RIGHT: Items Grid (tab=items) -->
@@ -280,7 +299,7 @@
 </div>
 
 <!-- ── Item Detail Modal ──────────────────────────────────────────────────── -->
-<div id="detailModal" class="modal" style="display:none">
+<div id="detailModal" class="shop-modal-overlay" style="display:none">
   <div class="modal-backdrop" id="modalBackdrop"></div>
   <div class="modal-box">
     <button class="modal-close" id="modalClose">✕</button>
@@ -289,6 +308,7 @@
 </div>
 
 <script src="panel.js"></script>
+<script src="ui-feedback.js"></script>
 <script src="shop.js"></script>
 </body>
 </html>

@@ -60,6 +60,14 @@ function handleStreamResponse(res, onChunk, onFinishReason, resolve, reject) {
     resolve(accumulated);
   });
 
+  // When the socket is destroyed (e.g. req.destroy() called on abort), Node.js may
+  // emit 'close' on the response stream without ever emitting 'end', leaving the
+  // Promise permanently pending. Resolve with whatever was accumulated so far.
+  res.on('close', () => {
+    if (inThink) accumulated += '</think>\n';
+    resolve(accumulated);
+  });
+
   res.on('error', reject);
 }
 

@@ -40,11 +40,22 @@ function esc(str) {
 }
 
 function toast(msg, type = 'info', duration = 3000) {
+  if (window.UIFeedback) {
+    window.UIFeedback.toast(msg, { type, duration });
+    return;
+  }
   const el = document.createElement('div');
   el.className = `toast ${type}`;
   el.textContent = msg;
   toastContainer.appendChild(el);
   setTimeout(() => el.remove(), duration);
+}
+
+async function confirmDanger(message, title = '确认操作', confirmText = '确认') {
+  if (window.UIFeedback) {
+    return window.UIFeedback.confirmDanger({ title, message, confirmText });
+  }
+  return confirm(message);
 }
 
 function markDirty() {
@@ -118,6 +129,10 @@ function compileRegex(findRegex) {
 // ─── Load / Save ──────────────────────────────────────────────────────────────
 
 async function loadFromServer() {
+  if (window.UIFeedback) {
+    $('prompt-list').innerHTML = window.UIFeedback.renderLoadingLines(5);
+    $('regex-list').innerHTML = window.UIFeedback.renderLoadingLines(3);
+  }
   try {
     const res  = await fetch('/api/preset/data');
     const json = await res.json();
@@ -398,19 +413,21 @@ $('btn-pe-delete').addEventListener('click', () => {
   if (!editingPromptIdentifier) return;
   const pIdx = findPromptIdx(editingPromptIdentifier);
   const name = pIdx >= 0 ? presetData.prompts[pIdx]?.name || editingPromptIdentifier : editingPromptIdentifier;
-  if (!confirm(`删除「${name}」？这同时会从排列顺序中移除。`)) return;
+  confirmDanger(`删除「${name}」？这同时会从排列顺序中移除。`, '删除提示词', '确认删除').then((ok) => {
+    if (!ok) return;
 
-  // Remove from prompts[]
-  if (pIdx >= 0) presetData.prompts.splice(pIdx, 1);
-  // Remove from prompt_order
-  const oList = getOrderList();
-  const oIdx  = oList.findIndex(e => e.identifier === editingPromptIdentifier);
-  if (oIdx >= 0) oList.splice(oIdx, 1);
+    // Remove from prompts[]
+    if (pIdx >= 0) presetData.prompts.splice(pIdx, 1);
+    // Remove from prompt_order
+    const oList = getOrderList();
+    const oIdx  = oList.findIndex(e => e.identifier === editingPromptIdentifier);
+    if (oIdx >= 0) oList.splice(oIdx, 1);
 
-  $('modal-prompt').style.display = 'none';
-  renderPromptList();
-  markDirty();
-  toast('已删除', 'info');
+    $('modal-prompt').style.display = 'none';
+    renderPromptList();
+    markDirty();
+    toast('已删除', 'info');
+  });
 });
 
 $('btn-pe-cancel').addEventListener('click', () => { $('modal-prompt').style.display = 'none'; });
@@ -621,16 +638,18 @@ $('btn-wb-delete').addEventListener('click', () => {
   if (!editingWbIdentifier) return;
   const pIdx = findPromptIdx(editingWbIdentifier);
   const name = pIdx >= 0 ? presetData.prompts[pIdx]?.name || editingWbIdentifier : editingWbIdentifier;
-  if (!confirm(`删除世界书原子「${name}」？此操作不可撤销。`)) return;
-  if (pIdx >= 0) presetData.prompts.splice(pIdx, 1);
-  const oList = getOrderList();
-  const oIdx  = oList.findIndex(e => e.identifier === editingWbIdentifier);
-  if (oIdx >= 0) oList.splice(oIdx, 1);
-  $('modal-wb').style.display = 'none';
-  renderPromptList();
-  if ($('tab-phases').classList.contains('active')) renderPhaseView();
-  markDirty();
-  toast('已删除', 'info');
+  confirmDanger(`删除世界书原子「${name}」？此操作不可撤销。`, '删除世界书原子', '确认删除').then((ok) => {
+    if (!ok) return;
+    if (pIdx >= 0) presetData.prompts.splice(pIdx, 1);
+    const oList = getOrderList();
+    const oIdx  = oList.findIndex(e => e.identifier === editingWbIdentifier);
+    if (oIdx >= 0) oList.splice(oIdx, 1);
+    $('modal-wb').style.display = 'none';
+    renderPromptList();
+    if ($('tab-phases').classList.contains('active')) renderPhaseView();
+    markDirty();
+    toast('已删除', 'info');
+  });
 });
 
 $('btn-wb-cancel').addEventListener('click', () => { $('modal-wb').style.display = 'none'; });
@@ -850,7 +869,7 @@ function reindexPhaseOrder(phaseId, bodyEl) {
  * - If auto-derive: compute derived phases, remove phaseId, set explicit
  * - If only one phase left: warns user, still allows it (entry just leaves this phase)
  */
-function removeEntryFromPhase(promptEntry, phaseId) {
+async function removeEntryFromPhase(promptEntry, phaseId) {
   const wb     = promptEntry._wbData || {};
   const current = Array.isArray(wb._phases) && wb._phases.length > 0
     ? [...wb._phases]
@@ -858,7 +877,12 @@ function removeEntryFromPhase(promptEntry, phaseId) {
 
   const remaining = current.filter(n => n !== phaseId);
   if (remaining.length === 0) {
-    if (!confirm(`「${promptEntry.name || promptEntry.identifier}」将不再属于任何阶段（仍会保留在条目列表中）。确定移除？`)) return;
+    const ok = await confirmDanger(
+      `「${promptEntry.name || promptEntry.identifier}」将不再属于任何阶段（仍会保留在条目列表中）。确定移除？`,
+      '移除阶段归属',
+      '确认移除'
+    );
+    if (!ok) return;
   }
   if (!promptEntry._wbData) promptEntry._wbData = {};
   promptEntry._wbData._phases = remaining.length > 0 ? remaining : [];
@@ -1045,12 +1069,14 @@ $('btn-re-delete').addEventListener('click', () => {
   if (editingRegexIdx < 0) return;
   const rules = presetData.extensions.SPreset.RegexBinding.regexes;
   const name  = rules[editingRegexIdx]?.scriptName || '该规则';
-  if (!confirm(`删除「${name}」？`)) return;
-  rules.splice(editingRegexIdx, 1);
-  $('modal-regex').style.display = 'none';
-  renderRegexList();
-  markDirty();
-  toast('已删除', 'info');
+  confirmDanger(`删除「${name}」？`, '删除正则规则', '确认删除').then((ok) => {
+    if (!ok) return;
+    rules.splice(editingRegexIdx, 1);
+    $('modal-regex').style.display = 'none';
+    renderRegexList();
+    markDirty();
+    toast('已删除', 'info');
+  });
 });
 
 $('btn-re-cancel').addEventListener('click', () => { $('modal-regex').style.display = 'none'; });
@@ -1061,13 +1087,18 @@ $('btn-add-regex').addEventListener('click', () => openRegexModal(-1));
 
 $('btn-save').addEventListener('click', saveToServer);
 $('btn-reload').addEventListener('click', () => {
-  if (isDirty && !confirm('有未保存的修改，确认重新加载？')) return;
-  loadFromServer();
+  if (!isDirty) {
+    loadFromServer();
+    return;
+  }
+  confirmDanger('有未保存的修改，确认重新加载？', '重新加载', '确认重载')
+    .then((ok) => { if (ok) loadFromServer(); });
 });
 
-$('btn-back').addEventListener('click', () => {
+$('btn-back').addEventListener('click', async () => {
   if (isDirty) {
-    if (!confirm('有未保存的修改，确认离开？')) return;
+    const ok = await confirmDanger('有未保存的修改，确认离开？', '离开页面', '确认离开');
+    if (!ok) return;
   }
   window.location.href = '/';
 });

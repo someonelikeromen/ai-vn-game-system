@@ -133,10 +133,65 @@ async function onSessionChange() {
   } catch (_) { state.sessionWorlds = []; }
   populateWorldSelector();
 
+  // Update return-home panel
+  updateReturnHomePanel(statData);
+
   // Refresh gacha pools if the gacha tab is currently active
   if ($('shopMainGacha')?.style.display !== 'none') {
     loadGachaPools();
     loadGachaPending();
+  }
+}
+
+function updateReturnHomePanel(statData) {
+  const panel      = $('returnHomePanel');
+  const mv         = statData?.Multiverse;
+  const originKey  = mv?.OriginWorldKey;
+  const curName    = Array.isArray(mv?.CurrentWorldName) ? mv.CurrentWorldName[0] : (mv?.CurrentWorldName || null);
+
+  if (!panel) return;
+  if (!originKey || curName === originKey) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = '';
+  $('originWorldName').textContent  = originKey;
+  $('currentWorldName').textContent = curName || '未知';
+
+  const pts = statData?.CharacterSheet?.Resources?.Points ?? 0;
+  $('returnHomeBalance').textContent = typeof pts === 'number' ? pts.toLocaleString() : pts;
+
+  const btn = $('btnReturnHome');
+  if (btn) btn.disabled = pts < 20000;
+}
+
+async function executeReturnHome() {
+  const sessionId = $('sessionSelect')?.value;
+  if (!sessionId) { toast('请先选择存档', true); return; }
+
+  const msgEl = $('returnHomeMsg');
+  const btn   = $('btnReturnHome');
+  if (btn) btn.disabled = true;
+  if (msgEl) { msgEl.textContent = '传送中…'; msgEl.style.display = ''; }
+
+  try {
+    const res = await fetch('/api/shop/return-home', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '请求失败');
+
+    toast(`已回归主世界「${data.worldName}」，消耗 20,000 积分`);
+    if (msgEl) msgEl.style.display = 'none';
+    // Re-load session to refresh panel
+    await onSessionChange();
+  } catch (e) {
+    toast(e.message, true);
+    if (msgEl) { msgEl.textContent = e.message; msgEl.style.display = ''; }
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -183,11 +238,19 @@ function populateWorldSelector() {
 
 // ── Items ─────────────────────────────────────────────────────────────────────
 async function loadItems() {
+  const grid = $('itemsGrid');
+  if (grid && window.UIFeedback) {
+    grid.innerHTML = window.UIFeedback.renderLoadingLines(6);
+  }
   try {
     state.allItems = await fetch('/api/shop/items').then((r) => r.json());
     await loadArchiveCounts();
     renderItems();
-  } catch (_) {}
+  } catch (_) {
+    if (grid && window.UIFeedback) {
+      grid.innerHTML = window.UIFeedback.renderEmpty('加载商城失败，请稍后重试。');
+    }
+  }
 }
 
 async function loadArchiveCounts() {
@@ -252,7 +315,12 @@ function renderItems() {
 
   if (!items.length) {
     grid.innerHTML = '';
-    if (empty) { grid.appendChild(empty); empty.style.display = ''; }
+    if (empty) {
+      grid.appendChild(empty);
+      empty.style.display = '';
+      const text = empty.querySelector('.muted');
+      if (text) text.textContent = '输入描述并点击「生成评估」后，这里会出现可兑换条目。';
+    }
     return;
   }
   if (empty) empty.style.display = 'none';
@@ -415,6 +483,9 @@ function bindEvents() {
   // World anchor
   $('btnGenWorldAnchor').addEventListener('click', startWorldAnchorGen);
 
+  // Return home
+  $('btnReturnHome')?.addEventListener('click', executeReturnHome);
+
   // Cart
   $('btnCartToggle').addEventListener('click', () => {
     state.cartOpen = !state.cartOpen;
@@ -499,7 +570,12 @@ async function checkoutCart() {
 
   const items = state.cart.map(id => state.allItems.find(i => i.id === id)).filter(Boolean);
   const total = items.reduce((s, i) => s + (i.pricePoints || 0), 0);
-  if (!window.confirm(`批量兑换 ${items.length} 件物品？\n\n${items.map(i => `• ${i.name}`).join('\n')}\n\n总费用：${total.toLocaleString()} 积分`)) return;
+  const okBatch = await confirmRisk({
+    title: '批量兑换确认',
+    message: `批量兑换 ${items.length} 件物品？\n\n${items.map(i => `• ${i.name}`).join('\n')}\n\n总费用：${total.toLocaleString()} 积分`,
+    confirmText: '确认兑换',
+  });
+  if (!okBatch) return;
 
   const btn = $('btnCartCheckout');
   if (btn) { btn.disabled = true; btn.textContent = '兑换中…'; }
@@ -698,7 +774,11 @@ async function startGeneration() {
 
   // If session bound and no world selected, warn but allow
   if (sessionId && !sourceWorld) {
-    const ok = confirm('未选择来源世界，将不限制评估来源。\n建议选择一个世界以获得更准确的评估结果。\n\n继续生成？');
+    const ok = await confirmRisk({
+      title: '继续生成确认',
+      message: '未选择来源世界，将不限制评估来源。\n建议选择一个世界以获得更准确的评估结果。\n\n继续生成？',
+      confirmText: '继续生成',
+    });
     if (!ok) return;
   }
 
@@ -858,7 +938,7 @@ async function doRedeem(itemId, sessionId) {
     ((item.requiredMedals || []).length
       ? '\n徽章：' + item.requiredMedals.map((m) => `${m.stars}★×${m.count}`).join(' + ')
       : '');
-  if (!window.confirm(confirmMsg)) return;
+  if (!await confirmRisk({ title: '兑换确认', message: confirmMsg, confirmText: '确认兑换' })) return;
 
   try {
     const resp = await fetch('/api/shop/redeem', {
@@ -909,7 +989,7 @@ async function doPull(itemId, sessionId) {
       ? '\n徽章：' + item.requiredMedals.map(m => `${m.stars}★×${m.count}`).join(' + ')
       : '') +
     `\n\n将从 ${poolCount} 个 ${tierLabel} 世界档案中随机抽取一个世界，加入武库（需在状态面板手动激活）。`;
-  if (!window.confirm(confirmMsg)) return;
+  if (!await confirmRisk({ title: '随机穿越确认', message: confirmMsg, confirmText: '确认穿越' })) return;
 
   try {
     const resp = await fetch('/api/worldanchor/pull', {
@@ -1028,7 +1108,7 @@ async function deleteItem(itemId) {
   if (!item) return;
   if (item.baseAnchor) { toast('随机锚点基础项不可删除', true); return; }
   if (item.system) { toast('系统项目不可删除', true); return; }
-  if (!window.confirm(`确认删除「${item.name}」？`)) return;
+  if (!await confirmRisk({ title: '删除商品', message: `确认删除「${item.name}」？`, confirmText: '确认删除' })) return;
   try {
     const resp = await fetch(`/api/shop/items/${itemId}`, { method: 'DELETE' });
     const data = await resp.json().catch(() => ({}));
@@ -1043,7 +1123,7 @@ async function deleteItem(itemId) {
 }
 
 async function deleteArchive(archiveId) {
-  if (!window.confirm('确认从档案库中删除该世界档案？')) return;
+  if (!await confirmRisk({ title: '删除世界档案', message: '确认从档案库中删除该世界档案？', confirmText: '确认删除' })) return;
   try {
     const resp = await fetch(`/api/worldanchor/archives/${archiveId}`, { method: 'DELETE' });
     if (!resp.ok) { toast('删除档案失败', true); return; }
@@ -1889,26 +1969,29 @@ function buildAbilityDetailHtml(item, sessionStat) {
     <span class="meta-chip">🏅 ${medStr}</span>
   </div>
 
-  <div class="detail-section">
-    <h3>描述</h3>
-    <div class="detail-desc">${escHtml(item.description || '')}</div>
+  <div class="detail-main-grid">
+    <div class="detail-main-col">
+      <div class="detail-section">
+        <h3>描述</h3>
+        <div class="detail-desc">${escHtml(item.description || '')}</div>
+      </div>
+      ${opsCompareH}
+      ${attrH ? `<div class="detail-section">
+        <h3>属性增量（应用至主角）</h3>
+        <div class="attr-delta-row">${attrH}</div>
+      </div>` : ''}
+      ${compareH}
+    </div>
+
+    <div class="detail-main-col">
+      ${effH ? `<div class="detail-section">
+        <h3>获得内容</h3>
+        <div class="eff-items-list">${effH}</div>
+      </div>` : ''}
+      ${evalBlock(item)}
+    </div>
   </div>
 
-  ${opsCompareH}
-
-  ${attrH ? `<div class="detail-section">
-    <h3>属性增量（应用至主角）</h3>
-    <div class="attr-delta-row">${attrH}</div>
-  </div>` : ''}
-
-  ${effH ? `<div class="detail-section">
-    <h3>获得内容</h3>
-    <div class="eff-items-list">${effH}</div>
-  </div>` : ''}
-
-  ${compareH}
-
-  ${evalBlock(item)}
   ${detailActions(item)}
 </div>`;
 }
@@ -2647,6 +2730,17 @@ function closeModal() {
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
+async function confirmRisk({ title, message, confirmText }) {
+  if (window.UIFeedback) {
+    return window.UIFeedback.confirmDanger({
+      title: title || '确认操作',
+      message: message || '是否继续？',
+      confirmText: confirmText || '确认',
+    });
+  }
+  return confirm(message || '是否继续？');
+}
+
 function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -2657,6 +2751,10 @@ function escHtml(str) {
 
 let toastTimer;
 function toast(msg, isError = false) {
+  if (window.UIFeedback) {
+    window.UIFeedback.toast(msg, { type: isError ? 'error' : 'success', duration: 3200 });
+    return;
+  }
   const existing = document.querySelector('.shop-toast');
   if (existing) existing.remove();
   const el = document.createElement('div');
@@ -2963,7 +3061,11 @@ async function discardGachaPending(pendingId) {
   const sessionId = $('sessionSelect')?.value;
   if (!sessionId) return;
 
-  if (!confirm('确定丢弃这件待领取物品？\n丢弃后将退还一次单抽费用。')) return;
+  if (!await confirmRisk({
+    title: '丢弃待领取物品',
+    message: '确定丢弃这件待领取物品？\n丢弃后将退还一次单抽费用。',
+    confirmText: '确认丢弃',
+  })) return;
 
   try {
     const resp = await fetch(`/api/sessions/${sessionId}/gacha/pending/${pendingId}`, { method: 'DELETE' });

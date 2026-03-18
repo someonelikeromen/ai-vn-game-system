@@ -35,7 +35,13 @@ function applyWorldArchiveToSession(session, archive, opts = {}) {
 
   const archiveEntry = {
     WorldName:   [archive.displayName, 'Name'],
-    Time:        { Date: [archive.timePeriod || '?', 'Date'], Clock: ['?', 'Time'], FlowRate: ['1.0', 'Rate'] },
+    Time:        {
+      Date:         [archive.timePeriod || '?', 'Date'],
+      Clock:        ['00:00:00', 'Time'],
+      FlowRate:     ['1:1', 'Rate'],
+      TotalSeconds: 0,
+    },
+    TimeFlow:    { type: 'ratio', ratioToBase: '1:1', description: '与主世界时间流速相同', notes: '' },
     Location:    [locationValue, 'Loc'],
     SocialWeb:   Object.fromEntries((archive.keyFactions || []).map(f => [f.name, [f.description, f.attitude || '']])),
     WorldRules:  archive.worldRules || [],

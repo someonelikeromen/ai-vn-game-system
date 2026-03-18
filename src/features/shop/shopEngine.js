@@ -353,7 +353,12 @@ function buildApplyScript(item) {
     const archiveEntry = {
       worldKey,
       WorldName:    [wd.displayName || item.name || '未知世界', 'Name'],
-      Time:         { Date: [wd.timePeriod || '?', 'Date'], Clock: ['?', 'Time'], FlowRate: [_buildFlowRateLabel(wd.timeFlow), 'Rate'] },
+      Time:         {
+        Date:         [wd.timePeriod || '?', 'Date'],
+        Clock:        ['00:00:00', 'Time'],
+        FlowRate:     [_buildFlowRateLabel(wd.timeFlow), 'Rate'],
+        TotalSeconds: 0,
+      },
       TimeFlow:     wd.timeFlow || null,
       Location:     [wd.initialLocation || '?', 'Loc'],
       SocialWeb:    Object.fromEntries((wd.keyFactions || []).map(f => [f.name, [f.description, f.attitude]])),
@@ -366,6 +371,11 @@ function buildApplyScript(item) {
     };
     // Store in Arsenal.WorldAnchors instead of immediately activating
     lines.push(`_.insert('Arsenal.WorldAnchors', ${JSON.stringify(archiveEntry)});`);
+  }
+
+  // 11. WorldReturn — switch CurrentWorldName back to OriginWorldKey
+  if (item.type === 'WorldReturn') {
+    lines.push(`_.set('Multiverse.CurrentWorldName', [stat_data.Multiverse?.OriginWorldKey || '', 'Name']);`);
   }
 
   return lines.join('\n');

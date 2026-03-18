@@ -6,6 +6,10 @@ const $ = id => document.getElementById(id);
 const qs = sel => document.querySelector(sel);
 
 function toast(msg, duration = 2800) {
+  if (window.UIFeedback) {
+    window.UIFeedback.toast(msg, { type: 'info', duration });
+    return;
+  }
   const el = $('toast');
   el.textContent = msg;
   el.style.display = 'block';
@@ -15,6 +19,13 @@ function toast(msg, duration = 2800) {
     el.classList.remove('show');
     setTimeout(() => { el.style.display = 'none'; }, 300);
   }, duration);
+}
+
+async function confirmDanger(message, title = '确认操作', confirmText = '确认') {
+  if (window.UIFeedback) {
+    return window.UIFeedback.confirmDanger({ title, message, confirmText });
+  }
+  return confirm(message);
 }
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -224,7 +235,8 @@ async function generateFromQuiz() {
 
   const answers = collectQuizAnswers();
   if (answers.unanswered > Math.floor(state.questions.length * 0.4)) {
-    if (!confirm(`还有 ${answers.unanswered} 道题未回答，继续生成？`)) return;
+    const ok = await confirmDanger(`还有 ${answers.unanswered} 道题未回答，继续生成？`, '问卷未完成', '继续生成');
+    if (!ok) return;
   }
 
   state.lastGenMode = 'quiz';
@@ -343,11 +355,15 @@ function setupArchivePanel() {
 
 async function loadArchiveList() {
   const listEl = $('archiveList');
-  listEl.innerHTML = '<p class="archive-loading">加载中…</p>';
+  listEl.innerHTML = window.UIFeedback
+    ? window.UIFeedback.renderLoadingLines(4)
+    : '<p class="archive-loading">加载中…</p>';
   try {
     const chars = await fetch('/api/characters').then(r => r.json());
     if (!chars.length) {
-      listEl.innerHTML = '<p class="archive-empty">暂无保存的角色档案。<br>生成角色后点击「存入档案库」即可保存。</p>';
+      listEl.innerHTML = window.UIFeedback
+        ? window.UIFeedback.renderEmpty('暂无保存的角色档案。生成角色后点击「存入档案库」即可保存。')
+        : '<p class="archive-empty">暂无保存的角色档案。<br>生成角色后点击「存入档案库」即可保存。</p>';
       return;
     }
     listEl.innerHTML = chars.map(c => renderArchiveCard(c)).join('');
@@ -361,12 +377,15 @@ async function loadArchiveList() {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.id;
         const name = btn.dataset.name;
-        if (!confirm(`确定删除角色「${name}」吗？此操作不可恢复。`)) return;
+        const ok = await confirmDanger(`确定删除角色「${name}」吗？此操作不可恢复。`, '删除角色', '确认删除');
+        if (!ok) return;
         await deleteCharFromArchive(id);
       });
     });
   } catch (e) {
-    listEl.innerHTML = `<p class="archive-empty error">加载失败：${escHtml(e.message)}</p>`;
+    listEl.innerHTML = window.UIFeedback
+      ? window.UIFeedback.renderEmpty(`加载失败：${escHtml(e.message)}`)
+      : `<p class="archive-empty error">加载失败：${escHtml(e.message)}</p>`;
   }
 }
 

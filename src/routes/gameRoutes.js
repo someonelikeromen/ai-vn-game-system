@@ -12,9 +12,8 @@
  */
 
 const log = require('../core/logger');
-const { buildStatSnapshot, processUpdateVariables, runAutoCalc } = require('../engine/varEngine');
+const { buildStatSnapshot, processUpdateVariables, runAutoCalc, syncWorldIdentity, propagateWorldTime } = require('../engine/varEngine');
 const { fullDisplayPipeline } = require('../engine/regexPipeline');
-const { syncWorldIdentity } = require('../engine/varEngine');
 const { runStreamTurn } = require('../engine/gameLoop');
 const { loadGameAssets, getUserPersona, applySessionCharName } = require('../core/config');
 
@@ -28,6 +27,22 @@ function sseHeaders(res) {
 function registerRoutes(app, deps) {
   const { sessionMgr, withSessionLock, hasLock, getConfig } = deps;
 
+  /**
+   * Wait up to `ms` milliseconds for the session lock to release.
+   * Returns true if the lock is free (or became free within the window).
+   * Handles the race condition where the client disconnects (stop / navigate away)
+   * and the backend needs a brief moment to process the close event and release the lock.
+   */
+  async function waitForLock(sessionId, ms = 1500) {
+    if (!hasLock(sessionId)) return true;
+    const deadline = Date.now() + ms;
+    while (Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, 150));
+      if (!hasLock(sessionId)) return true;
+    }
+    return false;
+  }
+
   // ── POST /api/sessions/:id/message ─────────────────────────────────────────
   app.post('/api/sessions/:id/message', async (req, res) => {
     const session = sessionMgr.getSession(req.params.id);
@@ -36,7 +51,7 @@ function registerRoutes(app, deps) {
     const { content } = req.body || {};
     if (!content) return res.status(400).json({ error: 'content required' });
 
-    if (hasLock(req.params.id)) {
+    if (!await waitForLock(req.params.id)) {
       return res.status(409).json({ error: '当前存档正在处理中，请等待完成后再发送' });
     }
 
@@ -57,7 +72,7 @@ function registerRoutes(app, deps) {
     const session = sessionMgr.getSession(req.params.id);
     if (!session) return res.status(404).json({ error: 'Session not found' });
 
-    if (hasLock(req.params.id)) {
+    if (!await waitForLock(req.params.id)) {
       return res.status(409).json({ error: '当前存档正在处理中，请等待完成后再操作' });
     }
 
@@ -107,7 +122,7 @@ function registerRoutes(app, deps) {
       return res.status(400).json({ error: 'msgIdx and content required' });
     }
 
-    if (hasLock(req.params.id)) {
+    if (!await waitForLock(req.params.id)) {
       return res.status(409).json({ error: '当前存档正在处理中，请等待完成后再操作' });
     }
 
@@ -145,18 +160,24 @@ function registerRoutes(app, deps) {
       const anchor      = anchors[idx];
       const displayName = Array.isArray(anchor.WorldName) ? anchor.WorldName[0] : (anchor.WorldName || worldKey);
 
-      if (!session.statData.Multiverse) session.statData.Multiverse = { CurrentWorldName: null, Archives: {} };
-      if (!session.statData.Multiverse.Archives) session.statData.Multiverse.Archives = {};
+      if (!session.statData.Multiverse) session.statData.Multiverse = { CurrentWorldName: null, Archives: {}, BaselineSeconds: 0, OriginWorldKey: null };
+      const mv = session.statData.Multiverse;
+      if (!mv.Archives) mv.Archives = {};
+
       // When not inheriting identity, use a generic location to prevent
       // identity-specific text baked into anchor.Location from leaking to LLM.
-      const anchorLocationRaw = Array.isArray(anchor.Location) ? anchor.Location[0] : anchor.Location;
       const locationValue = inheritIdentity !== false
         ? (anchor.Location || ['?', 'Loc'])
         : [`「${displayName}」世界的某处起始区域（以外来穿越者身份抵达，尚未确定具体位置）`, 'Loc'];
 
-      session.statData.Multiverse.Archives[displayName] = {
+      // Ensure Time has TotalSeconds and initialize JustEntered for first-turn date sync
+      const anchorTime = anchor.Time || {};
+      if (anchorTime.TotalSeconds == null) anchorTime.TotalSeconds = 0;
+      anchorTime.JustEntered = true;
+
+      mv.Archives[displayName] = {
         WorldName:     anchor.WorldName,
-        Time:          anchor.Time,
+        Time:          anchorTime,
         TimeFlow:      anchor.TimeFlow || null,
         Location:      locationValue,
         SocialWeb:     anchor.SocialWeb     || {},
@@ -166,7 +187,12 @@ function registerRoutes(app, deps) {
         WorldIdentity: inheritIdentity !== false ? (anchor.WorldIdentity || null) : null,
       };
 
-      session.statData.Multiverse.CurrentWorldName = [displayName, 'Name'];
+      mv.CurrentWorldName = [displayName, 'Name'];
+
+      // Auto-set OriginWorldKey on first world activation
+      if (!mv.OriginWorldKey) mv.OriginWorldKey = displayName;
+      if (mv.BaselineSeconds == null) mv.BaselineSeconds = 0;
+
       if (inheritIdentity !== false) {
         syncWorldIdentity(session.statData, displayName);
       } else if (session.statData.CharacterSheet) {
@@ -175,7 +201,7 @@ function registerRoutes(app, deps) {
       anchors.splice(idx, 1);
 
       sessionMgr.saveSession(session);
-      log.session('USE_ANCHOR', `Session ${session.id} activated world "${displayName}" inheritIdentity=${inheritIdentity}`);
+      log.session('USE_ANCHOR', `Session ${session.id} activated world "${displayName}" originKey="${mv.OriginWorldKey}" inheritIdentity=${inheritIdentity}`);
       res.json({ ok: true, worldName: displayName, statData: session.statData });
     } catch (e) {
       log.error('POST /api/sessions/:id/use-anchor error', e);
@@ -344,6 +370,52 @@ function registerRoutes(app, deps) {
       res.json({ ok: true, removed: [...removeIndices].sort(), statData: buildStatSnapshot(session.statData) });
     } catch (e) {
       log.error('DELETE /api/sessions/:id/messages/:idx error', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ── POST /api/shop/return-home ──────────────────────────────────────────────
+  app.post('/api/shop/return-home', (req, res) => {
+    try {
+      const { sessionId } = req.body || {};
+      if (!sessionId) return res.status(400).json({ error: 'sessionId required' });
+
+      const session = sessionMgr.getSession(sessionId);
+      if (!session) return res.status(404).json({ error: 'Session not found' });
+
+      const mv = session.statData?.Multiverse;
+      if (!mv?.OriginWorldKey) return res.status(400).json({ error: '尚未设定主世界（未激活任何世界锚点）' });
+
+      const originKey = mv.OriginWorldKey;
+      const curKey    = Array.isArray(mv.CurrentWorldName) ? mv.CurrentWorldName[0] : mv.CurrentWorldName;
+      if (curKey === originKey) return res.status(400).json({ error: '你已身处主世界，无需回归' });
+
+      const RETURN_HOME_PRICE = 20000;
+      const cs     = session.statData?.CharacterSheet;
+      const points = cs?.Resources?.Points ?? 0;
+      if (points < RETURN_HOME_PRICE) {
+        return res.status(400).json({ error: `积分不足（需要 ${RETURN_HOME_PRICE}，当前 ${points}）` });
+      }
+
+      // Deduct points
+      cs.Resources.Points = points - RETURN_HOME_PRICE;
+
+      // Switch world
+      mv.CurrentWorldName = [originKey, 'Name'];
+
+      // Set JustEntered so Phase 4 re-syncs date on next turn
+      if (mv.Archives[originKey]) {
+        if (!mv.Archives[originKey].Time) mv.Archives[originKey].Time = {};
+        mv.Archives[originKey].Time.JustEntered = true;
+      }
+
+      syncWorldIdentity(session.statData, originKey);
+      sessionMgr.saveSession(session);
+
+      log.shop('RETURN_HOME', `Session ${session.id} returned to origin "${originKey}" cost=${RETURN_HOME_PRICE}`);
+      res.json({ ok: true, worldName: originKey, remainingPoints: cs.Resources.Points, statData: session.statData });
+    } catch (e) {
+      log.error('POST /api/shop/return-home error', e);
       res.status(500).json({ error: e.message });
     }
   });

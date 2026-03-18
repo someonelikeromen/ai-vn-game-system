@@ -722,6 +722,88 @@ function buildDepthInjectionSnapshotOnly(charCard, statData) {
  * @param {object} statData
  * @param {string} narrative   - Full text from Phase 3
  */
+/**
+ * Build the world time synchronization prompt block for Phase 4.
+ * LLM is only responsible for the current world's elapsed seconds + narrative date.
+ * Server handles propagation to all other worlds via propagateWorldTime().
+ */
+function buildTimeSyncBlock(statData) {
+  const mv = statData?.Multiverse;
+  if (!mv?.Archives) return '';
+
+  const curKey = Array.isArray(mv.CurrentWorldName) ? mv.CurrentWorldName[0] : mv.CurrentWorldName;
+  if (!curKey || !mv.Archives[curKey]) return '';
+
+  const cur = mv.Archives[curKey];
+  const tf  = cur.TimeFlow;
+
+  // Build flow rate label
+  let flowLabel = '1:1（与主世界同步）';
+  if (tf) {
+    if (tf.type === 'frozen')         flowLabel = '冻结（时间静止）';
+    else if (tf.type === 'fixed_interval') flowLabel = `固定跳跃：每次进入 +${tf.fixedJump || '?'}`;
+    else if (tf.type === 'hybrid')    flowLabel = tf.description || '复合规则';
+    else {
+      const r = tf.ratioToBase || '1:1';
+      const parts = r.split(':').map(s => s.trim());
+      flowLabel = parts[0] === parts[1] ? `${r}（与主世界同步）` : `${r}（基准${parts[0]}秒=此世界${parts[1]}秒）`;
+    }
+  }
+
+  const curDate  = Array.isArray(cur.Time?.Date)  ? cur.Time.Date[0]  : (cur.Time?.Date  || '?');
+  const curClock = Array.isArray(cur.Time?.Clock) ? cur.Time.Clock[0] : (cur.Time?.Clock || '?');
+  const totalSec = cur.Time?.TotalSeconds || 0;
+  const justEntered = cur.Time?.JustEntered === true;
+
+  // Escape world key for use in path (handles special chars like colons, spaces)
+  const escapedKey = curKey.includes('"') ? curKey.replace(/"/g, '\\"') : curKey;
+  const pathKey    = `"${escapedKey}"`;
+
+  if (justEntered) {
+    const fixedJumpNote = tf?.type === 'fixed_interval'
+      ? `\n⚡ 本次入境时间跳跃：${tf.fixedJump || '?'}，请将跳跃量一并计入流逝秒数。` : '';
+    return [
+      '---',
+      '',
+      '【世界时间同步任务（必须执行）】',
+      `⚠️ 你刚刚进入此世界（${curKey}）。`,
+      `系统时钟：${curClock}（已根据其他世界行动自动推进，累计 ${totalSec} 秒）`,
+      `上次记录日期：${curDate}`,
+      `时间流速：${flowLabel}`,
+      fixedJumpNote,
+      '',
+      '请在 <UpdateVariable> 中完成以下两项：',
+      '',
+      '1. 根据系统时钟和上次记录日期，计算当前实际日期并更新（必须）：',
+      `   _.set('Multiverse.Archives[${pathKey}].Time.Date', ["新日期描述", "Date"])`,
+      '',
+      '2. 估算进入本世界这一刻的流逝秒数（含入境跳跃 + 本回合行动时间，精确到秒，最少1秒）：',
+      `   _.set('Multiverse.CurrentWorldElapsedSeconds', <整数>)`,
+      '',
+      '禁止输出 Time.Clock（系统自动生成）。',
+    ].join('\n');
+  }
+
+  return [
+    '---',
+    '',
+    '【世界时间同步任务（必须执行）】',
+    `当前世界：${curKey} | 时间流速：${flowLabel}`,
+    `当前时刻：${curDate} ${curClock}`,
+    '',
+    '请在 <UpdateVariable> 中完成以下操作：',
+    '',
+    '1. 估算本回合当前世界流逝了多少秒（精确到秒，最少1秒）：',
+    `   _.set('Multiverse.CurrentWorldElapsedSeconds', <整数>)`,
+    '   参考：日常对话约300~1200秒，战斗约60~1800秒，旅行按叙事时长估算。',
+    '',
+    '2. 若叙事中发生跨天日期变化，更新叙事日期（无变化可省略）：',
+    `   _.set('Multiverse.Archives[${pathKey}].Time.Date', ["新日期描述", "Date"])`,
+    '',
+    '禁止输出 Time.Clock（系统自动生成）。',
+  ].join('\n');
+}
+
 function buildPhase4Messages(charCard, statData, narrative) {
   const { buildStatSnapshot } = require('./varEngine');
   const snapshot = buildStatSnapshot(statData);
@@ -739,6 +821,8 @@ function buildPhase4Messages(charCard, statData, narrative) {
 
   const ruleText = updateRuleEntries.map(e => e.content).join('\n\n');
 
+  const timeSyncBlock = buildTimeSyncBlock(statData);
+
   const system = [
     '你是《无限武库》变量更新引擎。',
     '根据本回合叙事内容和当前状态，生成精确的变量更新块。',
@@ -755,6 +839,7 @@ function buildPhase4Messages(charCard, statData, narrative) {
     '<status_current_variables>',
     JSON.stringify(snapshot, null, 2),
     '</status_current_variables>',
+    ...(timeSyncBlock ? [timeSyncBlock] : []),
   ].join('\n');
 
   const user = [

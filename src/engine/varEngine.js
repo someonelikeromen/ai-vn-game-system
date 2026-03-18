@@ -702,6 +702,78 @@ function renderBackendDataStream(statData) {
   }
 }
 
+// ─── World Time Propagation ───────────────────────────────────────────────────
+
+/**
+ * Parse a TimeFlow object into a world/base seconds multiplier.
+ * Format: ratioToBase = "BASE:WORLD" (e.g. "1:3" means 1 base sec = 3 world secs)
+ */
+function parseFlowRate(timeFlow) {
+  if (!timeFlow || timeFlow.type === 'frozen') return 1;
+  const parts = (timeFlow.ratioToBase || '1:1').split(':').map(parseFloat);
+  if (parts.length === 2 && parts[0] > 0) return parts[1] / parts[0];
+  return 1;
+}
+
+/**
+ * Convert total seconds to HH:MM:SS string (wraps at 24h).
+ */
+function formatHHMMSS(totalSeconds) {
+  const s = Math.abs(Math.round(totalSeconds)) % 86400;
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+
+/**
+ * Called after processUpdateVariables in gameLoop FINALIZE.
+ * Reads Multiverse.CurrentWorldElapsedSeconds (written by Phase 4 LLM),
+ * updates the current world's TotalSeconds/Clock, calculates base elapsed,
+ * and propagates to all other worlds proportionally.
+ * Also clears the JustEntered flag after first-turn date sync.
+ */
+function propagateWorldTime(statData) {
+  const mv = statData?.Multiverse;
+  if (!mv || !mv.Archives) return;
+
+  const elapsed = mv.CurrentWorldElapsedSeconds;
+  if (!elapsed || elapsed <= 0) {
+    // Still clear JustEntered even if no elapsed seconds reported
+    const curKey = Array.isArray(mv.CurrentWorldName) ? mv.CurrentWorldName[0] : mv.CurrentWorldName;
+    const cur = curKey && mv.Archives[curKey];
+    if (cur?.Time?.JustEntered) delete cur.Time.JustEntered;
+    return;
+  }
+
+  delete mv.CurrentWorldElapsedSeconds;
+
+  const curKey = Array.isArray(mv.CurrentWorldName) ? mv.CurrentWorldName[0] : mv.CurrentWorldName;
+  const cur    = curKey && mv.Archives[curKey];
+  if (!cur) return;
+
+  // Update current world
+  if (!cur.Time) cur.Time = {};
+  cur.Time.TotalSeconds = (cur.Time.TotalSeconds || 0) + elapsed;
+  cur.Time.Clock = [formatHHMMSS(cur.Time.TotalSeconds), 'Time'];
+  if (cur.Time.JustEntered) delete cur.Time.JustEntered;
+
+  // Calculate base elapsed and update baseline
+  const curRate     = parseFlowRate(cur.TimeFlow);
+  const baseElapsed = elapsed / curRate;
+  mv.BaselineSeconds = (mv.BaselineSeconds || 0) + baseElapsed;
+
+  // Propagate to all other worlds
+  for (const [name, arc] of Object.entries(mv.Archives)) {
+    if (name === curKey || !arc?.Time) continue;
+    const tf = arc.TimeFlow;
+    if (!tf || tf.type === 'frozen' || tf.type === 'fixed_interval') continue;
+    const worldElapsed = baseElapsed * parseFlowRate(tf);
+    arc.Time.TotalSeconds = (arc.Time.TotalSeconds || 0) + worldElapsed;
+    arc.Time.Clock = [formatHHMMSS(arc.Time.TotalSeconds), 'Time'];
+  }
+}
+
 module.exports = {
   parsePath,
   getAtPath,
@@ -716,4 +788,7 @@ module.exports = {
   renderBackendDataStream,
   getMedalCount,
   setMedalCount,
+  parseFlowRate,
+  formatHHMMSS,
+  propagateWorldTime,
 };

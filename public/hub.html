@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>控制台 · 无限武库</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="hub.css">
+  <link rel="stylesheet" href="ui-humanized.css">
+  <link rel="stylesheet" href="ui-feedback.css">
+</head>
+<body>
+<div class="hub-shell">
+  <header class="hub-topbar">
+    <a href="/" class="btn">← 返回游戏</a>
+    <h1>🧭 控制台</h1>
+    <div class="hub-grow"></div>
+    <a href="/settings" class="btn">高级设置</a>
+  </header>
+
+  <main class="hub-main">
+    <section class="hub-card">
+      <h2>开局体检</h2>
+      <p class="hub-desc">检查关键配置是否可用，减少“进游戏后才报错”的情况。</p>
+      <div id="healthList" class="hub-health-list"></div>
+      <div class="hub-actions">
+        <button class="btn" id="btnRunHealth">🩺 重新体检</button>
+        <button class="btn" id="btnRunConn">🔌 连通性测试</button>
+        <span id="healthStatus"></span>
+      </div>
+    </section>
+
+    <section class="hub-card">
+      <h2>一体化接口配置</h2>
+      <p class="hub-desc">把主对话与商城 API 放在同一处配置，适合新手快速完成开局。</p>
+      <div class="hub-grid">
+        <label>主接口 BaseURL<input id="baseUrl" type="text" placeholder="https://api.openai.com"></label>
+        <label>主接口模型<input id="model" type="text" placeholder="gpt-4o"></label>
+        <label>主接口 Key<input id="apiKey" type="password" placeholder="sk-..."></label>
+        <label>Temperature<input id="temperature" type="number" min="0" max="2" step="0.1"></label>
+      </div>
+      <div class="hub-grid">
+        <label>商城 BaseURL（可留空继承）<input id="shopBaseUrl" type="text" placeholder="留空继承主接口"></label>
+        <label>商城模型（可留空继承）<input id="shopModel" type="text" placeholder="留空继承主模型"></label>
+        <label>商城 Key（可留空继承）<input id="shopApiKey" type="password" placeholder="留空继承主 Key"></label>
+        <label>商城兑换快照
+          <select id="shopCharStateOnRedeem">
+            <option value="off">关闭</option>
+            <option value="snapshot">摘要</option>
+            <option value="full">完整</option>
+          </select>
+        </label>
+      </div>
+      <div class="hub-actions">
+        <button class="btn primary" id="btnSaveCfg">💾 保存配置</button>
+        <button class="btn" id="btnTestCfg">🔌 测试主接口</button>
+        <span id="cfgStatus"></span>
+      </div>
+    </section>
+
+    <section class="hub-card">
+      <h2>页面分工入口</h2>
+      <div class="hub-links">
+        <a class="hub-link" href="/">🎮 游戏主页<br><span>对话、状态、新建存档</span></a>
+        <a class="hub-link" href="/shop">🏪 商城中心<br><span>兑换、抽卡、世界锚点</span></a>
+        <a class="hub-link" href="/character">✦ 主角生成<br><span>问卷、背景、角色档案库</span></a>
+        <a class="hub-link" href="/preset">📝 预设编辑<br><span>提示词、阶段原子、正则规则</span></a>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="ui-feedback.js"></script>
+<script src="hub.js"></script>
+</body>
+</html>

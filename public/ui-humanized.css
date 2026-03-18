@@ -1,0 +1,190 @@
+/* ── UI Enhancement Layer ──────────────────────────────────────────────────── */
+/* 在 style.css 基础上做微调，保留终端科幻风格，增强可读性与一致性。           */
+
+:root {
+  --ui-font: "Microsoft YaHei UI", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+  --mono-font: "Courier New", "Consolas", monospace;
+
+  /* 扫描线角度渐变（用于头部高光条） */
+  --scanline-gradient: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,180,255,0.018) 2px,
+    rgba(0,180,255,0.018) 4px
+  );
+}
+
+/* ── 基础字体：正文使用 UI 字体，终端标签保留等宽 ─────────────────────────── */
+html, body,
+button, input, select, textarea {
+  font-family: var(--ui-font);
+}
+
+/* 保留等宽字体的科幻元素 */
+.sf-sys-label,
+.sf-char-name,
+.stat-tab,
+.hud-key,
+.hud-num,
+.hud-bool,
+.hud-hint,
+.hud-str,
+.hud-null,
+.hud-chip,
+.hud-pool-nums,
+.hud-group-title,
+#topbar h1,
+.session-name-label,
+.sidebar-header,
+.stat-hero-title,
+.tree-branch > details > summary,
+.tree-key, .tree-num, .tree-str, .tree-bool,
+.gen-title, .filter-title, .cart-header h3,
+.shop-title, .shop-back-btn {
+  font-family: var(--mono-font) !important;
+}
+
+/* ── 按钮圆角统一 ─────────────────────────────────────────────────────────── */
+.btn,
+.btn-primary,
+.btn-ghost,
+.st-btn,
+.st-save-btn,
+.shop-back-btn,
+.stat-float-btn {
+  border-radius: 8px !important;
+}
+
+/* ── 状态浮窗：增强科幻感 ─────────────────────────────────────────────────── */
+.stat-float {
+  background: rgba(4, 4, 14, 0.97) !important;
+  border-color: rgba(0, 180, 255, 0.25) !important;
+  box-shadow:
+    0 0 0 1px rgba(0,180,255,0.09),
+    0 0 48px rgba(0,180,255,0.10),
+    0 24px 64px rgba(0,0,0,0.92),
+    inset 0 1px 0 rgba(0,200,255,0.09) !important;
+}
+
+.stat-float-header {
+  background: linear-gradient(90deg, #020208 0%, #030310 100%) !important;
+  border-bottom: 1px solid rgba(0,180,255,0.18) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-float-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,180,255,0.55), rgba(0,255,136,0.3), transparent);
+}
+
+.stat-float-body {
+  background: transparent !important;
+}
+
+/* ── HUD 拖拽指示器 ───────────────────────────────────────────────────────── */
+.sf-drag-hint {
+  font-size: 14px;
+  color: rgba(0,180,255,0.25);
+  letter-spacing: 3px;
+  cursor: move;
+  user-select: none;
+  padding: 0 4px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.stat-float-header:hover .sf-drag-hint {
+  color: rgba(0,180,255,0.5);
+}
+
+/* ── 主侧边栏扫描线效果 ───────────────────────────────────────────────────── */
+#sidebar-left {
+  background: linear-gradient(180deg, #020208 0%, #020210 100%) !important;
+  position: relative;
+}
+
+/* ── 聊天气泡增强 ─────────────────────────────────────────────────────────── */
+.msg.assistant .msg-bubble {
+  border-left-width: 2px !important;
+  border-left-color: rgba(0,180,255,0.42) !important;
+  background: linear-gradient(135deg, rgba(5,5,16,0.98) 0%, rgba(8,8,20,0.97) 100%) !important;
+}
+
+.msg.user .msg-bubble {
+  background: linear-gradient(135deg, #111120 0%, #18182a 100%) !important;
+  border-color: rgba(0,180,255,0.2) !important;
+}
+
+/* ── 输入区域增强 ─────────────────────────────────────────────────────────── */
+#input-area {
+  background: linear-gradient(180deg, #060610 0%, #04040c 100%) !important;
+  border-top-color: rgba(0,180,255,0.16) !important;
+}
+
+#input-box:focus {
+  box-shadow: 0 0 0 2px rgba(0,180,255,0.14), 0 0 16px rgba(0,180,255,0.08) !important;
+}
+
+/* ── 商品详情弹窗全屏居中显示 ──────────────────────────────────────────────── */
+.modal-box {
+  width: min(96vw, 1040px) !important;
+  max-height: 92vh !important;
+}
+
+#modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-desc,
+.eval-report {
+  max-height: none !important;
+}
+
+.detail-actions {
+  position: sticky;
+  bottom: 0;
+  background: rgba(7,7,15,0.95);
+  backdrop-filter: blur(6px);
+  padding-top: 10px;
+}
+
+/* ── 卡片描述文字可见性 ───────────────────────────────────────────────────── */
+.card-desc,
+.item-desc,
+.knowledge-summary,
+.ability-desc {
+  color: rgba(184, 216, 232, 0.82) !important;
+}
+
+/* ── Topbar 发光底边 ──────────────────────────────────────────────────────── */
+#topbar {
+  background: linear-gradient(90deg, #010106 0%, #020208 100%) !important;
+}
+
+/* ── 会话列表项活跃态发光 ─────────────────────────────────────────────────── */
+.session-item.active {
+  box-shadow: inset 0 0 16px rgba(0,180,255,0.06), 0 0 0 1px rgba(0,180,255,0.18);
+}
+
+/* ── 选项按钮发光 ─────────────────────────────────────────────────────────── */
+.option-btn:hover {
+  box-shadow: 0 2px 12px rgba(0,180,255,0.12) !important;
+}
+
+/* ── 各子页面 header 与主界面风格一致 ─────────────────────────────────────── */
+.shop-header,
+.char-header {
+  background: linear-gradient(90deg, #010106 0%, #02020a 100%) !important;
+  position: relative;
+}
+
+/* ── 模态框遮罩改善 ───────────────────────────────────────────────────────── */
+.modal-overlay {
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}

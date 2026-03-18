@@ -1,3 +1,367 @@
+## [v0.29] — 全局字体变量覆盖：style.css 所有硬编码 px 替换为 CSS 变量（2026-03-18）
+
+### 修改文件
+- `public/style.css`
+
+### 修改内容
+- 将侧边栏（`.sidebar-header`、`.session-item-name`、`.session-item-meta`、`.session-delete-btn`）的硬编码字体尺寸替换为 `var(--font-ui)` / `var(--font-sm)`
+- 将顶栏（`#topbar h1`、`.session-name-label`）替换为 CSS 变量
+- 将聊天区域（`.msg-meta`、`.think-block summary`、`.think-content`、`.options-hint`、`.options-toggle`、`.msg-action-btn`、`.msg-inline-edit textarea`、`.msg-inline-edit-btns button`）替换为 CSS 变量
+- 将欢迎屏幕（`#welcome-screen p`）、模态标题（`.modal h2`）替换为变量
+- 将新游戏向导所有 `ng-*` 元素字体替换为 CSS 变量
+- 将状态浮窗中 `.sf-sys-label`、`.sf-char-name`、`.stat-tab`、`.stat-tab-zh`、`.stat-float-btn` 及所有 HUD 子元素（dim / mood / trigger / rel / ctx）替换为 `var(--font-stat)`
+
+### 修改原因
+- 之前外观设置字体调节后主界面左侧及其他区域无变化，根本原因是 `style.css` 中大量元素使用了硬编码 `px` 值，不受 CSS 变量控制
+
+### 修改结果
+- 所有主界面区域（顶栏、侧边栏、对话区、状态面板）的字体大小现在均随外观设置中的字体滑块实时变化
+
+## [v0.28] — 字体调节升级：滑块+数值输入+实时预览，范围扩展至 8–38px（2026-03-18）
+
+### 修改文件
+- `public/theme.js`
+- `public/settings.html`
+- `public/settings.js`
+- `public/settings.css`
+
+### 修改内容
+- **`theme.js`**：字体存储从 enum 键（xs/sm/md/lg/xl）改为直接存储 px 数值（`uiFontPx`/`chatFontPx`/`statFontPx`），自动迁移旧版 enum 值；字体范围 8–38px
+- **`settings.html`**：字体区块从按钮网格改为三行滑块+数值输入+实时预览的布局；每行右侧有重置按钮；HUD 区域预览使用等宽字体样式
+- **`settings.js`**：重写字体控件逻辑，滑块与数字输入双向同步，输入时实时更新全局字体并刷新预览文字；重置按钮恢复默认值
+- **`settings.css`**：添加 `.st-font-slider-block`、`.st-font-slider`、`.st-font-input`、`.st-font-preview`、`.st-font-reset-btn` 等新样式；自定义滑块外观（青蓝色发光拖把手）
+
+### 修改原因
+- 原有的 5 档按钮无法精细调节字体大小，且上限仅 18–19px，满足不了大字号需求
+
+### 修改结果
+- 三个字体区域均可通过滑块拖动或直接输入 8–38 的任意整数 px 值，旁边实时预览效果
+
+## [v0.27] — 前端整体科幻风格增强、分区字体调节、状态栏拖动优化、商品详情页修复（2026-03-18）
+
+### 修改文件
+- `public/ui-humanized.css`
+- `public/theme.js`
+- `public/style.css`
+- `public/settings.html`
+- `public/settings.js`
+- `public/settings.css`
+- `public/panel.js`
+- `public/index.html`
+- `public/shop.html`
+- `public/shop.css`
+
+### 修改内容
+- **科幻风格恢复**：重写 `ui-humanized.css`，移除破坏终端 HUD 风格的强制覆盖，恢复等宽字体、青蓝发光边框、扫描线渐变；为状态栏 Header 添加发光底边和深色渐变背景
+- **分区字体调节**：`theme.js` 扩展为支持三个独立字体配置（`uiFontSize`、`chatFontSize`、`statFontSize`），通过内联 `<style>` 标签动态注入 `:root` CSS 变量；`settings.html` 将原单一字体选择器拆分为三个分区域选择器；`style.css` 的 HUD 字体改用 `--font-stat` 变量
+- **状态栏拖动优化**：`panel.js` 改进拖动逻辑，新增触摸屏支持、视口边界夹持保护、拖动中关闭过渡动画；`index.html` 在状态栏 Header 添加 `⠿` 拖动把手图标，扩大可拖动区域
+- **商品详情页位置修复**：`shop.html` 将 `#detailModal` 的 class 从 `.modal`（与 `style.css` 冲突）改为 `.shop-modal-overlay`；`shop.css` 重写对应的遮罩层和弹窗样式，增加入场动画和毛玻璃效果
+
+### 修改原因
+- `ui-humanized.css` 原先强制覆盖了 `style.css` 的科幻风格，与状态栏 HUD 风格不一致
+- 用户需要针对不同区域（UI、聊天内容、状态栏）独立调整字体大小
+- 状态栏拖动区域过窄，且缺乏清晰的拖动指示
+- 商品详情弹窗因 `.modal` 类名被 `style.css` 的窄弹框样式覆盖，导致显示位置/尺寸异常
+
+### 修改结果
+- 整体界面恢复青蓝色终端科幻风格，与状态栏 HUD 视觉保持一致
+- 可分别调节 UI、聊天正文、状态面板三个区域的字体大小
+- 状态栏可通过 Header 全区域拖动，移动端同样支持触摸拖动
+- 商品详情弹窗正确居中显示，尺寸扩展至 96vw / 1040px
+
+## [v0.26] — 反馈系统全站收口：角色页/预设页接入统一提示与确认（2026-03-18）
+
+### 修改文件
+- `public/character.html`
+- `public/character.js`
+- `public/preset.html`
+- `public/preset.js`
+- `ARCHITECTURE.md`
+
+### 修改内容
+- 角色页与预设页接入 `ui-feedback.css` / `ui-feedback.js`，统一使用 `UIFeedback.toast`
+- 角色页高风险操作（未答完继续生成、删除档案）改为统一危险确认弹窗
+- 预设页所有删除/离开/重载确认从原生 `confirm` 迁移到统一危险确认弹窗
+- 角色档案列表、预设初始加载阶段接入骨架反馈，角色档案空列表/失败态接入统一空状态模板
+
+### 修改原因
+- 之前统一反馈能力主要集中在主页/设置/商城，角色与预设页仍存在交互风格断层
+- 原生确认框样式与文案能力有限，不利于“人性化傻瓜化”一致体验
+
+### 修改结果
+- 全前端关键页面的提示、确认、加载/空状态体验统一完成
+- 高风险操作确认文案和样式一致，误操作防护更直观
+
+---
+
+## [v0.25] — 体验优化四件套：体检、统一提示、防误操作、加载骨架（2026-03-18）
+
+### 修改文件
+- `public/ui-feedback.js`
+- `public/ui-feedback.css`
+- `public/hub.html`
+- `public/hub.css`
+- `public/hub.js`
+- `public/index.html`
+- `public/app.js`
+- `public/settings.html`
+- `public/settings.js`
+- `public/shop.html`
+- `public/shop.js`
+- `ARCHITECTURE.md`
+
+### 修改内容
+- 新增全站反馈层 `UIFeedback`：统一 toast、危险操作确认弹窗、骨架屏/空状态模板
+- `hub` 新增“开局体检”卡片：检查主接口/商城继承策略/关键字段完整性，并支持一键连通性测试
+- `app.js`、`settings.js`、`shop.js` 的提示消息统一切换到 `UIFeedback.toast`（保留旧逻辑兜底）
+- 商城关键高风险操作改为统一确认弹窗（批量兑换、兑换确认、随机穿越、删除商品、删除档案、丢弃待领取）
+- 增加加载/空状态优化：主页存档列表与商城列表接入骨架/空状态指引文案
+
+### 修改原因
+- 提示与确认逻辑分散在多个页面，体验不一致，且误操作防护不足
+- 数据加载阶段反馈不明显，用户容易误判为“卡死”
+- 新用户需要更直观的“配置是否可用”入口
+
+### 修改结果
+- 前端反馈交互从“页面自管”升级为“统一反馈层”
+- 高风险操作具备一致的二次确认样式与文案
+- 首屏即能完成配置体检与连通性验证，加载与空状态可理解性更强
+
+---
+
+## [v0.24] — 第二轮前端重组：设置页接口合并 + 商城详情双栏化（2026-03-18）
+
+### 修改文件
+- `public/settings.html`
+- `public/settings.js`
+- `public/settings.css`
+- `public/shop.js`
+- `public/shop.css`
+- `ARCHITECTURE.md`
+
+### 修改内容
+- 将设置页原「AI 接口」与「商城接口」职责合并为一个统一入口「接口与模型」
+- 商城接口改为“可选覆盖”区块，主接口测试与商城接口测试并列，形成一站式配置流程
+- `shop-api` 哈希路由映射到统一接口面板，旧入口兼容
+- 商城商品详情（能力类）改为双栏布局：左侧核心信息（描述/属性/对比），右侧获得内容与评估报告
+- 增加详情布局响应式规则，小屏自动退化为单栏
+
+### 修改原因
+- 进一步降低新用户理解成本，避免“主接口和商城接口分散在不同面板”造成配置混乱
+- 商城详情信息密度高，单列滚动阅读效率低
+
+### 修改结果
+- 设置页形成更明确的“先主接口、后按需覆盖”的傻瓜化操作路径
+- 商城详情阅读路径更稳定，信息对照更清晰
+
+---
+
+## [v0.23] — 前端重组：新增控制台 + 全站人性化统一样式（2026-03-18）
+
+### 修改文件
+- `server.js`
+- `public/index.html`
+- `public/settings.html`
+- `public/shop.html`
+- `public/character.html`
+- `public/preset.html`
+- `public/hub.html`
+- `public/hub.css`
+- `public/hub.js`
+- `public/ui-humanized.css`
+- `ARCHITECTURE.md`
+
+### 修改内容
+- 新增 `/hub` 控制台页面：将主接口与商城接口集中到同一处进行配置，并提供前端页面职责分工导航入口
+- 主页面、商城、主角、预设、设置页均接入控制台入口，页面职责改为“主页对话、控制台配置、功能页执行”
+- 新增 `ui-humanized.css` 作为全站统一覆盖层：统一字体体系、按钮圆角、状态栏文字风格
+- 优化商城详情弹窗宽度与内容可读性，缓解详情信息展示不全的问题
+
+### 修改原因
+- 现有页面入口与配置分散，不利于新用户快速理解“先配什么、再去哪”
+- 状态栏与其他页面字体风格割裂，导致整体视觉不一致
+- 商城详情在复杂条目下阅读体验差
+
+### 修改结果
+- 形成“控制台集中配置 + 各页面专注功能”的新前端分工结构
+- 全站字体/按钮/状态栏风格更统一，更偏向人性化和傻瓜化使用
+- 商城详情信息展示更完整，可读性提升
+
+---
+
+## [v0.22] — 设置页清理：移除冗余路径字段 + 扩展字体档位（2026-03-18）
+
+### 修改文件
+- `public/settings.html`
+- `public/settings.js`
+- `public/theme.js`
+- `public/style.css`
+
+### 修改内容
+- 删除「其他」面板中「文件路径」分组（角色卡路径、预设路径输入框）
+- 同步移除 `loadConfig` / `saveConfig` 中对应的字段读写逻辑
+- 字体大小新增 `xs`（10px）档位，使范围覆盖标准(14px) ±4px（10px ~ 18px）
+- `theme.js` `VALID_FONTSIZES` 数组加入 `'xs'`，`style.css` 补充 `.font-xs` 变量
+
+### 修改原因
+- 内容已完全内置（`src/content/`），角色卡/预设路径配置项对用户无实际意义，保留会造成困惑
+- 用户需要在 14px 标准字体基础上有向下调整 4px（10px）的空间
+
+### 修改结果
+- 「其他」面板仅保留玩家信息配置，页面更简洁
+- 字体档位：极小(10px)、小(12px)、标准(14px)、大(16px)、特大(18px)，覆盖标准 ±4px 全范围
+
+---
+
+## [v0.21] — 世界时间轴同步系统 + 回归主世界兑换（2026-03-17）
+
+### 修改文件
+- `src/features/world/worldEngine.js`
+- `src/features/shop/shopEngine.js`
+- `src/engine/varEngine.js`
+- `src/engine/gameLoop.js`
+- `src/engine/promptBuilder.js`
+- `src/routes/gameRoutes.js`
+- `src/routes/shopRoutes.js`
+- `public/shop.html`
+- `public/shop.js`
+- `public/shop.css`
+
+### 修改内容
+
+**世界时间轴同步系统**
+
+- **新增数据字段**：`Multiverse.BaselineSeconds`（基准时间轴累计秒数）、`Multiverse.OriginWorldKey`（主世界名称）、`Multiverse.CurrentWorldElapsedSeconds`（LLM写入的临时触发字段）、`Archive.Time.TotalSeconds`（各世界累计秒数）；`Time.Clock` 格式统一为 `"HH:MM:SS"` 由服务端生成
+- **`worldEngine.js`**：archiveEntry 补全 `TimeFlow` 字段（`type:ratio, ratioToBase:'1:1'`）并初始化 `Time.TotalSeconds=0`、`Time.Clock='00:00:00'`
+- **`shopEngine.js`**：WorldTraverse archiveEntry 同步追加 `Time.TotalSeconds=0`、`Time.Clock='00:00:00'`
+- **`varEngine.js`**：新增 `parseFlowRate(timeFlow)`、`formatHHMMSS(seconds)`、`propagateWorldTime(statData)` 三个函数并导出；`propagateWorldTime` 在 Phase 4 后读取 `CurrentWorldElapsedSeconds`，更新当前世界时钟，计算基准流逝量，按 FlowRate 传播到所有背景世界，清除 `JustEntered` 标志
+- **`gameLoop.js`**：导入 `propagateWorldTime`，在两处 `processUpdateVariables + runAutoCalc` 之间插入调用
+- **`promptBuilder.js`**：新增 `buildTimeSyncBlock(statData)` 函数，在 `buildPhase4Messages` 系统消息末尾追加原子化时间同步任务块；区分普通回合模式和 `JustEntered` 刚进入世界模式，指示 LLM 估算当前世界流逝秒数（精确到秒）并更新叙事日期
+- **`gameRoutes.js`**：`use-anchor` 路由补全 `Time.TotalSeconds` 初始化、设置 `JustEntered=true`、首次激活自动写入 `OriginWorldKey`；新增 `POST /api/shop/return-home` 路由（扣除 20000 积分，切换 CurrentWorldName 到 OriginWorldKey，设置 JustEntered）
+
+**回归主世界兑换**
+
+- **`shopEngine.js`**：`buildApplyScript` 新增 `WorldReturn` 类型分支，设置 `CurrentWorldName = OriginWorldKey`
+- **`shopRoutes.js`**：typeMap 注册 `WorldReturn: '回归主世界'`
+- **`shop.html` + `shop.js` + `shop.css`**：侧边栏底部新增"回归主世界"固定卡片，当 `currentWorld !== originWorld` 时显示；显示主世界名称、当前世界名称、积分余额；积分不足时禁用按钮
+
+### 修改原因
+- 多世界穿越时各世界时间独立流逝，但原系统缺乏统一时间轴，LLM 无法正确推算跨世界时间关系
+- 玩家需要花费资源回归起始世界，作为游戏平衡机制
+
+### 修改结果
+- Phase 4 LLM 只需估算当前世界流逝秒数，服务端自动按 FlowRate 比例同步所有背景世界时钟（精确到秒）
+- 变量回退时时间字段随 `statSnapshotBefore` 快照自动恢复
+- 商城页新增回归主世界卡片，消耗 20,000 积分可返回 OriginWorldKey 世界
+
+## [v0.20] — 全局 UI 终端风格统一，从紫色系切换为 cyan 终端 HUD 风格（2026-03-17）
+
+### 修改文件
+- `public/style.css`
+- `public/shop.css`
+- `public/character.css`
+- `public/preset.css`
+- `public/settings.css`
+
+### 修改内容
+- **CSS 变量**：将 `style.css` 的 `:root` 背景层（`--bg` ~ `--bg5`）从紫调深色改为更纯粹的近黑终端色（`#04040c` 系列）；边框从不透明紫色改为半透明 cyan（`rgba(0,180,255,…)`）；主色 `--accent` / `--accent2` / `--accent3` 从紫色改为 `#0090b8` / `#00d4ff` / `#00ff88` 终端三色；阴影改为 cyan 光晕
+- **Topbar**：背景改为 `#020208`，底部渐变线改为 cyan→green；标题改用 `Courier New` 等宽字体、大写 + cyan 渐变
+- **Sidebar**：背景 `#020208`，header 标签改用 monospace 大写 + cyan 低透明文字；激活项改为 cyan 渐变背景 + cyan 左边框
+- **按钮系统**：`.btn` hover 改为 cyan；`.btn.primary` 渐变改为 `#0090b8→#006688`；发送键同步更新；所有输入框 focus 光晕改为 cyan
+- **消息气泡**：AI 消息左边框改为 cyan；流式光标颜色改为 `#00d4ff`；Think 块 streaming 状态改为 cyan 边框
+- **Modal / Form**：modal 背景 `#07070f`，边框改为 cyan glow，标题改用等宽字体；表单 focus 改为 cyan
+- **Toast / Wizard / Phase**：Toast info 改为 cyan；Wizard 步骤激活色改为 cyan；Phase 进度条左边框改为 cyan；步骤字体改为 monospace
+- **Theme Variants**：主题中 `theme-blue` / `theme-green` 的边框也更新为 `rgba()` 透明格式；`theme-oled` 边框同步改为 cyan 半透明；默认主题名从"幽暗·星域"更新为"终端·青蓝"
+- **shop.css**：header 背景 `#020208` + cyan 渐变线；侧边栏 `#030309`；卡片边框改为 cyan 半透明；按钮、购物车、弹窗等全面 cyan 化；字段 label 改为 monospace
+- **character.css**：`:root` 变量整体切换为 cyan 系；header、按钮、表单输入、Tags、能力卡片、Type/Traversal 选择器全部 cyan 化
+- **preset.css**：两处 `:root` 变量块均更新为 cyan 系；topbar、按钮、toggle、modal、toast 全部 cyan 化
+- **settings.css**：topbar 底部渐变线、返回按钮、标题、保存按钮、导航激活项、toggle、group-title、info-box、theme-card 选中状态全部 cyan 化
+
+### 修改原因
+- 全局 UI 与状态栏（stat-float）的终端 HUD 风格不一致；状态栏早已使用 cyan + monospace + 发光边框，主界面仍为旧的紫色系
+- 用户要求以状态栏为基准对整体 UI 进行同风格统一改造
+
+### 修改结果
+- 整个系统界面统一为超深蓝黑背景 + 电子青蓝发光边框 + 绿色 accent + 等宽字体系统标签的终端 HUD 风格
+- 各页面（主聊天、商城、角色、预设、设置）视觉语言一致
+- 语义色（HP/危险/警告/成功）保留不变
+
+## [v0.19] — 各阶段添加3次重试，失败/太短则中止后续阶段（2026-03-17）
+
+### 修改文件
+- `src/engine/gameLoop.js`
+- `public/app.js`
+
+### 修改内容
+- 新增常量 `MAX_RETRIES = 3`、`MIN_P1_CHARS = 50`、`MIN_P3_CHARS = 100`
+- **Phase 1**：替换单次 try/catch 为最多 4 次尝试的重试循环；每次尝试依次检查：LLM 调用异常、响应过短（< 50 chars）、无 JSON、JSON 解析失败；任一条件耗尽重试次数后中止整个回合（res.end() + return）
+- **Phase 3**：替换单次调用为最多 4 次尝试的重试循环；每次重试前向前端发送 `phase { status: 'retry', attempt }` 事件，并检查响应长度（< 100 chars）；耗尽重试后中止回合
+- **Phase 4**：`MAX_P4_RETRIES` 由硬编码 `2` 改为引用 `MAX_RETRIES`（即 3 次重试）
+- **前端**：`readSSEStream` 中新增对 `phase 3 retry` 事件的处理：清空 `state.streamingText`、`bubble.innerHTML`、`hasNarrativeText`，并显示重试进度指示器
+
+### 修改原因
+- Phase 1/3 此前只有单次机会，LLM 偶发空响应或截断响应会导致后续阶段使用无效输入
+- Phase 4 的重试上限偏低（2次），与 Phase 1/3 不一致
+
+### 修改结果
+- 每个 LLM 阶段最多尝试 4 次（1 初始 + 3 重试）
+- 任一阶段彻底失败则立即中止，不进行后续阶段，避免浪费 LLM 调用
+- 前端 Phase 3 重试时自动清空已流式输出的内容并显示"第N次重试"提示
+
+## [v0.18] — 修复停止按钮后锁无法释放、Phase4重试阻塞问题（2026-03-17）
+
+### 修改文件
+- `src/core/llmClient.js`
+- `src/engine/gameLoop.js`
+
+### 修改内容
+- `llmClient.js`：`handleStreamResponse` 添加 `res.on('close', resolve)` 处理器，防止 Promise 因 socket 被 `req.destroy()` 关闭后只触发 `'close'`（无 `'end'`/`'error'`）而永久悬挂
+- `gameLoop.js`：`runMultiPhaseTurn` 的 Phase 4 重试循环顶部添加 `if (clientAborted) break;`，避免客户端已断开时继续重试 LLM 调用
+- `gameLoop.js`：`runMultiPhaseTurn` 在 Phase 4 结束、进入 FINALIZE 前添加 `clientAborted` 提前退出，避免处理空响应并保存不完整消息
+- `gameLoop.js`：`runSinglePhaseTurn` 在 LLM 调用完成、开始变量处理前添加 `clientAborted` 提前退出
+
+### 修改原因
+- 停止按钮按下后，前端关闭 SSE 连接，`req.on('close')` 触发 `req.destroy()` 销毁 LLM HTTP socket
+- 但 Node.js HTTP 流在 socket 被 destroy 时往往只触发 `'close'` 而非 `'end'`，导致 `createCompletion` Promise 悬挂长达 29 秒（直到 LLM 服务端超时）
+- 29 秒后以 0 chars 解析，Phase 4 completeness check 失败，触发重试，锁始终无法释放
+- 后续 retrace/message 请求全部返回 409，用户无法开始新的交互
+
+### 修改结果
+- 停止后 `createCompletion` 毫秒级解析（socket close 立即触发 resolve）
+- Phase 4 重试循环检测到 `clientAborted` 立即 break，不再发起无效 LLM 调用
+- `runStreamTurn` 函数提前 return，会话锁立即释放
+- 后续 retrace/message/regenerate 请求可以正常获得锁并执行
+
+# [v0.17] - 淇鐐瑰嚮鍋滄鍚庣珛鍗冲彂閫佷粛鏄剧ず"姝ｅ湪澶勭悊涓?锛?026-03-17锛?
+### 淇敼鏂囦欢
+- `src/routes/gameRoutes.js`
+
+### 淇敼鍐呭
+- 鏂板 waitForLock(sessionId, ms=1500) 杈呭姪鍑芥暟锛氬湪浼氳瘽閿佽鍗犵敤鏃惰疆璇㈢瓑寰呮渶澶?1500ms锛堟瘡 150ms 妫€鏌ヤ竴娆★級锛岃嫢閿佸湪绛夊緟绐楀彛鍐呴噴鏀惧垯鑷姩缁х画锛屽惁鍒欐墠杩斿洖 409
+- message銆乺egenerate銆乺etrace 涓変釜绔偣鐨?hasLock 鍗虫椂鎷掔粷閫昏緫鏀逛负璋冪敤 waitForLock
+
+### 淇敼鍘熷洜
+- 鐐瑰嚮鍋滄鎸夐挳鍚庡墠绔珛鍒绘仮澶嶅彲杈撳叆鐘舵€侊紝浣嗗悗绔渶瑕佸嚑涓簨浠跺惊鐜懆鏈熸墠鑳藉鐞嗚繛鎺ュ叧闂€侀攢姣?LLM 璇锋眰銆侀噴鏀句細璇濋攣
+- 鐢ㄦ埛鍦ㄨ繖娈垫瀬鐭獥鍙ｆ湡鍐呭彂閫佹柊娑堟伅灏变細鎾炲埌鍗虫椂 409 鎷掔粷
+
+### 淇敼缁撴灉
+- 鐐瑰嚮鍋滄鍚庣珛鍗冲彂閫侊紝鏈嶅姟绔渶澶氱瓑寰?1.5 绉掞紙閫氬父 <200ms 灏变細閲婃斁锛夛紝绛夐攣閲婃斁鍚庣洿鎺ョ户缁鐞嗭紝鏃犻渶鐢ㄦ埛閲嶈瘯
+
+---
+# [v0.16] - 淇鍒囨崲鍟嗗簵椤甸潰鍚庝細璇濋攣鏈噴鏀惧鑷存帓闃燂紙2026-03-17锛?
+### 淇敼鏂囦欢
+- `src/engine/gameLoop.js`
+- `public/app.js`
+
+### 淇敼鍐呭
+- gameLoop.js锛氫慨澶?req.on('close') 绔炴€佹潯浠讹紝close 浜嬩欢瑙﹀彂鏃?llmNodeReq 涓?null 瀵艰嚧 clientAborted 鏈璁剧疆锛屽悗鍙?LLM 璋冪敤缁х画杩愯鎸佹湁閿?- gameLoop.js锛氭墍鏈?onRequest 鍥炶皟鏂板 if (clientAborted) nReq.destroy()锛岀‘淇濆嵆渚?close 宸插湪璧嬪€煎墠瑙﹀彂锛屽悗缁?LLM 璇锋眰涔熻绔嬪嵆閿€姣?- app.js锛氱偣鍑诲晢搴楁寜閽墠鍏堣皟鐢?stopGeneration()锛屼富鍔ㄤ腑姝㈠鎴风 fetch
+
+### 淇敼鍘熷洜
+- 鍒囨崲鍒板晢搴楅〉闈㈠啀鍥炴潵鍚庡彂閫佹秷鎭彁绀?褰撳墠瀛樻。姝ｅ湪澶勭悊涓?锛?09 琚攣锛?- 澶氶樁娈垫祦绋嬪鑸寮€鏃?llmNodeReq 鍙兘涓?null锛屽鑷?clientAborted 鏈缃?
+### 淇敼缁撴灉
+- 鍒囨崲鍟嗗簵鍚庡悗绔珛鍗充腑姝?LLM 璋冪敤骞堕噴鏀句細璇濋攣
+- 鍥炲埌鏁呬簨椤甸潰鍙珛鍗虫甯稿彂閫佹秷鎭?
+---
 # [v0.15] 鈥?Phase 4 鎴柇淇 + 缁啓閲嶈瘯锛?026-03-16锛?
 ### 淇敼鏂囦欢
 - src/core/llmClient.js

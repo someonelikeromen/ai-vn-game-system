@@ -117,6 +117,7 @@ app.get('/character', (req, res) => res.sendFile(path.join(__dirname, 'public', 
 app.get('/shop',      (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.get('/preset',    (req, res) => res.sendFile(path.join(__dirname, 'public', 'preset.html')));
 app.get('/settings',  (req, res) => res.sendFile(path.join(__dirname, 'public', 'settings.html')));
+app.get('/hub',       (req, res) => res.sendFile(path.join(__dirname, 'public', 'hub.html')));
 // Worldbook editor removed — entries are now managed in the unified preset editor (/preset).
 app.get('*',          (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 

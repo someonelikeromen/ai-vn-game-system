@@ -56,7 +56,7 @@ function buildShopPrefillText(item, statData, charStateMode) {
     PassiveAbility: '被动能力', PowerSource: '基盘能力',
     ApplicationTechnique: '应用技巧', Inventory: '物品',
     Knowledge: '知识', WorldTraverse: '世界锚点',
-    Companion: '同伴', Mech: '机体',
+    Companion: '同伴', Mech: '机体', WorldReturn: '回归主世界',
   };
   const typeLabel = typeMap[item.type] || item.type || '';
   let text = `【系统】${typeLabel}【${item.name}】（${tierLabel}）已兑换并完成内化。`;

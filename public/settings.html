@@ -7,6 +7,8 @@
   <script src="theme.js"></script>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="settings.css">
+  <link rel="stylesheet" href="ui-humanized.css">
+  <link rel="stylesheet" href="ui-feedback.css">
 </head>
 <body>
 <div id="settings-app">
@@ -16,6 +18,7 @@
     <a href="/" class="st-back-btn" title="返回主界面">← 返回</a>
     <span class="st-title">⚙ 系统设置</span>
     <span class="st-topbar-sep"></span>
+    <a href="/hub" class="st-back-btn" style="text-decoration:none">🧭 控制台</a>
     <a href="/preset" class="st-back-btn" style="text-decoration:none">📝 预设</a>
     <button class="st-save-btn" id="btn-save">💾 保存</button>
   </header>
@@ -26,10 +29,7 @@
     <!-- Side nav -->
     <nav class="st-nav">
       <div class="st-nav-item active" data-panel="api">
-        <span class="st-nav-icon">🔗</span><span>AI 接口</span>
-      </div>
-      <div class="st-nav-item" data-panel="shop">
-        <span class="st-nav-icon">🏪</span><span>商城接口</span>
+        <span class="st-nav-icon">🔗</span><span>接口与模型</span>
       </div>
       <div class="st-nav-item" data-panel="multiphase">
         <span class="st-nav-icon">⚡</span><span>多阶段推理</span>
@@ -47,10 +47,14 @@
     <!-- Content panels -->
     <main class="st-content">
 
-      <!-- ── Panel: AI 接口 ──────────────────────────────────────────────── -->
+      <!-- ── Panel: 接口与模型 ───────────────────────────────────────────── -->
       <section id="panel-api" class="st-panel active">
-        <h2 class="st-section-title">🔗 AI 接口</h2>
-        <p class="st-section-desc">主对话模型的 API 配置，适用于游戏叙述生成。</p>
+        <h2 class="st-section-title">🔗 接口与模型（统一配置）</h2>
+        <p class="st-section-desc">主对话与商城模型集中配置。新手只需先填主接口，商城可按需覆盖。</p>
+
+        <div class="st-info">
+          <strong>推荐流程：</strong>先配置主接口（BaseURL / API Key / 模型）并测试；商城接口留空即可继承，只有需要分流模型时再单独填写。
+        </div>
 
         <div class="st-field">
           <label class="st-label">API 地址 (BaseURL)</label>
@@ -100,18 +104,8 @@
         </label>
 
         <div class="st-divider"></div>
-
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="st-btn primary" id="btn-test-api">🔗 测试连接</button>
-          <a href="/logs" target="_blank" class="st-btn" style="text-decoration:none">📋 查看日志</a>
-        </div>
-        <div class="st-test-status" id="api-test-status"></div>
-      </section>
-
-      <!-- ── Panel: 商城接口 ─────────────────────────────────────────────── -->
-      <section id="panel-shop" class="st-panel">
-        <h2 class="st-section-title">🏪 商城接口</h2>
-        <p class="st-section-desc">商城专用模型配置，留空则继承主 AI 接口设置。</p>
+        <h3 class="st-sub-title">🏪 商城接口覆盖（可选）</h3>
+        <p class="st-section-desc">留空表示继承主接口，适合“傻瓜模式”；仅在你想让商城走独立模型时填写。</p>
 
         <div class="st-info">
           <strong>提示：</strong>商城使用独立的 LLM 来生成道具、同伴和增益效果。建议使用响应速度较快的模型。
@@ -152,9 +146,13 @@
           </select>
         </div>
 
-        <div style="display:flex;gap:8px;margin-top:8px">
+        <div class="st-divider"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="st-btn primary" id="btn-test-api">🔗 测试主接口</button>
           <button class="st-btn primary" id="btn-test-shop-api">🔗 测试商城接口</button>
+          <a href="/logs" target="_blank" class="st-btn" style="text-decoration:none">📋 查看日志</a>
         </div>
+        <div class="st-test-status" id="api-test-status"></div>
         <div class="st-test-status" id="shop-test-status"></div>
       </section>
 
@@ -266,23 +264,47 @@
         </div>
 
         <div class="st-group">
-          <div class="st-group-title">字体大小</div>
-          <div class="st-font-options">
-            <div class="st-font-opt" data-size="sm">
-              <div class="st-font-opt-size" style="font-size:12px">A</div>
-              <div class="st-font-opt-label">小 (12px)</div>
+          <div class="st-group-title">字体大小 <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:6px">拖动滑块或直接填入数值（8–38 px）</span></div>
+
+          <!-- UI 全局字体 -->
+          <div class="st-font-slider-block">
+            <div class="st-font-region-label">
+              界面 UI 字体
+              <span class="st-font-region-hint">按钮、标签、表单元素</span>
+              <button class="st-font-reset-btn" data-group="ui" data-default="14" title="恢复默认 14px">↺</button>
             </div>
-            <div class="st-font-opt selected" data-size="md">
-              <div class="st-font-opt-size" style="font-size:14px">A</div>
-              <div class="st-font-opt-label">标准 (14px)</div>
+            <div class="st-font-slider-row">
+              <input type="range"  id="fontSlider-ui"   class="st-font-slider" data-group="ui"   min="8" max="38" step="1" value="14">
+              <input type="number" id="fontInput-ui"    class="st-font-input"  data-group="ui"   min="8" max="38" step="1" value="14">
+              <span  class="st-font-preview" id="fontPreview-ui" style="font-size:14px">无限武库 Aa 123</span>
             </div>
-            <div class="st-font-opt" data-size="lg">
-              <div class="st-font-opt-size" style="font-size:16px">A</div>
-              <div class="st-font-opt-label">大 (16px)</div>
+          </div>
+
+          <!-- 聊天内容字体 -->
+          <div class="st-font-slider-block">
+            <div class="st-font-region-label">
+              聊天内容字体
+              <span class="st-font-region-hint">AI 叙事正文、对话气泡</span>
+              <button class="st-font-reset-btn" data-group="chat" data-default="14" title="恢复默认 14px">↺</button>
             </div>
-            <div class="st-font-opt" data-size="xl">
-              <div class="st-font-opt-size" style="font-size:18px">A</div>
-              <div class="st-font-opt-label">特大 (18px)</div>
+            <div class="st-font-slider-row">
+              <input type="range"  id="fontSlider-chat" class="st-font-slider" data-group="chat" min="8" max="38" step="1" value="14">
+              <input type="number" id="fontInput-chat"  class="st-font-input"  data-group="chat" min="8" max="38" step="1" value="14">
+              <span  class="st-font-preview" id="fontPreview-chat" style="font-size:14px">无限武库 Aa 123</span>
+            </div>
+          </div>
+
+          <!-- 状态面板字体 -->
+          <div class="st-font-slider-block">
+            <div class="st-font-region-label">
+              状态面板字体
+              <span class="st-font-region-hint">HUD 数值、状态栏条目</span>
+              <button class="st-font-reset-btn" data-group="stat" data-default="11" title="恢复默认 11px">↺</button>
+            </div>
+            <div class="st-font-slider-row">
+              <input type="range"  id="fontSlider-stat" class="st-font-slider" data-group="stat" min="8" max="38" step="1" value="11">
+              <input type="number" id="fontInput-stat"  class="st-font-input"  data-group="stat" min="8" max="38" step="1" value="11">
+              <span  class="st-font-preview st-font-preview-stat" id="fontPreview-stat" style="font-size:11px">STATUS_OK · 99 / 100</span>
             </div>
           </div>
         </div>
@@ -296,18 +318,6 @@
       <section id="panel-other" class="st-panel">
         <h2 class="st-section-title">📂 其他设置</h2>
         <p class="st-section-desc">文件路径和玩家信息配置。</p>
-
-        <div class="st-group">
-          <div class="st-group-title">文件路径</div>
-          <div class="st-field">
-            <label class="st-label">角色卡路径 (.json)</label>
-            <input class="st-input" id="cfg-charcard" type="text" placeholder="D:\test2\无限武库.json">
-          </div>
-          <div class="st-field">
-            <label class="st-label">预设路径 (.json) <span class="st-label-hint">留空使用内置预设</span></label>
-            <input class="st-input" id="cfg-preset" type="text" placeholder="D:\test2\Izumi Reload.json">
-          </div>
-        </div>
 
         <div class="st-group">
           <div class="st-group-title">玩家信息 <span style="font-weight:400;font-size:11px;opacity:0.6">（供 AI 引用）</span></div>
@@ -336,6 +346,7 @@
 
 <div id="st-toast"></div>
 
+<script src="ui-feedback.js"></script>
 <script src="settings.js"></script>
 </body>
 </html>
