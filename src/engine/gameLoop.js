@@ -140,10 +140,12 @@ async function runSinglePhaseTurn(session, userContent, req, res) {
   // Process user input through regex pipeline
   const processedInput = processUserInput(preset.regexRules, userContent, 0);
 
-  // Add user message to history
+  // Add user message to history and persist immediately so a mid-turn restart
+  // does not erase the user's input from the session file.
   sessionMgr.addMessage(session, 'user', processedInput, userContent, {
     html: userContent.replace(/\n/g, '<br>'),
   });
+  sessionMgr.saveSession(session);
   const userMsgIdx = session.history.length - 1;
 
   // Build context window — first 2 turns as stable anchor + last 10 recent turns
@@ -334,10 +336,12 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
   // Process user input
   const processedInput = processUserInput(preset.regexRules, userContent, 0);
 
-  // Add user message to history
+  // Add user message to history and persist immediately so a mid-turn restart
+  // does not erase the user's input from the session file.
   sessionMgr.addMessage(session, 'user', processedInput, userContent, {
     html: userContent.replace(/\n/g, '<br>'),
   });
+  sessionMgr.saveSession(session);
   const userMsgIdx = session.history.length - 1;
 
   // Build context history (same window as single-phase)

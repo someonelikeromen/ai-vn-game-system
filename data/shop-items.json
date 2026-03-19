@@ -1,5 +1,71 @@
 [
   {
+    "id": "4f7d7718-88f3-40cb-8125-8a0f083620c6",
+    "createdAt": "2026-03-19T15:54:10.505Z",
+    "name": "战术机驾驶技术 (Tactical Surface Fighter Piloting Skills)",
+    "type": "ApplicationTechnique",
+    "tier": 0,
+    "pricePoints": 120,
+    "requiredMedals": [],
+    "description": "来自《Muv-Luv Alternative》世界的正规卫士（Pilot）驾驶技术。将复杂的战术步行战斗机（TSF）操纵逻辑化为肌肉记忆，包含三维空间机动（AMBAC）、近战长刀格斗、突击炮射击以及针对BETA的战术规避动作。此项兑换仅提供软性技术与经验，不包含战术机本体。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: 纯驾驶技巧，不提升肉体力量 → 估算=1.0\nDUR: 无肉体物理防护提升 → 估算=1.0\nVIT: 包含抗G力呼吸法与耐力分配经验，但基础体质总量不变 → 估算=1.0\nREC: 无自愈提升 → 估算=1.0\nAGI: 提升机体控制力，不改变肉体移动速度 → 估算=1.0\nREF: 驾驶舱内的高速信息处理训练略微优化神经反应，但未突破人类极限 → 估算=1.0\nPER: 依赖机体传感器，肉眼感知无明显变化 → 估算=1.0\nMEN: 经历过模拟战与卫士心理训练，具备一定的战场抗压能力 → 估算=1.0\nSOL: 无灵魂层面变异 → 估算=1.0\nCHA: 无自然影响力变化 → 估算=1.0\n**1B 属性提纯汇总**\n- 提纯后所有物理与精神属性均未突破0★人类极限，覆盖维度=0项\n**1C 功能维度判定**\n覆盖0维度→调整-3星，结合上限强制下限0★\n**1D 实战模拟裁判**\n在无战术机（Mech）的情况下，该技术持有者对战同星级普通人无任何直接战斗优势（胜率约50%），维持0★。\n基础星级：0★\n#### 第二轮\n基准分：100\n- 前置条件-稀有（必须拥有或获取一台战术机/机甲才能发挥实际战斗价值，徒手状态下为屠龙之技）：-30%\n- 潜力 PS=+2（作为钥匙，可让驾驶员完美操纵并发挥出战术机2★~3★的重火力与高机动破坏力，跨越2个星级）：+50%\n最终积分 = 100 × (1 - 0.30 + 0.50) = 120\n#### 第三轮\n结论：0★ | 120积分 | 徽章：无",
+    "effects": {
+      "applicationTechniques": [
+        {
+          "schoolName": "战术机卫士操纵体系 (TSF Pilot Training)",
+          "school": "机甲驾驶",
+          "type": "制御技巧",
+          "parentSource": "",
+          "description": "针对战术步行战斗机的标准驾驶与战斗技巧体系，将复杂的OS反馈与双轴操纵杆操作转化为驾驶员的神经本能。",
+          "subTechniques": [
+            {
+              "name": "AMBAC 空间机动",
+              "type": "Active",
+              "proficiencyLevel": "熟练",
+              "costInitial": "无消耗",
+              "costMaintenance": "体力-轻",
+              "castTime": "Instant",
+              "cooldown": "无",
+              "hasRisk": false,
+              "riskDesc": "",
+              "tier": 0,
+              "desc": "主动质量移动姿态控制技术。利用机体四肢的质量在跳跃或失重状态下进行无工质姿态调整，实现三维空间中的高速变向与平滑机动，大幅降低推进剂消耗。"
+            },
+            {
+              "name": "突击炮射击与火控",
+              "type": "Active",
+              "proficiencyLevel": "熟练",
+              "costInitial": "无消耗",
+              "costMaintenance": "无",
+              "castTime": "Instant",
+              "cooldown": "无",
+              "hasRisk": false,
+              "riskDesc": "",
+              "tier": 0,
+              "desc": "熟练操作机载36mm/120mm突击炮进行移动射击、火力压制与多目标锁定，掌握利用机械臂快速更换弹匣的战术动作，确保火力网不间断。"
+            },
+            {
+              "name": "长刀/短刀近距离格斗",
+              "type": "Active",
+              "proficiencyLevel": "熟练",
+              "costInitial": "无消耗",
+              "costMaintenance": "体力-中",
+              "castTime": "Instant",
+              "cooldown": "无",
+              "hasRisk": false,
+              "riskDesc": "",
+              "tier": 0,
+              "desc": "使用战术机配备的近战武装进行迎击与突刺。精通利用机体自重与推进器瞬间加速所产生的动能，执行一击脱离的高效斩击，避免机体陷入混战。"
+            }
+          ]
+        }
+      ]
+    },
+    "sourceDescription": "战术机驾驶技术",
+    "generatedSessionId": "58fe057d-bd1c-4dce-a214-007f5c143abe",
+    "sourceWorld": "Muv-Luv (Alternative篇)"
+  },
+  {
     "id": "5c6d9f42-86f6-45e4-856b-8afc2d379ff5",
     "createdAt": "2026-03-17T13:08:17.162Z",
     "name": "99式卫士强化装备 (Type-99 Surface Pilot Suit)",
