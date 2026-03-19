@@ -178,30 +178,99 @@
         </label>
 
         <div id="mp-config" class="st-group">
-          <div class="st-group-title">阶段配置</div>
 
+          <!-- ── Phase 1 ── -->
+          <div class="st-group-title">阶段1 · 规划 <span class="st-label-hint">留空字段继承主接口</span></div>
           <div class="st-field">
-            <label class="st-label">阶段1 模型 <span class="st-label-hint">留空使用主接口</span></label>
-            <input class="st-input" id="cfg-p1-model" type="text" placeholder="（继承主接口）">
+            <label class="st-label">BaseURL</label>
+            <input class="st-input" id="cfg-p1-baseurl" type="text" placeholder="（继承主接口）">
           </div>
           <div class="st-field">
-            <label class="st-label">阶段1 Max Tokens</label>
+            <label class="st-label">API Key</label>
+            <div class="st-input-row">
+              <input class="st-input password-field" id="cfg-p1-apikey" type="password" placeholder="（继承主接口）">
+              <button class="st-icon-btn" data-toggle-pw="cfg-p1-apikey" title="显示/隐藏">👁</button>
+            </div>
+          </div>
+          <div class="st-field">
+            <label class="st-label">模型</label>
+            <div class="st-input-row">
+              <input class="st-input" id="cfg-p1-model" type="text" placeholder="（继承主接口）">
+              <button class="st-btn" id="btn-fetch-p1-models">获取列表</button>
+            </div>
+            <div id="st-p1-model-list" style="display:none;margin-top:6px">
+              <select class="st-select" id="cfg-p1-model-select"><option value="">-- 选择模型 --</option></select>
+            </div>
+          </div>
+          <div class="st-field">
+            <label class="st-label">Max Tokens</label>
             <input class="st-input" id="cfg-p1-maxtokens" type="number" min="128" max="8192" value="512">
           </div>
 
           <div class="st-divider"></div>
 
+          <!-- ── Phase 3 ── -->
+          <div class="st-group-title">阶段3 · 生成叙事 <span class="st-label-hint">留空字段继承主接口</span></div>
           <div class="st-field">
-            <label class="st-label">阶段4 模型 <span class="st-label-hint">留空使用主接口</span></label>
-            <input class="st-input" id="cfg-p4-model" type="text" placeholder="（继承主接口）">
+            <label class="st-label">BaseURL</label>
+            <input class="st-input" id="cfg-p3-baseurl" type="text" placeholder="（继承主接口）">
           </div>
           <div class="st-field">
-            <label class="st-label">阶段4 Max Tokens</label>
+            <label class="st-label">API Key</label>
+            <div class="st-input-row">
+              <input class="st-input password-field" id="cfg-p3-apikey" type="password" placeholder="（继承主接口）">
+              <button class="st-icon-btn" data-toggle-pw="cfg-p3-apikey" title="显示/隐藏">👁</button>
+            </div>
+          </div>
+          <div class="st-field">
+            <label class="st-label">模型</label>
+            <div class="st-input-row">
+              <input class="st-input" id="cfg-p3-model" type="text" placeholder="（继承主接口）">
+              <button class="st-btn" id="btn-fetch-p3-models">获取列表</button>
+            </div>
+            <div id="st-p3-model-list" style="display:none;margin-top:6px">
+              <select class="st-select" id="cfg-p3-model-select"><option value="">-- 选择模型 --</option></select>
+            </div>
+          </div>
+          <div class="st-field">
+            <label class="st-label">Max Tokens <span class="st-label-hint">留空继承主接口</span></label>
+            <input class="st-input" id="cfg-p3-maxtokens" type="number" min="256" max="131072" placeholder="（继承主接口）">
+          </div>
+
+          <div class="st-divider"></div>
+
+          <!-- ── Phase 4 ── -->
+          <div class="st-group-title">阶段4 · 状态更新 <span class="st-label-hint">留空字段继承主接口</span></div>
+          <div class="st-field">
+            <label class="st-label">BaseURL</label>
+            <input class="st-input" id="cfg-p4-baseurl" type="text" placeholder="（继承主接口）">
+          </div>
+          <div class="st-field">
+            <label class="st-label">API Key</label>
+            <div class="st-input-row">
+              <input class="st-input password-field" id="cfg-p4-apikey" type="password" placeholder="（继承主接口）">
+              <button class="st-icon-btn" data-toggle-pw="cfg-p4-apikey" title="显示/隐藏">👁</button>
+            </div>
+          </div>
+          <div class="st-field">
+            <label class="st-label">模型</label>
+            <div class="st-input-row">
+              <input class="st-input" id="cfg-p4-model" type="text" placeholder="（继承主接口）">
+              <button class="st-btn" id="btn-fetch-p4-models">获取列表</button>
+            </div>
+            <div id="st-p4-model-list" style="display:none;margin-top:6px">
+              <select class="st-select" id="cfg-p4-model-select"><option value="">-- 选择模型 --</option></select>
+            </div>
+          </div>
+          <div class="st-field">
+            <label class="st-label">Max Tokens</label>
             <input class="st-input" id="cfg-p4-maxtokens" type="number" min="256" max="16384" value="2048">
           </div>
 
           <div class="st-divider"></div>
 
+          <!-- ── RAG ── -->
+          <div class="st-group-title">检索配置</div>
           <div class="st-field">
             <label class="st-label">RAG Top-K <span class="st-label-hint">历史检索条数</span></label>
             <div class="st-num-row">

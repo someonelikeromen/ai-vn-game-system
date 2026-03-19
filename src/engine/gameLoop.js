@@ -15,7 +15,7 @@ const { buildContextWindow, buildPhase1Messages, buildPhase3Messages, buildPhase
 const { processForPrompt, processUserInput, fullDisplayPipeline } = require('./regexPipeline');
 const { createCompletion }                                 = require('../core/llmClient');
 const { processUpdateVariables, buildStatSnapshot, runAutoCalc, syncWorldIdentity, propagateWorldTime } = require('./varEngine');
-const { loadGameAssets, getUserPersona, applySessionCharName, syncSessionCharProfile, buildLLMConfig, buildShopLLMConfig, getConfig } = require('../core/config');
+const { loadGameAssets, getUserPersona, applySessionCharName, syncSessionCharProfile, buildLLMConfig, buildPhaseLLMConfig, buildShopLLMConfig, getConfig } = require('../core/config');
 const { retrieveFromStatData, extractCombatData } = require('./ragEngine');
 const shopStore  = require('../features/shop/shopStore');
 const shopEngine = require('../features/shop/shopEngine');
@@ -287,22 +287,29 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
   applySessionCharName(userPersona, session);
   const llmConfig   = buildLLMConfig(config);
 
-  // Phase-specific LLM configs (can override model/maxTokens for Phase 1 & 4)
+  // Phase-specific LLM configs — each phase can override model, baseUrl, apiKey, maxTokens
   const mp = config.multiPhase || {};
-  const phase1Config = {
-    ...llmConfig,
-    ...(mp.phase1Model    ? { model:     mp.phase1Model }    : {}),
-    ...(mp.phase1MaxTokens? { maxTokens: mp.phase1MaxTokens } : { maxTokens: 512 }),
+  const phase1Config = buildPhaseLLMConfig(llmConfig, {
+    model:       mp.phase1Model,
+    baseUrl:     mp.phase1BaseUrl,
+    apiKey:      mp.phase1ApiKey,
+    maxTokens:   mp.phase1MaxTokens || 512,
     temperature: 0.3,
-  };
-  const phase4Config = {
-    ...llmConfig,
-    ...(mp.phase4Model     ? { model:     mp.phase4Model }     : {}),
-    // No maxTokens cap for Phase 4 — let the model finish naturally.
-    // Only apply an explicit override if set in config.
-    ...(mp.phase4MaxTokens ? { maxTokens: mp.phase4MaxTokens } : { maxTokens: null }),
+  });
+  const phase3Config = buildPhaseLLMConfig(llmConfig, {
+    model:       mp.phase3Model,
+    baseUrl:     mp.phase3BaseUrl,
+    apiKey:      mp.phase3ApiKey,
+    maxTokens:   mp.phase3MaxTokens || null,
+    temperature: llmConfig.temperature,
+  });
+  const phase4Config = buildPhaseLLMConfig(llmConfig, {
+    model:       mp.phase4Model,
+    baseUrl:     mp.phase4BaseUrl,
+    apiKey:      mp.phase4ApiKey,
+    maxTokens:   mp.phase4MaxTokens || null,
     temperature: 0.6,
-  };
+  });
 
   const send = (event, data) => {
     if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
@@ -345,7 +352,7 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   send('phase', { phase: 1, label: '规划大纲', status: 'start' });
 
-  let phase1Result = { outline: [], logQueryTerms: [], reqCharUpdate: false, reqItemUpdate: '', reqCombatEnemies: [] };
+  let phase1Result = { outline: [], logQueryTerms: [], reqCharUpdate: false, reqItemUpdate: [], reqCombatEnemies: [] };
   {
     const p1Messages = buildPhase1Messages(preset, charCard, session.statData, prevHistory, userPersona, processedInput);
     log.chatReq(session.id + ':p1', p1Messages);
@@ -383,7 +390,8 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
         return;
       }
 
-      const jsonMatch = p1Raw.match(/```(?:json)?\s*([\s\S]*?)```/) || p1Raw.match(/(\{[\s\S]*\})/);
+      const p1Stripped = p1Raw.replace(/<think>[\s\S]*?<\/think>/gi, '');
+      const jsonMatch = p1Stripped.match(/```json\s*([\s\S]*?)```/) || p1Stripped.match(/```\s*(\{[\s\S]*?\})\s*```/) || p1Stripped.match(/(\{[\s\S]*\})/);
       if (!jsonMatch) {
         log.warn(`[PHASE1] No JSON found on attempt ${attempt + 1}/${MAX_RETRIES + 1}`);
         if (attempt < MAX_RETRIES) continue;
@@ -398,7 +406,7 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
           outline:          Array.isArray(parsed.outline)          ? parsed.outline          : [],
           logQueryTerms:    Array.isArray(parsed.logQueryTerms)    ? parsed.logQueryTerms    : [],
           reqCharUpdate:    Boolean(parsed.reqCharUpdate),
-          reqItemUpdate:    String(parsed.reqItemUpdate  || ''),
+          reqItemUpdate:    Array.isArray(parsed.reqItemUpdate) ? parsed.reqItemUpdate : (parsed.reqItemUpdate ? [String(parsed.reqItemUpdate)] : []),
           reqCombatEnemies: Array.isArray(parsed.reqCombatEnemies) ? parsed.reqCombatEnemies : [],
         };
         p1Done = true;
@@ -469,7 +477,7 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
     let attemptResponse = '';
     const t0p3 = Date.now();
     try {
-      await createCompletion(llmConfig, p3Messages, {
+      await createCompletion(phase3Config, p3Messages, {
         stream:    true,
         onRequest: (nReq) => { llmNodeReq = nReq; if (clientAborted) nReq.destroy(); },
         onChunk:   (delta, accumulated) => {
@@ -491,7 +499,7 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
       attemptResponse = prefillP3 + attemptResponse;
     }
     const durP3 = Date.now() - t0p3;
-    log.llm({ model: llmConfig.model, baseUrl: llmConfig.baseUrl, msgCount: p3Messages.length, stream: true, durationMs: durP3, responseChars: attemptResponse.length, phase: 3 });
+    log.llm({ model: phase3Config.model, baseUrl: phase3Config.baseUrl, msgCount: p3Messages.length, stream: true, durationMs: durP3, responseChars: attemptResponse.length, phase: 3 });
     log.chatResp(session.id + ':p3', attemptResponse, durP3);
 
     if (clientAborted) break;

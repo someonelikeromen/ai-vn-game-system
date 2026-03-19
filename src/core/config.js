@@ -51,6 +51,22 @@ function buildLLMConfig(userConfig) {
   };
 }
 
+/**
+ * Build a per-phase LLM config by overriding only the fields that are
+ * explicitly set in opts (falsy values are ignored → inherit from base).
+ * @param {object} base    - Result of buildLLMConfig(userConfig)
+ * @param {object} opts    - { model, baseUrl, apiKey, maxTokens, temperature }
+ */
+function buildPhaseLLMConfig(base, opts = {}) {
+  const out = { ...base };
+  if (opts.model)                       out.model       = opts.model;
+  if (opts.baseUrl)                     out.baseUrl     = opts.baseUrl;
+  if (opts.apiKey)                      out.apiKey      = opts.apiKey;
+  if (opts.maxTokens != null)           out.maxTokens   = opts.maxTokens;
+  if (opts.temperature != null)         out.temperature = opts.temperature;
+  return out;
+}
+
 /** Shop uses its own API settings; falls back to main config if shop fields are absent. */
 function buildShopLLMConfig(userConfig) {
   return {
@@ -185,6 +201,7 @@ module.exports = {
   loadUserConfig,
   saveUserConfig,
   buildLLMConfig,
+  buildPhaseLLMConfig,
   buildShopLLMConfig,
   loadGameAssets,
   invalidateAssetsCache,

@@ -1,3 +1,58 @@
+## [v0.32] — 支持为各推理阶段单独配置 API、模型（2026-03-19）
+
+### 修改文件
+- `src/core/config.js`
+- `src/engine/gameLoop.js`
+- `public/settings.html`
+- `public/settings.js`
+
+### 修改内容
+- `config.js`：新增 `buildPhaseLLMConfig(base, opts)` helper，将 base LLM config 与 phase 级别的 model/baseUrl/apiKey/maxTokens 合并（空值继承 base）
+- `gameLoop.js`：Phase 1 / Phase 3 / Phase 4 均改为使用 `buildPhaseLLMConfig` 构建独立 config；Phase 3 原先直接使用 `llmConfig`，现在也支持独立覆盖
+- `settings.html`：多阶段推理面板重构，Phase 1、Phase 3、Phase 4 各自有独立的 BaseURL、API Key、模型、Max Tokens 输入框及"获取模型列表"下拉
+- `settings.js`：load/save 新增 `phase1/3/4BaseUrl`、`phase1/3/4ApiKey`、`phase1/3/4MaxTokens` 字段；各阶段"获取列表"按钮自动 fallback 到主接口地址；通用 `data-toggle-pw` 密码显隐绑定
+
+### 修改原因
+- 不同阶段对模型能力要求差异大（规划阶段可用轻量模型节省成本，生成阶段需要高质量模型），且部分场景需要不同的 API 提供商
+
+### 修改结果
+- 可为 Phase 1/3/4 分别指定不同的 API 地址、密钥和模型，留空字段则继承主接口设置
+
+## [v0.31] — 扩展 PHASE1 规划字段：outline/logQueryTerms 不限数量，reqItemUpdate 改为含子系统的数组（2026-03-19）
+
+### 修改文件
+- `src/content/worldbook.js`
+- `src/engine/gameLoop.js`
+- `src/engine/promptBuilder.js`
+
+### 修改内容
+- worldbook.js ID 65 prompt：`outline` 示例扩展至4拍并移除"3~5个"数量限制；`logQueryTerms` 移除"1~8个"上限；`reqItemUpdate` 从空字符串改为数组格式，并要求每项注明所属子系统（如 "瑞士军刀（Inventory）"）
+- gameLoop.js：`reqItemUpdate` 解析从 `String()` 改为 `Array`，兼容旧字符串回退（包裹为单元素数组）；初始值从 `''` 改为 `[]`
+- promptBuilder.js：更新 JSDoc 注释中的字段类型说明
+
+### 修改原因
+- 原 prompt 对节拍数和关键词数施加了硬性上限，导致模型在复杂回合只生成少量节拍/检索词
+- `reqItemUpdate` 作为单字符串无法同时描述多件道具/能力及其所属子系统，信息量不足
+
+### 修改结果
+- 模型可按实际剧情需求输出任意数量的节拍和检索词
+- `reqItemUpdate` 可携带完整的多道具/子系统信息，便于后续 Phase 3/4 上下文注入
+
+## [v0.30] — 修复 PHASE1 JSON 解析被 think 块误导导致回合中止（2026-03-19）
+
+### 修改文件
+- `src/engine/gameLoop.js`
+
+### 修改内容
+- PHASE1 JSON 提取前，先用正则剥离 `<think>...</think>` 块内容
+- 正则优先匹配 ` ```json ` 明确类型的代码块，其次匹配任意包裹 `{}` 的代码块，最后回退裸 `{}` 匹配
+
+### 修改原因
+- 模型（如 gemini）返回带 `<think>` 思考块的响应时，思考块内的文本（如"不使用\`\`\`yaml格式包裹）"）包含反引号序列，旧正则 ` ```(?:json)? ` 会命中该位置并提取 "yaml格式包裹)，..." 作为 JSON 内容，导致解析失败并 abort 整个回合
+
+### 修改结果
+- 即使模型输出带 `<think>` 块，PHASE1 也能正确定位并解析 JSON 输出
+
 ## [v0.29] — 全局字体变量覆盖：style.css 所有硬编码 px 替换为 CSS 变量（2026-03-18）
 
 ### 修改文件

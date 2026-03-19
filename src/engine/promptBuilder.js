@@ -442,7 +442,7 @@ function buildInitMessages(preset, charCard, statData, userPersona, greetingInde
  *   - Update Rules (IDs 51-64, order>=990): excluded (phase [4] only)
  *
  * Expected response after </think>:
- * { "outline": [...], "logQueryTerms": [...], "reqCharUpdate": bool, "reqItemUpdate": "" }
+ * { "outline": [...], "logQueryTerms": [...], "reqCharUpdate": bool, "reqItemUpdate": ["道具（子系统）", ...] }
  *
  * @param {object} preset
  * @param {object} charCard

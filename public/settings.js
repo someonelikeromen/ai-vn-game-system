@@ -86,6 +86,17 @@ function bindEyeBtn(btnId, inputId) {
 bindEyeBtn('btn-toggle-key',     'cfg-apikey');
 bindEyeBtn('btn-toggle-shopkey', 'cfg-shop-apikey');
 
+// Bind all phase API key toggle buttons via data-toggle-pw attribute
+document.querySelectorAll('[data-toggle-pw]').forEach(btn => {
+  const inputId = btn.getAttribute('data-toggle-pw');
+  const inp = $(inputId);
+  if (!inp) return;
+  btn.addEventListener('click', () => {
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+  });
+});
+
 // ── Slider sync ───────────────────────────────────────────────────────────────
 function bindSlider(rangeId, numberId) {
   const r = $(rangeId), n = $(numberId);
@@ -118,12 +129,20 @@ async function loadConfig() {
     const mp = cfg.multiPhase || {};
     $('cfg-mp-enabled').checked  = mp.enabled !== false;
     $('toggle-mp-enabled').classList.toggle('on', mp.enabled !== false);
-    $('cfg-p1-model').value      = mp.phase1Model     || '';
-    $('cfg-p1-maxtokens').value  = mp.phase1MaxTokens || 512;
-    $('cfg-p4-model').value      = mp.phase4Model     || '';
-    $('cfg-p4-maxtokens').value  = mp.phase4MaxTokens || 2048;
-    $('cfg-rag-topk').value      = mp.ragTopK         || 8;
-    $('cfg-rag-topk-range').value = mp.ragTopK        || 8;
+    $('cfg-p1-baseurl').value    = mp.phase1BaseUrl    || '';
+    $('cfg-p1-apikey').value     = mp.phase1ApiKey     || '';
+    $('cfg-p1-model').value      = mp.phase1Model      || '';
+    $('cfg-p1-maxtokens').value  = mp.phase1MaxTokens  || 512;
+    $('cfg-p3-baseurl').value    = mp.phase3BaseUrl    || '';
+    $('cfg-p3-apikey').value     = mp.phase3ApiKey     || '';
+    $('cfg-p3-model').value      = mp.phase3Model      || '';
+    $('cfg-p3-maxtokens').value  = mp.phase3MaxTokens  || '';
+    $('cfg-p4-baseurl').value    = mp.phase4BaseUrl    || '';
+    $('cfg-p4-apikey').value     = mp.phase4ApiKey     || '';
+    $('cfg-p4-model').value      = mp.phase4Model      || '';
+    $('cfg-p4-maxtokens').value  = mp.phase4MaxTokens  || 2048;
+    $('cfg-rag-topk').value      = mp.ragTopK          || 8;
+    $('cfg-rag-topk-range').value = mp.ragTopK         || 8;
     $('mp-config').style.opacity = mp.enabled !== false ? '1' : '0.4';
     $('mp-config').style.pointerEvents = mp.enabled !== false ? '' : 'none';
 
@@ -155,11 +174,19 @@ async function saveConfig() {
 
     multiPhase: {
       enabled:          $('cfg-mp-enabled').checked,
-      phase1Model:      $('cfg-p1-model').value.trim(),
+      phase1BaseUrl:    $('cfg-p1-baseurl').value.trim()  || undefined,
+      phase1ApiKey:     $('cfg-p1-apikey').value.trim()   || undefined,
+      phase1Model:      $('cfg-p1-model').value.trim()    || undefined,
       phase1MaxTokens:  parseInt($('cfg-p1-maxtokens').value) || 512,
-      phase4Model:      $('cfg-p4-model').value.trim(),
+      phase3BaseUrl:    $('cfg-p3-baseurl').value.trim()  || undefined,
+      phase3ApiKey:     $('cfg-p3-apikey').value.trim()   || undefined,
+      phase3Model:      $('cfg-p3-model').value.trim()    || undefined,
+      phase3MaxTokens:  parseInt($('cfg-p3-maxtokens').value) || undefined,
+      phase4BaseUrl:    $('cfg-p4-baseurl').value.trim()  || undefined,
+      phase4ApiKey:     $('cfg-p4-apikey').value.trim()   || undefined,
+      phase4Model:      $('cfg-p4-model').value.trim()    || undefined,
       phase4MaxTokens:  parseInt($('cfg-p4-maxtokens').value) || 2048,
-      ragTopK:          parseInt($('cfg-rag-topk').value)     || 8,
+      ragTopK:          parseInt($('cfg-rag-topk').value) || 8,
     },
 
     userName:        $('cfg-username').value.trim(),
@@ -219,12 +246,60 @@ $('cfg-model-select').addEventListener('change', function () {
 });
 
 $('btn-fetch-shop-models').addEventListener('click', () => {
-  const baseUrl = $('cfg-shop-baseurl').value.trim() || $('cfg-baseurl').value.trim();
-  const apiKey  = $('cfg-shop-apikey').value.trim()  || $('cfg-apikey').value.trim();
   fetchModels('cfg-shop-baseurl', 'cfg-shop-apikey', 'st-shop-model-list', 'cfg-shop-model-select');
 });
 $('cfg-shop-model-select').addEventListener('change', function () {
   if (this.value) { $('cfg-shop-model').value = this.value; markDirty(); }
+});
+
+// Phase model fetch helpers (fall back to main baseUrl/apiKey when phase field is empty)
+function fetchPhaseModels(phaseBaseUrlId, phaseApiKeyId, listId, selectId, modelInputId) {
+  const baseUrl = $(phaseBaseUrlId).value.trim() || $('cfg-baseurl').value.trim();
+  const apiKey  = $(phaseApiKeyId).value.trim()  || $('cfg-apikey').value.trim();
+  if (!baseUrl) { toast('请先填写 API 地址（或主接口地址）', 'err'); return; }
+  $(phaseBaseUrlId)._fallbackUrl = baseUrl;
+  $(phaseApiKeyId)._fallbackKey  = apiKey;
+  fetchModels(phaseBaseUrlId, phaseApiKeyId, listId, selectId);
+  // restore original values after fetchModels reads them
+}
+
+$('btn-fetch-p1-models').addEventListener('click', () => {
+  const baseUrl = $('cfg-p1-baseurl').value.trim() || $('cfg-baseurl').value.trim();
+  const apiKey  = $('cfg-p1-apikey').value.trim()  || $('cfg-apikey').value.trim();
+  if (!baseUrl) { toast('请先填写阶段1或主接口的 API 地址', 'err'); return; }
+  const tmpBase = $('cfg-p1-baseurl').value; const tmpKey = $('cfg-p1-apikey').value;
+  $('cfg-p1-baseurl').value = baseUrl; $('cfg-p1-apikey').value = apiKey;
+  fetchModels('cfg-p1-baseurl', 'cfg-p1-apikey', 'st-p1-model-list', 'cfg-p1-model-select')
+    .finally(() => { $('cfg-p1-baseurl').value = tmpBase; $('cfg-p1-apikey').value = tmpKey; });
+});
+$('cfg-p1-model-select').addEventListener('change', function () {
+  if (this.value) { $('cfg-p1-model').value = this.value; markDirty(); }
+});
+
+$('btn-fetch-p3-models').addEventListener('click', () => {
+  const baseUrl = $('cfg-p3-baseurl').value.trim() || $('cfg-baseurl').value.trim();
+  const apiKey  = $('cfg-p3-apikey').value.trim()  || $('cfg-apikey').value.trim();
+  if (!baseUrl) { toast('请先填写阶段3或主接口的 API 地址', 'err'); return; }
+  const tmpBase = $('cfg-p3-baseurl').value; const tmpKey = $('cfg-p3-apikey').value;
+  $('cfg-p3-baseurl').value = baseUrl; $('cfg-p3-apikey').value = apiKey;
+  fetchModels('cfg-p3-baseurl', 'cfg-p3-apikey', 'st-p3-model-list', 'cfg-p3-model-select')
+    .finally(() => { $('cfg-p3-baseurl').value = tmpBase; $('cfg-p3-apikey').value = tmpKey; });
+});
+$('cfg-p3-model-select').addEventListener('change', function () {
+  if (this.value) { $('cfg-p3-model').value = this.value; markDirty(); }
+});
+
+$('btn-fetch-p4-models').addEventListener('click', () => {
+  const baseUrl = $('cfg-p4-baseurl').value.trim() || $('cfg-baseurl').value.trim();
+  const apiKey  = $('cfg-p4-apikey').value.trim()  || $('cfg-apikey').value.trim();
+  if (!baseUrl) { toast('请先填写阶段4或主接口的 API 地址', 'err'); return; }
+  const tmpBase = $('cfg-p4-baseurl').value; const tmpKey = $('cfg-p4-apikey').value;
+  $('cfg-p4-baseurl').value = baseUrl; $('cfg-p4-apikey').value = apiKey;
+  fetchModels('cfg-p4-baseurl', 'cfg-p4-apikey', 'st-p4-model-list', 'cfg-p4-model-select')
+    .finally(() => { $('cfg-p4-baseurl').value = tmpBase; $('cfg-p4-apikey').value = tmpKey; });
+});
+$('cfg-p4-model-select').addEventListener('change', function () {
+  if (this.value) { $('cfg-p4-model').value = this.value; markDirty(); }
 });
 
 // ── Test API ──────────────────────────────────────────────────────────────────
