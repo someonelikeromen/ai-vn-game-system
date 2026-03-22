@@ -14,8 +14,9 @@
 const log = require('../core/logger');
 const { buildStatSnapshot, processUpdateVariables, runAutoCalc, syncWorldIdentity, propagateWorldTime } = require('../engine/varEngine');
 const { fullDisplayPipeline } = require('../engine/regexPipeline');
-const { runStreamTurn } = require('../engine/gameLoop');
+const { runStreamTurn, processNarrativeSpawnsAsync } = require('../engine/gameLoop');
 const { loadGameAssets, getUserPersona, applySessionCharName } = require('../core/config');
+const worldArchiveStore = require('../features/world/worldArchiveStore');
 
 function sseHeaders(res) {
   res.setHeader('Content-Type', 'text/event-stream');
@@ -157,8 +158,19 @@ function registerRoutes(app, deps) {
       const idx = anchors.findIndex(a => a.worldKey === worldKey);
       if (idx === -1) return res.status(404).json({ error: `Anchor "${worldKey}" not found` });
 
-      const anchor      = anchors[idx];
-      const displayName = Array.isArray(anchor.WorldName) ? anchor.WorldName[0] : (anchor.WorldName || worldKey);
+      const anchor = anchors[idx];
+      const rawName = Array.isArray(anchor.WorldName) ? anchor.WorldName[0] : (anchor.WorldName || worldKey);
+
+      // 优先使用档案库的 displayName 作为 key，保证与世界档案 1:1 对应
+      // 这样 Phase 2 存 NPC 和商店查询都使用同一个 key，无需模糊匹配
+      const allArchivesForKey = worldArchiveStore.loadArchives();
+      const matchedForKey = allArchivesForKey.find(a =>
+        (a.displayName || '') === rawName ||
+        a.worldKey === worldKey ||
+        (a.displayName || '').includes(rawName.slice(0, 4)) ||
+        rawName.includes((a.displayName || '').slice(0, 4))
+      );
+      const displayName = (matchedForKey && matchedForKey.displayName) ? matchedForKey.displayName : rawName;
 
       if (!session.statData.Multiverse) session.statData.Multiverse = { CurrentWorldName: null, Archives: {}, BaselineSeconds: 0, OriginWorldKey: null };
       const mv = session.statData.Multiverse;
@@ -202,6 +214,40 @@ function registerRoutes(app, deps) {
 
       sessionMgr.saveSession(session);
       log.session('USE_ANCHOR', `Session ${session.id} activated world "${displayName}" originKey="${mv.OriginWorldKey}" inheritIdentity=${inheritIdentity}`);
+
+      // ── Background: pre-generate NPCs from betaDatabase catalog ──────────────
+      // Find the matching world archive and batch-spawn all betaDatabase entries
+      // so Phase 2 extractCombatData can find them on first encounter.
+      setImmediate(() => {
+        try {
+          const catalog = matchedForKey && matchedForKey.betaDatabase && matchedForKey.betaDatabase.catalog;
+          if (Array.isArray(catalog) && catalog.length > 0) {
+            log.info(`[USE_ANCHOR] betaDatabase found (${catalog.length} entries) — queuing background NPC pre-generation for "${displayName}"`);
+            const snapshot = buildStatSnapshot(session.statData);
+            const spawnTags = catalog.map(entry => ({
+              name:        entry.name || '',
+              type:        'Monster',
+              sourceWorld: displayName,
+              description: [
+                entry.latinName  ? `学名：${entry.latinName}` : '',
+                entry.nickname   ? `俗称：${entry.nickname}`  : '',
+                entry.combatTier ? `战力星级：${entry.combatTier}` : '',
+                entry.primaryThreat ? `主要威胁：${entry.primaryThreat}` : '',
+                entry.tierBasis  ? `战力依据：${entry.tierBasis}` : '',
+                entry.antiFeat   ? `Anti-Feat：${entry.antiFeat}` : '',
+                entry.appearance ? `外形：${entry.appearance.slice(0, 200)}` : '',
+              ].filter(Boolean).join('\n'),
+              hostile:  true,
+              location: null,
+            }));
+            processNarrativeSpawnsAsync(session.id, spawnTags, snapshot, session.statData)
+              .catch(err => log.error(`[USE_ANCHOR] betaDatabase pre-spawn error: ${err.message}`));
+          }
+        } catch (e) {
+          log.error('[USE_ANCHOR] betaDatabase pre-spawn setup error:', e.message);
+        }
+      });
+
       res.json({ ok: true, worldName: displayName, statData: session.statData });
     } catch (e) {
       log.error('POST /api/sessions/:id/use-anchor error', e);

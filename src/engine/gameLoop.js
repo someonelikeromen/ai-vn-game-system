@@ -17,11 +17,47 @@ const { createCompletion }                                 = require('../core/ll
 const { processUpdateVariables, buildStatSnapshot, runAutoCalc, syncWorldIdentity, propagateWorldTime } = require('./varEngine');
 const { loadGameAssets, getUserPersona, applySessionCharName, syncSessionCharProfile, buildLLMConfig, buildPhaseLLMConfig, buildShopLLMConfig, getConfig } = require('../core/config');
 const { retrieveFromStatData, extractCombatData } = require('./ragEngine');
-const shopStore  = require('../features/shop/shopStore');
-const shopEngine = require('../features/shop/shopEngine');
-const shopPrompt = require('../features/shop/shopPrompt');
-const npcPrompt  = require('../features/npc/npcPrompt');
-const npcEngine  = require('../features/npc/npcEngine');
+const shopStore        = require('../features/shop/shopStore');
+const shopEngine       = require('../features/shop/shopEngine');
+const shopPrompt       = require('../features/shop/shopPrompt');
+const npcPrompt        = require('../features/npc/npcPrompt');
+const npcEngine        = require('../features/npc/npcEngine');
+const worldArchiveStore = require('../features/world/worldArchiveStore');
+
+// ─── Bestiary Lookup Helper ───────────────────────────────────────────────────
+
+/**
+ * Find a betaDatabase catalog entry matching `entityName` from any world archive
+ * whose displayName fuzzy-matches `worldKey`.
+ *
+ * Returns the matching catalog entry object, or null if not found.
+ */
+function findBestiaryEntry(entityName, worldKey) {
+  if (!entityName) return null;
+  try {
+    const archives = worldArchiveStore.loadArchives();
+    // Find the archive whose displayName most closely matches worldKey
+    const archive = archives.find(a =>
+      a.worldKey === worldKey ||
+      (a.displayName || '').includes(worldKey) ||
+      worldKey.includes(a.displayName || '') ||
+      // loose: share at least 4 CJK chars or significant substring
+      (worldKey.length >= 4 && (a.displayName || '').includes(worldKey.slice(0, 4)))
+    );
+    if (!archive) return null;
+    const catalog = archive.betaDatabase?.catalog;
+    if (!Array.isArray(catalog)) return null;
+    const nameLower = entityName.toLowerCase();
+    return catalog.find(e =>
+      (e.name        || '').toLowerCase().includes(nameLower) ||
+      nameLower.includes((e.name || '').toLowerCase()) ||
+      (e.latinName   || '').toLowerCase().includes(nameLower) ||
+      (e.nickname    || '').toLowerCase().includes(nameLower)
+    ) || null;
+  } catch (_) {
+    return null;
+  }
+}
 
 // ─── SystemGrant Tag Parser ───────────────────────────────────────────────────
 
@@ -93,6 +129,29 @@ function parseSystemSpawnTags(text) {
     }
   }
   return spawns;
+}
+
+// ─── SystemRedeemItem Tag Parser ─────────────────────────────────────────────
+
+/**
+ * Parse <SystemRedeemItem> tags from Phase 4 output.
+ * Each tag contains the name of a shop item to redeem for free.
+ *
+ * Format (plain text body):
+ *   <SystemRedeemItem>物品名</SystemRedeemItem>
+ *
+ * @param {string} text
+ * @returns {string[]} Array of item names to redeem
+ */
+function parseSystemRedeemItemTags(text) {
+  const names = [];
+  const re = /<SystemRedeemItem[^>]*>([\s\S]*?)<\/SystemRedeemItem>/gi;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const name = m[1].trim();
+    if (name) names.push(name);
+  }
+  return names;
 }
 
 // ─── Core Game Turn (SSE Streaming) ──────────────────────────────────────────
@@ -312,6 +371,8 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
     maxTokens:   mp.phase4MaxTokens || null,
     temperature: 0.6,
   });
+  // Shop LLM config for Phase 2 item evaluation (same config used by NarrativeGrant/Spawn)
+  const shopItemConfig = buildShopLLMConfig(config);
 
   const send = (event, data) => {
     if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
@@ -436,7 +497,7 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
   if (clientAborted) { if (!res.writableEnded) res.end(); return; }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // PHASE 2 — Info Retrieval (RAG + context assembly, no LLM)
+  // PHASE 2 — Info Retrieval + Item Evaluation (RAG + combat + reqItemUpdate)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   send('phase', { phase: 2, label: '检索信息', status: 'start' });
 
@@ -448,7 +509,78 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
   const combatData = extractCombatData(session.statData, phase1Result.reqCombatEnemies);
   const combatCount = combatData?.entities?.length || 0;
 
-  send('phase', { phase: 2, label: '检索信息', status: 'done', logCount, combatCount });
+  // Enemies NOT matched to existing NPCs → trigger background spawn generation (up to 10)
+  if (phase1Result.reqCombatEnemies.length > 0) {
+    const resolvedNPCNames = new Set(
+      (combatData?.entities || [])
+        .filter(e => e._sourceType === 'NPC')
+        .map(e => (e.name || '').toLowerCase())
+    );
+    const unresolvedEnemies = phase1Result.reqCombatEnemies
+      .filter(name => name && !resolvedNPCNames.has(name.toLowerCase()))
+      .slice(0, 10);
+
+    if (unresolvedEnemies.length > 0) {
+      log.info(`[PHASE2] ${unresolvedEnemies.length} unresolved enemies → spawning: ${unresolvedEnemies.join(', ')}`);
+      const _snapshotForP2Spawn = buildStatSnapshot(session.statData);
+      const _statDataForP2Spawn = session.statData;
+      const autoSpawnTags = unresolvedEnemies.map(name => ({
+        name,
+        type:        'Monster',
+        sourceWorld: '',
+        description: `${name}（Phase 1 战斗规划请求）`,
+        hostile:     true,
+        location:    null,
+      }));
+      const _sidForP2Spawn = session.id;
+      setImmediate(() => {
+        processNarrativeSpawnsAsync(_sidForP2Spawn, autoSpawnTags, _snapshotForP2Spawn, _statDataForP2Spawn)
+          .catch(err => log.error('Phase2 unresolved enemy spawn error', err));
+      });
+    }
+  }
+
+  // reqItemUpdate: synchronous batch evaluation → add to shop at normal price → inject into P3/P4
+  let evaluatedItems = [];
+  if (phase1Result.reqItemUpdate.length > 0 && !clientAborted) {
+    const itemBatch   = phase1Result.reqItemUpdate.slice(0, 10);
+    const prevItems   = shopStore.loadItems().slice(0, 8);
+    const itemMsgs    = shopPrompt.buildNarrativeItemBatchMessages(itemBatch, prevItems, buildStatSnapshot(session.statData));
+    log.info(`[PHASE2] Evaluating ${itemBatch.length} reqItemUpdate items synchronously`);
+    log.shopReq('itemUpdate:p2', itemMsgs);
+    try {
+      const t0item = Date.now();
+      const itemRaw = await createCompletion(shopItemConfig, itemMsgs, {
+        stream:    false,
+        onRequest: (nReq) => { llmNodeReq = nReq; if (clientAborted) nReq.destroy(); },
+      });
+      log.shopResp('itemUpdate:p2', itemRaw, Date.now() - t0item);
+      log.llm({ model: shopItemConfig.model, baseUrl: shopItemConfig.baseUrl, msgCount: itemMsgs.length, stream: false, durationMs: Date.now() - t0item, responseChars: itemRaw.length, phase: 2 });
+
+      const parsed = shopEngine.parseGachaBatchResponse(itemRaw);
+      evaluatedItems = parsed.filter(item => item?.name);
+
+      // Add to shop at normal (evaluated) price — no auto-apply, player redeems manually
+      for (const item of evaluatedItems) {
+        try {
+          shopStore.addItem({
+            ...item,
+            narrativeItemUpdate:  true,
+            narrativeGrantedAt:   new Date().toISOString(),
+            sourceDescription:    item.description || item.name,
+          });
+        } catch (addErr) {
+          log.warn(`[PHASE2] shopStore.addItem "${item.name}" failed: ${addErr.message}`);
+        }
+      }
+      log.info(`[PHASE2] ${evaluatedItems.length} items evaluated and added to shop`);
+    } catch (itemErr) {
+      log.warn(`[PHASE2] Item evaluation failed: ${itemErr.message} — continuing without item context`);
+      evaluatedItems = [];
+    }
+  }
+
+  send('phase', { phase: 2, label: '检索信息', status: 'done', logCount, combatCount, itemCount: evaluatedItems.length });
 
   if (clientAborted) { if (!res.writableEnded) res.end(); return; }
 
@@ -459,7 +591,7 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
 
   const p3Messages = buildPhase3Messages(
     preset, charCard, session.statData, contextHistory, userPersona, processedInput,
-    { outline: phase1Result.outline, retrievedLogs, combatData }
+    { outline: phase1Result.outline, retrievedLogs, combatData, evaluatedItems }
   );
   log.chatReq(session.id + ':p3', p3Messages);
 
@@ -538,7 +670,7 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
   let phase4Response = '';
   try {
     const MAX_P4_RETRIES = MAX_RETRIES;
-    const p4BaseMessages  = buildPhase4Messages(charCard, session.statData, phase3Response);
+    const p4BaseMessages  = buildPhase4Messages(charCard, session.statData, phase3Response, evaluatedItems);
     const t0p4 = Date.now();
 
     for (let attempt = 0; attempt <= MAX_P4_RETRIES; attempt++) {
@@ -613,6 +745,45 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
   // Process UpdateVariable from Phase 4 (and ignore any stray ones in Phase 3)
   const templateVars = { userName: userPersona.name, charName: charCard.name };
   processUpdateVariables(phase4Response, session.statData, templateVars);
+
+  // SystemRedeemItem tags in Phase 4 → free redemption of Phase 2 evaluated items
+  // Phase 4 outputs these when the narrative confirms the player actually obtained an item.
+  const redeemNames = parseSystemRedeemItemTags(phase4Response);
+  const fallbackRedeemNames = [];   // names that need fallback batch eval
+  if (redeemNames.length > 0) {
+    const allShopItems = shopStore.loadItems();
+    for (const name of redeemNames) {
+      const nameLC  = name.toLowerCase().trim();
+      // Prefer shop-saved version (has id/timestamps); fall back to evaluatedItems in-memory
+      const savedItem = allShopItems.find(it => (it.name || '').toLowerCase().trim() === nameLC)
+                     || evaluatedItems.find(it => (it.name || '').toLowerCase().trim() === nameLC);
+      if (!savedItem) {
+        // Not in shop OR evaluatedItems — queue for fallback generation
+        log.warn(`[REDEEM] "${name}" not found in shop/evaluatedItems — queuing fallback evaluation`);
+        fallbackRedeemNames.push(name);
+        continue;
+      }
+      const freeItem = { ...savedItem, pricePoints: 0, requiredMedals: [] };
+      try {
+        shopEngine.executeRedemption(freeItem, session, templateVars);
+        log.shop('REDEEM', `SystemRedeemItem: free-redeemed "${savedItem.name}" (${savedItem.tier}★) → session ${session.id}`);
+      } catch (redeemErr) {
+        log.error(`SystemRedeemItem "${name}" executeRedemption failed: ${redeemErr.message}`);
+      }
+    }
+  }
+
+  // Fallback: items in <SystemRedeemItem> that were absent from shop/evaluatedItems
+  // → batch-evaluate then free-apply asynchronously (background, non-blocking)
+  if (fallbackRedeemNames.length > 0) {
+    const _sidForFallback  = session.id;
+    const _snapForFallback = buildStatSnapshot(session.statData);
+    setImmediate(() => {
+      processRedeemFallbackAsync(_sidForFallback, fallbackRedeemNames, _snapForFallback)
+        .catch(err => log.error('SystemRedeemFallback background error', err));
+    });
+  }
+
   propagateWorldTime(session.statData);
   runAutoCalc(session.statData);
   syncSessionCharProfile(session);
@@ -769,6 +940,141 @@ async function processNarrativeGrantsAsync(sessionId, grantTags, snapshotAtGrant
   }
 }
 
+// ─── Phase 1 Item Updates Background Processing ───────────────────────────────
+
+/**
+ * Background: batch-evaluate up to 10 reqItemUpdate items from Phase 1 planning.
+ * Uses gacha-style batch prompt → JSON array response → add to shop + auto-apply for free.
+ *
+ * @param {string}   sessionId
+ * @param {string[]} itemDescriptions - From phase1Result.reqItemUpdate (max 10)
+ * @param {object}   snapshotAtPhase  - statData snapshot at evaluation time
+ */
+async function processPhase1ItemUpdatesAsync(sessionId, itemDescriptions, snapshotAtPhase) {
+  const config      = getConfig();
+  const llmConfig   = buildShopLLMConfig(config);
+  const { charCard } = loadGameAssets(config);
+  const userPersona = getUserPersona(config);
+
+  const MAX_ITEMS = 10;
+  const batch = itemDescriptions.slice(0, MAX_ITEMS);
+
+  try {
+    log.shop('ITEM_UPDATE', `Batch evaluating ${batch.length} items for session ${sessionId}: ${batch.join(', ')}`);
+
+    const previousItems = shopStore.loadItems().slice(0, 8);
+    const messages      = shopPrompt.buildNarrativeItemBatchMessages(batch, previousItems, snapshotAtPhase);
+    log.shopReq(`itemUpdate:batch`, messages);
+
+    let fullResponse = '';
+    const t0 = Date.now();
+    await createCompletion(llmConfig, messages, {
+      stream:  true,
+      onChunk: (_d, acc) => { fullResponse = acc; },
+    });
+    const durMs = Date.now() - t0;
+    log.shopResp(`itemUpdate:batch`, fullResponse, durMs);
+    log.llm({ model: llmConfig.model, baseUrl: llmConfig.baseUrl, msgCount: messages.length, stream: true, durationMs: durMs, responseChars: fullResponse.length });
+
+    const items = shopEngine.parseGachaBatchResponse(fullResponse);
+    if (!items.length) throw new Error('批量评估返回空数组');
+
+    const sess = sessionMgr.getSession(sessionId);
+    if (!sess) return;
+    applySessionCharName(userPersona, sess);
+    const vars = { userName: userPersona.name, charName: charCard.name };
+
+    for (const item of items) {
+      if (!item?.name) continue;
+      try {
+        const savedItem = shopStore.addItem({
+          ...item,
+          narrativeItemUpdate:    true,
+          narrativeGrantedAt:     new Date().toISOString(),
+          sourceDescription:      item.description || item.name,
+        });
+        const freeItem = { ...savedItem, pricePoints: 0, requiredMedals: [] };
+        shopEngine.executeRedemption(freeItem, sess, vars);
+        log.shop('ITEM_UPDATE', `Applied "${savedItem.name}" (${savedItem.tier}★) to session ${sessionId}`);
+      } catch (err) {
+        log.error(`ItemUpdate apply "${item.name}" failed: ${err.message}`);
+      }
+    }
+
+    sessionMgr.saveSession(sess);
+
+  } catch (err) {
+    log.error(`Phase1ItemUpdates batch failed for session ${sessionId}: ${err.message}`);
+  }
+}
+
+// ─── SystemRedeemItem Fallback Background Processing ─────────────────────────
+
+/**
+ * Background: batch-evaluate item names that appeared in <SystemRedeemItem> tags but
+ * were absent from both the shop store and the current turn's evaluatedItems.
+ * Evaluates → adds to shop → free-redeems into session (price=0).
+ *
+ * @param {string}   sessionId
+ * @param {string[]} missedNames  - Item names to generate (plain names, no subsystem suffix)
+ * @param {object}   snapshot     - statData snapshot at time of fallback trigger
+ */
+async function processRedeemFallbackAsync(sessionId, missedNames, snapshot) {
+  const config      = getConfig();
+  const llmConfig   = buildShopLLMConfig(config);
+  const { charCard } = loadGameAssets(config);
+  const userPersona = getUserPersona(config);
+
+  try {
+    log.shop('REDEEM_FALLBACK', `Batch-evaluating ${missedNames.length} missing item(s): ${missedNames.join(', ')}`);
+
+    const prevItems  = shopStore.loadItems().slice(0, 8);
+    const messages   = shopPrompt.buildNarrativeItemBatchMessages(missedNames, prevItems, snapshot);
+    log.shopReq('redeemFallback', messages);
+
+    let fullResponse = '';
+    const t0 = Date.now();
+    await createCompletion(llmConfig, messages, {
+      stream:  true,
+      onChunk: (_d, acc) => { fullResponse = acc; },
+    });
+    const durMs = Date.now() - t0;
+    log.shopResp('redeemFallback', fullResponse, durMs);
+    log.llm({ model: llmConfig.model, baseUrl: llmConfig.baseUrl, msgCount: messages.length, stream: true, durationMs: durMs, responseChars: fullResponse.length });
+
+    const items = shopEngine.parseGachaBatchResponse(fullResponse);
+    if (!items.length) throw new Error('Fallback batch returned empty array');
+
+    const sess = sessionMgr.getSession(sessionId);
+    if (!sess) return;
+    applySessionCharName(userPersona, sess);
+    const vars = { userName: userPersona.name, charName: charCard.name };
+
+    for (const item of items) {
+      if (!item?.name) continue;
+      try {
+        const savedItem = shopStore.addItem({
+          ...item,
+          narrativeItemUpdate:      true,
+          narrativeRedeemFallback:  true,
+          narrativeGrantedAt:       new Date().toISOString(),
+          sourceDescription:        item.description || item.name,
+        });
+        const freeItem = { ...savedItem, pricePoints: 0, requiredMedals: [] };
+        shopEngine.executeRedemption(freeItem, sess, vars);
+        log.shop('REDEEM_FALLBACK', `Applied "${savedItem.name}" (${savedItem.tier}★) → session ${sessionId}`);
+      } catch (err) {
+        log.error(`RedeemFallback apply "${item.name}" failed: ${err.message}`);
+      }
+    }
+
+    sessionMgr.saveSession(sess);
+
+  } catch (err) {
+    log.error(`processRedeemFallbackAsync failed for session ${sessionId}: ${err.message}`);
+  }
+}
+
 // ─── Narrative Spawn Background Processing ────────────────────────────────────
 
 /**
@@ -801,8 +1107,12 @@ async function processNarrativeSpawnsAsync(sessionId, spawnTags, snapshot, liveS
         ? `**${spawn.name}**（类型：${spawn.type}）\n${spawn.description || ''}`
         : spawn.description;
 
-      const worldKey    = spawn.sourceWorld || curWorld || 'Unknown';
-      const messages    = npcPrompt.buildMessages(evalDesc, worldKey, worldPowerSystems);
+      const worldKey      = spawn.sourceWorld || curWorld || 'Unknown';
+      const bestiaryEntry = findBestiaryEntry(spawn.name, worldKey);
+      if (bestiaryEntry) {
+        log.info(`[SPAWN] Found bestiary entry for "${spawn.name}" in ${worldKey} → injecting as reference`);
+      }
+      const messages    = npcPrompt.buildMessages(evalDesc, worldKey, worldPowerSystems, bestiaryEntry);
       log.shopReq(`narrativeSpawn:${spawnName}`, messages);
 
       let fullResponse = '';
@@ -828,4 +1138,4 @@ async function processNarrativeSpawnsAsync(sessionId, spawnTags, snapshot, liveS
   }
 }
 
-module.exports = { runStreamTurn, processNarrativeGrantsAsync, processNarrativeSpawnsAsync, parseSystemGrantTags, parseSystemSpawnTags };
+module.exports = { runStreamTurn, processNarrativeGrantsAsync, processNarrativeSpawnsAsync, processPhase1ItemUpdatesAsync, processRedeemFallbackAsync, parseSystemGrantTags, parseSystemSpawnTags, parseSystemRedeemItemTags };

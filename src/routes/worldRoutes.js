@@ -4,7 +4,9 @@
  * GET/POST /api/worldbook/data
  * GET/PATCH/DELETE /api/worldanchor/archives/:id
  * GET /api/worldanchor/archives
- * POST /api/worldanchor/generate (SSE)
+ * POST /api/worldanchor/generate (SSE — 不自动保存，返回预览数据)
+ * POST /api/worldanchor/save    (保存预览数据到档案库)
+ * POST /api/worldanchor/archives/:id/regen-field (字段级重新生成)
  * POST /api/worldanchor/pull
  * POST /api/sessions/:id/use-anchor (handled in gameRoutes)
  */
@@ -12,8 +14,9 @@
 const fs   = require('fs');
 const log  = require('../core/logger');
 const { createCompletion } = require('../core/llmClient');
-const worldAnchorPrompt  = require('../features/world/worldAnchorPrompt');
-const worldArchiveStore  = require('../features/world/worldArchiveStore');
+const worldAnchorPrompt       = require('../features/world/worldAnchorPrompt');
+const worldAnchorRegenPrompt  = require('../features/world/worldAnchorRegenPrompt');
+const worldArchiveStore       = require('../features/world/worldArchiveStore');
 const shopStore          = require('../features/shop/shopStore');
 const { buildStatSnapshot, getMedalCount, setMedalCount } = require('../engine/varEngine');
 const { applyWorldArchiveToSession } = require('../features/world/worldEngine');
@@ -203,7 +206,8 @@ function registerRoutes(app, deps) {
         ? worldData.powerSystems
         : (worldData.powerSystem ? [{ name: '综合力量体系', description: worldData.powerSystem }] : []);
 
-      const archive = worldArchiveStore.addArchive({
+      // 构建预览对象（不写库，由前端确认后调 /save 保存）
+      const previewArchive = {
         worldKey: worldData.worldKey, displayName: worldData.displayName || worldName,
         universe: worldData.universe || '', timePeriod: worldData.timePeriod || '',
         tierRange, worldTier: worldTierNum !== null ? worldTierNum : tierCfg.tierMax,
@@ -213,17 +217,125 @@ function registerRoutes(app, deps) {
         powerSystems, keyFactions: worldData.keyFactions || [],
         worldIdentity: worldData.worldIdentity || null, timeFlow: worldData.timeFlow || null,
         timeline: Array.isArray(worldData.timeline) ? worldData.timeline : [],
-      });
+      };
 
       const ruleCount   = (worldData.worldRules   || []).length;
       const systemCount = (worldData.powerSystems || []).length;
-      log.shop('WORLD_ARCHIVE', `Generated world archive: ${archive.displayName} [${tierRange} / ${worldTierNum ?? '?'}★] | rules=${ruleCount} | powerSystems=${systemCount}`);
-      const counts = worldArchiveStore.countByTier();
-      send('done', { archive, tierRange, worldTier: worldTierNum, tierLabel: tierCfg.label, poolCount: counts[tierRange], counts });
+      log.shop('WORLD_ARCHIVE', `Generated preview: ${previewArchive.displayName} [${tierRange} / ${worldTierNum ?? '?'}★] | rules=${ruleCount} | powerSystems=${systemCount}`);
+      send('done', { archive: previewArchive, tierRange, worldTier: worldTierNum, tierLabel: tierCfg.label });
       res.end();
     } catch (err) {
       log.error('World anchor generate error', err);
       send('error', { message: err.message });
+      res.end();
+    }
+  });
+
+  // POST /api/worldanchor/preview-regen-field — 预览阶段字段重新生成（非流式，直接返回 JSON）
+  app.post('/api/worldanchor/preview-regen-field', async (req, res) => {
+    const { field, fieldIndex, archive, extraHint } = req.body || {};
+    if (!field || !archive) return res.status(400).json({ error: 'field and archive required' });
+    try {
+      const config    = getConfig();
+      const llmConfig = buildShopLLMConfig(config);
+      const messages  = worldAnchorRegenPrompt.buildRegenFieldMessages(field, archive, { fieldIndex, extraHint });
+      const fullResponse = await createCompletion(llmConfig, messages, {});
+      let patch;
+      try {
+        const m = fullResponse.match(/```json\s*([\s\S]*?)\s*```/i) || fullResponse.match(/(\{[\s\S]*\})/);
+        patch = JSON.parse(m ? m[1] : fullResponse);
+      } catch (_) { return res.status(422).json({ error: '解析失败，请重试' }); }
+      const fieldKey = field.replace(/^single/, '').charAt(0).toLowerCase() + field.replace(/^single/, '').slice(1);
+      const patchKey = Object.keys(patch)[0];
+      log.shop('WORLD_PREVIEW_REGEN', `field="${field}" displayName="${archive.displayName || '?'}"`);
+      res.json({ ok: true, field: patchKey, fieldIndex, newValue: patch[patchKey] });
+    } catch (e) {
+      log.error('POST /api/worldanchor/preview-regen-field error', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // POST /api/worldanchor/save — 将预览档案写入数据库
+  app.post('/api/worldanchor/save', (req, res) => {
+    try {
+      const data = req.body;
+      if (!data?.worldKey) return res.status(400).json({ error: 'worldKey required' });
+      const tierCfg = worldArchiveStore.TIER_CONFIG[data.tierRange] || worldArchiveStore.TIER_CONFIG['mid'];
+      const archive = worldArchiveStore.addArchive({
+        worldKey:        data.worldKey,
+        displayName:     data.displayName || data.worldKey,
+        universe:        data.universe        || '',
+        timePeriod:      data.timePeriod      || '',
+        tierRange:       data.tierRange       || 'mid',
+        worldTier:       data.worldTier       ?? tierCfg.tierMax,
+        midTier:         data.midTier,
+        tierReason:      data.tierReason      || '',
+        recommendedEntry:data.recommendedEntry|| '',
+        initialLocation: data.initialLocation || '',
+        worldRules:      data.worldRules      || [],
+        powerSystems:    data.powerSystems    || [],
+        keyFactions:     data.keyFactions     || [],
+        worldIdentity:   data.worldIdentity   || null,
+        timeFlow:        data.timeFlow        || null,
+        timeline:        data.timeline        || [],
+      });
+      const counts = worldArchiveStore.countByTier();
+      log.shop('WORLD_ARCHIVE', `Saved archive: ${archive.displayName} [${archive.tierRange}]`);
+      res.json({ ok: true, archive, counts });
+    } catch (e) {
+      log.error('POST /api/worldanchor/save error', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // POST /api/worldanchor/archives/:id/regen-field — 字段级重新生成（SSE）
+  app.post('/api/worldanchor/archives/:id/regen-field', async (req, res) => {
+    const { field, fieldIndex, extraHint } = req.body || {};
+    if (!field) return res.status(400).json({ error: 'field required' });
+
+    const archive = worldArchiveStore.loadArchives().find(a => a.id === req.params.id);
+    if (!archive) return res.status(404).json({ error: 'Archive not found' });
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('X-Accel-Buffering', 'no');
+    const send = (ev, data) => res.write(`event: ${ev}\ndata: ${JSON.stringify(data)}\n\n`);
+
+    try {
+      const config    = getConfig();
+      const llmConfig = buildShopLLMConfig(config);
+      const messages  = worldAnchorRegenPrompt.buildRegenFieldMessages(field, archive, { fieldIndex, extraHint });
+
+      let fullResponse = '';
+      await createCompletion(llmConfig, messages, {
+        stream:  true,
+        onChunk: (delta, acc) => { fullResponse = acc; send('chunk', { delta }); },
+      });
+
+      // 解析 LLM 返回的 JSON patch
+      let patch;
+      try {
+        const m = fullResponse.match(/```json\s*([\s\S]*?)\s*```/i) ||
+                  fullResponse.match(/(\{[\s\S]*\})/);
+        patch = JSON.parse(m ? m[1] : fullResponse);
+      } catch (_) { send('error', { message: '解析失败，请重试' }); return res.end(); }
+
+      // 应用 patch 并保存
+      if (field in patch) {
+        if (fieldIndex != null && Array.isArray(archive[field])) {
+          archive[field][fieldIndex] = patch[field];
+        } else {
+          archive[field] = patch[field];
+        }
+        worldArchiveStore.updateArchive(archive.id, { [field]: archive[field] });
+        log.shop('WORLD_REGEN', `Regenerated field "${field}" (idx=${fieldIndex ?? 'all'}) for archive ${archive.displayName}`);
+      }
+
+      send('done', { field, fieldIndex, newValue: patch[field] });
+      res.end();
+    } catch (e) {
+      log.error('POST /api/worldanchor/archives/:id/regen-field error', e);
+      send('error', { message: e.message });
       res.end();
     }
   });

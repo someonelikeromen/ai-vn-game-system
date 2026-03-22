@@ -77,6 +77,15 @@ function entryForPhase(entry, phase) {
   return getEntryPhases(entry).includes(phase);
 }
 
+/**
+ * Returns true if a preset prompt `p` should be injected in the given `phase`.
+ * If `p._phases` is not set or empty, the prompt has no phase restriction (returns true).
+ */
+function promptForPhase(p, phase) {
+  if (!Array.isArray(p._phases) || p._phases.length === 0) return true;
+  return p._phases.includes(phase);
+}
+
 // ─── System Prompt Assembly ───────────────────────────────────────────────────
 
 // IDs that should never be injected into the system prompt
@@ -524,6 +533,7 @@ function buildPhase1Messages(preset, charCard, statData, prevHistory, userPerson
     if (!afterNsfw) continue;
     if (p.marker) continue;
     if (p.role === 'assistant') continue;
+    if (!promptForPhase(p, 1)) continue;
     const text = substituteVars(p.content, vars).trim();
     if (text) parts.push(text);
   }
@@ -539,7 +549,7 @@ function buildPhase1Messages(preset, charCard, statData, prevHistory, userPerson
   // ── Assistant prefill (same as Phase 3 — enables CoT) ────────────────────
   const prefillVars = { charName: charCard.name, userName: userPersona?.name || 'User' };
   const prefillParts = preset.prompts
-    .filter(p => p.enabled && p.role === 'assistant' && !p.marker && p.content.trim())
+    .filter(p => p.enabled && p.role === 'assistant' && !p.marker && p.content.trim() && promptForPhase(p, 1))
     .map(p => substituteVars(p.content, prefillVars).trim())
     .filter(Boolean);
 
@@ -613,6 +623,21 @@ function buildPhase3Messages(preset, charCard, statData, history, userPersona, u
     }
   }
 
+  // Phase 2 evaluated items (reqItemUpdate batch results) — narrative context
+  if (Array.isArray(phaseContext.evaluatedItems) && phaseContext.evaluatedItems.length > 0) {
+    const lines = phaseContext.evaluatedItems.map((item, i) => {
+      const tier = item.tier ?? '?';
+      const type = item.type || '?';
+      const desc = item.description ? `：${item.description.slice(0, 80)}` : '';
+      return `${i + 1}. **${item.name}**（${tier}★ | ${type}）${desc}`;
+    });
+    phaseContextParts.push(
+      '【本回合预计涉及的道具/能力（Phase 2 商城评估结果）】\n' +
+      lines.join('\n') + '\n' +
+      '（以上物品已评估入库，叙事中若确实发生获取/变更，第四阶段将写入变量）'
+    );
+  }
+
   if (phaseContextParts.length > 0) {
     messages.push({ role: 'system', content: phaseContextParts.join('\n\n') });
   }
@@ -659,6 +684,7 @@ function buildPhase3Messages(preset, charCard, statData, history, userPersona, u
     if (!afterNsfw) continue;
     if (p.marker) continue;
     if (p.role === 'assistant') continue;
+    if (!promptForPhase(p, 3)) continue;
     const text = substituteVars(p.content, vars).trim();
     if (text) parts.push(text);
   }
@@ -668,7 +694,7 @@ function buildPhase3Messages(preset, charCard, statData, history, userPersona, u
   // ── Assistant prefill ─────────────────────────────────────────────────────
   const prefillVars = { charName: charCard.name, userName: userPersona?.name || 'User' };
   const prefillParts = preset.prompts
-    .filter(p => p.enabled && p.role === 'assistant' && !p.marker && p.content.trim())
+    .filter(p => p.enabled && p.role === 'assistant' && !p.marker && p.content.trim() && promptForPhase(p, 3))
     .map(p => substituteVars(p.content, prefillVars).trim())
     .filter(Boolean);
 
@@ -804,7 +830,13 @@ function buildTimeSyncBlock(statData) {
   ].join('\n');
 }
 
-function buildPhase4Messages(charCard, statData, narrative) {
+/**
+ * @param {object}   charCard
+ * @param {object}   statData
+ * @param {string}   narrative      - Full text from Phase 3
+ * @param {object[]} evaluatedItems - Items evaluated in Phase 2 (reqItemUpdate results); may be empty
+ */
+function buildPhase4Messages(charCard, statData, narrative, evaluatedItems = []) {
   const { buildStatSnapshot } = require('./varEngine');
   const snapshot = buildStatSnapshot(statData);
 
@@ -823,6 +855,35 @@ function buildPhase4Messages(charCard, statData, narrative) {
 
   const timeSyncBlock = buildTimeSyncBlock(statData);
 
+  // Build evaluated items block for P4 — instructs LLM to emit <SystemRedeemItem> tags
+  // for items actually obtained, rather than manually writing effects (shop pipeline handles that)
+  let itemsBlock = '';
+  if (Array.isArray(evaluatedItems) && evaluatedItems.length > 0) {
+    const itemLines = evaluatedItems.map((item, i) => {
+      const tier = item.tier ?? '?';
+      const type = item.type || '?';
+      const desc = item.description ? `：${item.description.slice(0, 80)}` : '';
+      return `${i + 1}. **${item.name}**（${tier}★ | ${type}）${desc}`;
+    }).join('\n');
+
+    itemsBlock = [
+      '',
+      '---',
+      '',
+      '【本回合商城已评估物品（reqItemUpdate Phase 2 结果）】',
+      '系统已为以下物品生成完整的兑换数据（effects/attributes/能量池等），无需在 <UpdateVariable> 中手动写入：',
+      '',
+      itemLines,
+      '',
+      '**操作规则**：',
+      '- 若叙事确认角色**获得**了某物品 → 在 <UpdateVariable> 结束后另起一行输出：',
+      '  `<SystemRedeemItem>物品名</SystemRedeemItem>`',
+      '  系统将自动完成完整兑换（写入 Loadout、ShopInventory、属性加成、能量池等），无需重复写入',
+      '- 若叙事确认角色**消耗/失去**了某物品 → 在 <UpdateVariable> 中用 _.remove 从对应 Loadout 字段删除',
+      '- 若叙事中未实际发生变更（仅路过/提及）→ 不输出任何 SystemRedeemItem 标签',
+    ].join('\n');
+  }
+
   const system = [
     '你是《无限武库》变量更新引擎。',
     '根据本回合叙事内容和当前状态，生成精确的变量更新块。',
@@ -840,6 +901,7 @@ function buildPhase4Messages(charCard, statData, narrative) {
     JSON.stringify(snapshot, null, 2),
     '</status_current_variables>',
     ...(timeSyncBlock ? [timeSyncBlock] : []),
+    ...(itemsBlock ? [itemsBlock] : []),
   ].join('\n');
 
   const user = [

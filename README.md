@@ -1,98 +1,136 @@
 # AI-VN System · 无限武库
 
-基于无限武库角色卡、泉此方预设、对话文本构建的独立 AI 驱动游戏/视觉小说系统。
+基于"无限武库"角色卡的 AI 驱动文字 RPG 游戏系统，在浏览器里运行，AI 实时生成剧情与战斗。
 
-## 快速开始
+---
 
-```bash
-# 1. 安装依赖（仅首次）
-npm install
+## 第一步：安装 Node.js（只需做一次）
 
-# 2. 启动服务器
-node server.js
-# 或双击 start.bat
+Node.js 是让这个程序能在你电脑上运行的"引擎"，类似于玩游戏需要先装显卡驱动。
 
-# 3. 打开浏览器访问
+1. 打开浏览器，访问 **https://nodejs.org**
+2. 点击左边那个大按钮（写着 **LTS** 的版本，更稳定）
+3. 下载完成后双击安装，一路点"下一步/Next"就行，不用改任何设置
+4. 安装完毕后，按 `Win + R`，输入 `cmd`，回车，在黑窗口里输入：
+   ```
+   node -v
+   ```
+   如果显示类似 `v22.x.x` 的版本号，说明装好了
+
+---
+
+## 第二步：下载本项目（只需做一次）
+
+如果你是直接拿到的文件夹，跳过这步。
+
+如果你要从 GitHub 下载：
+
+1. 安装 Git：访问 **https://git-scm.com**，下载安装（一路默认）
+2. 在你想放项目的地方，按住 Shift 右键，选"在此处打开 PowerShell 窗口"
+3. 输入：
+   ```
+   git clone https://github.com/someonelikeromen/ai-vn-game-system.git
+   ```
+
+---
+
+## 第三步：安装依赖（只需做一次）
+
+依赖就是程序需要用到的各种库，相当于游戏的"运行库"。
+
+1. 进入项目文件夹
+2. 在文件夹空白处按住 Shift 右键 → "在此处打开 PowerShell 窗口"（或 CMD）
+3. 输入：
+   ```
+   npm install
+   ```
+4. 等它跑完（会出现一堆字），完成后不报红色错误即可
+
+> 以后不需要重复执行，除非项目有更新（更新后运行 `update.bat` 会自动处理）
+
+---
+
+## 第四步：启动游戏
+
+**双击 `start.bat`** 即可启动。
+
+黑窗口出现类似这样的内容说明启动成功：
+
+```
+[SERVER] 服务器已启动，访问 http://localhost:3000
+```
+
+然后打开浏览器，访问：
+
+```
 http://localhost:3000
 ```
 
-## 首次配置
+> 不要关闭那个黑窗口，它就是游戏的服务器，关了游戏就断了
 
-1. 打开 `http://localhost:3000`
-2. 点击右上角 **⚙ 设置**
-3. 填写：
-   - **角色卡路径**：`D:\test2\无限武库demov1.3 (5).json`
-   - **预设路径**：`D:\test2\Izumi Reload 0211.json`
-   - **API 地址**：你的 OpenAI 兼容 API 地址
-   - **API 密钥**：你的密钥
-   - **模型**：`gpt-4o`（推荐）或其他兼容模型
-4. 保存后点击 **测试连接** 验证 API
-5. 点击 **＋ 新游戏**，选择起始剧情开始游戏
+---
 
-## 项目结构
+## 第五步：首次配置 API
+
+游戏需要连接一个 AI 接口才能运行，类似于网游需要服务器地址。
+
+1. 打开 `http://localhost:3000` 后，点右上角 **⚙ 设置**
+2. 填写以下内容：
+
+| 设置项 | 填什么 |
+|--------|--------|
+| API 地址 | 你的 AI 接口地址（见下方说明） |
+| API 密钥 | 你的密钥（Key） |
+| 模型名称 | 比如 `gpt-4o`、`claude-3-5-sonnet` 等 |
+
+3. 点 **保存**，再点 **测试连接**，显示"连接成功"即可
+4. 回到主界面，点 **＋ 新游戏** 开始
+
+### 常见 API 地址参考
+
+| 服务 | API 地址 |
+|------|---------|
+| OpenAI 官方 | `https://api.openai.com` |
+| 本地 Ollama | `http://localhost:11434` |
+| 本地 LM Studio | `http://localhost:1234` |
+| 国内中转（OneAPI 等） | 看你买的服务提供商给的地址 |
+
+---
+
+## 日常使用
+
+| 操作 | 方法 |
+|------|------|
+| 启动游戏 | 双击 `start.bat` |
+| 更新到最新版 | 双击 `update.bat` |
+| 查看日志/报错 | 浏览器访问 `http://localhost:3000/logs` |
+| 存档位置 | `data/sessions/` 文件夹 |
+
+---
+
+## 常见问题
+
+**Q：双击 start.bat 一闪而过？**
+A：Node.js 没装好，或者依赖没安装。重新执行第一步和第三步。
+
+**Q：浏览器打开是空白/无法访问？**
+A：黑窗口关了，重新双击 `start.bat`。
+
+**Q：测试连接失败？**
+A：检查 API 地址结尾不要有多余的 `/`，密钥是否正确复制（前后无空格）。
+
+---
+
+## 项目结构（参考用，不需要动）
 
 ```
-game-system/
-├── server.js          # Express 服务器（所有 API）
-├── config.json        # 用户配置（API key 等）
-├── src/
-│   ├── varEngine.js   # 变量引擎（_.set / _.insert / _.remove / _.add）
-│   ├── configLoader.js # 读取角色卡 / 预设 JSON
-│   ├── promptBuilder.js # 组装系统提示词 / 对话上下文
-│   ├── regexPipeline.js # 正则处理管道（展示 / 提示词）
-│   ├── llmClient.js   # OpenAI 兼容 API（支持流式输出）
-│   └── session.js     # 会话管理（内存 + 磁盘持久化）
-├── public/
-│   ├── index.html     # 游戏主界面
-│   ├── app.js         # 前端逻辑
-│   └── style.css      # 深色游戏主题
-└── data/sessions/     # 自动保存的存档
+ai-vn-game-system/
+├── start.bat          ← 启动脚本（双击运行）
+├── update.bat         ← 更新脚本（双击运行）
+├── server.js          ← 服务器主程序
+├── src/               ← 游戏逻辑代码
+├── public/            ← 游戏界面（网页）
+└── data/
+    ├── sessions/      ← 游戏存档
+    └── logs/          ← 运行日志
 ```
-
-## 核心机制
-
-### 变量系统
-AI 回复中的 `<UpdateVariable>` 块会被自动执行：
-- `_.set('path', value)` — 设置值
-- `_.insert('path', value)` — 向数组添加元素
-- `_.insert('path', 'key', value)` — 向对象添加键值
-- `_.remove('path')` — 删除路径
-- `_.add('path', delta)` — 数值加法
-
-### 提示词组装
-每轮对话的消息数组：
-1. **system** — 泉此方角色设定 + 无限武库世界法则
-2. **user** — `[Start a new chat]`
-3. **assistant** — 第一条消息（含变量初始化）
-4. ...历史消息...
-5. **system** — 后端数据流（角色状态，深度≥4时注入）
-6. **user** — 当前输入 + `<status_current_variables>` 状态快照
-
-### 正则管道
-- **promptOnly**：在发送给 LLM 前应用（清理 UpdateVariable、think 标签等）
-- **markdownOnly**：在展示给用户时应用（美化选项、弹幕等）
-
-## API 接口
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/config` | 获取配置 |
-| POST | `/api/config` | 保存配置 |
-| POST | `/api/config/test` | 测试 API 连接 |
-| GET | `/api/assets/greetings` | 获取开场白列表 |
-| GET | `/api/sessions` | 列出所有存档 |
-| POST | `/api/sessions` | 创建新会话 |
-| DELETE | `/api/sessions/:id` | 删除会话 |
-| POST | `/api/sessions/:id/init` | 初始化会话（处理第一条消息） |
-| POST | `/api/sessions/:id/message` | 发送消息（SSE 流式） |
-| GET | `/api/sessions/:id/stat` | 获取当前角色状态 |
-
-## 支持的 API 格式
-
-任何 OpenAI Chat Completions 兼容接口均可使用：
-- OpenAI (`https://api.openai.com`)
-- Azure OpenAI
-- Claude (via OpenAI proxy)
-- Ollama (`http://localhost:11434`)
-- LM Studio (`http://localhost:1234`)
-- 国内中转 API（如 oneapi）

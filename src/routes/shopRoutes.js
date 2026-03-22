@@ -3,7 +3,9 @@
  * Shop Routes — item generation, redemption, and management.
  * GET /api/shop/items
  * DELETE /api/shop/items/:id
- * POST /api/shop/generate (SSE)
+ * POST /api/shop/generate (SSE — 不自动保存，返回预览数据)
+ * POST /api/shop/save    (保存预览数据到 shopStore)
+ * POST /api/shop/items/:id/regen-field (字段级重新生成)
  * POST /api/shop/redeem
  * GET/POST /api/shop/config
  * GET /api/shop/models
@@ -13,9 +15,10 @@
 const log        = require('../core/logger');
 const { testConnection } = require('../core/llmClient');
 const { createCompletion } = require('../core/llmClient');
-const shopStore  = require('../features/shop/shopStore');
-const shopEngine = require('../features/shop/shopEngine');
-const shopPrompt = require('../features/shop/shopPrompt');
+const shopStore      = require('../features/shop/shopStore');
+const shopEngine     = require('../features/shop/shopEngine');
+const shopPrompt     = require('../features/shop/shopPrompt');
+const shopRegenPrompt = require('../features/shop/shopRegenPrompt');
 const { buildStatSnapshot } = require('../engine/varEngine');
 
 // ─── Shop helpers ─────────────────────────────────────────────────────────────
@@ -271,16 +274,130 @@ function registerRoutes(app, deps) {
         try { parsed = shopEngine.parseGenerationResponse(fullResponse); }
         catch (parseErr) { send('error', { message: `第${i + 1}项解析失败: ${parseErr.message}`, index: i }); continue; }
 
-        const savedItem = shopStore.addItem({ ...parsed, sourceDescription: description, generatedSessionId: sessionId || null, sourceWorld: sourceWorld || null });
-        log.shop('GENERATED', `${savedItem.name} | ${savedItem.tier}★ | ${savedItem.pricePoints}pt | ${duration}ms`);
+        // 不自动保存，返回预览数据，由前端确认后调 /api/shop/save 保存
+        const previewItem = { ...parsed, sourceDescription: description, generatedSessionId: sessionId || null, sourceWorld: sourceWorld || null };
+        log.shop('GENERATED_PREVIEW', `${parsed.name} | ${parsed.tier}★ | ${parsed.pricePoints}pt | ${duration}ms`);
         log.shopResp(description, fullResponse, duration);
         log.llm({ model: llmConfig.model, baseUrl: llmConfig.baseUrl, msgCount: messages.length, stream: useStream, durationMs: duration, responseChars: fullResponse.length });
-        send('done', { item: savedItem, index: i, total: count });
+        send('done', { item: previewItem, index: i, total: count });
       }
       res.end();
     } catch (err) {
       log.error('Shop generate error', err);
       send('error', { message: err.message });
+      res.end();
+    }
+  });
+
+  // POST /api/shop/preview-regen-field — 预览阶段字段重新生成（SSE）
+  app.post('/api/shop/preview-regen-field', async (req, res) => {
+    const { field, item, extraHint } = req.body || {};
+    if (!field || !item) return res.status(400).json({ error: 'field and item required' });
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('X-Accel-Buffering', 'no');
+    const send = (ev, data) => res.write(`event: ${ev}\ndata: ${JSON.stringify(data)}\n\n`);
+
+    try {
+      const config    = getConfig();
+      const llmConfig = buildShopLLMConfig(config);
+      const messages  = shopRegenPrompt.buildRegenFieldMessages(field, item, { extraHint });
+      let fullResponse = '';
+      await createCompletion(llmConfig, messages, {
+        stream:  true,
+        onChunk: (delta, acc) => { fullResponse = acc; send('chunk', { delta }); },
+      });
+      let patch;
+      try {
+        const m = fullResponse.match(/```json\s*([\s\S]*?)\s*```/i) || fullResponse.match(/(\{[\s\S]*\})/);
+        patch = JSON.parse(m ? m[1] : fullResponse);
+      } catch (_) { send('error', { message: '解析失败，请重试' }); return res.end(); }
+      log.shop('PREVIEW_REGEN', `field="${field}" item="${item.name || '?'}"`);
+      send('done', { field, newValue: patch[field] });
+      res.end();
+    } catch (e) {
+      log.error('POST /api/shop/preview-regen-field error', e);
+      send('error', { message: e.message });
+      res.end();
+    }
+  });
+
+  // POST /api/shop/save — 将预览数据持久化
+  app.post('/api/shop/save', (req, res) => {
+    try {
+      const data = req.body;
+      if (!data?.name) return res.status(400).json({ error: 'name required' });
+      const savedItem = shopStore.addItem({
+        name:               data.name,
+        type:               data.type        || 'Inventory',
+        tier:               data.tier        ?? 0,
+        tierLabel:          data.tierLabel   || '',
+        pricePoints:        data.pricePoints ?? 0,
+        sourceWorld:        data.sourceWorld || null,
+        sourceDescription:  data.sourceDescription || '',
+        generatedSessionId: data.generatedSessionId || null,
+        description:        data.description || '',
+        appearance:         data.appearance  || '',
+        abilities:          data.abilities   || [],
+        restrictions:       data.restrictions || [],
+        sideEffects:        data.sideEffects || '',
+        lore:               data.lore        || '',
+        antiFeats:          data.antiFeats   || [],
+        rationale:          data.rationale   || '',
+        reviewRound1:       data.reviewRound1 || '',
+        reviewRound2:       data.reviewRound2 || '',
+        reviewRound3:       data.reviewRound3 || '',
+      });
+      log.shop('SAVED', `${savedItem.name} | ${savedItem.tier}★ | ${savedItem.pricePoints}pt`);
+      res.json({ ok: true, item: savedItem });
+    } catch (e) {
+      log.error('POST /api/shop/save error', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // POST /api/shop/items/:id/regen-field — 字段级重新生成（SSE）
+  app.post('/api/shop/items/:id/regen-field', async (req, res) => {
+    const { field, extraHint } = req.body || {};
+    if (!field) return res.status(400).json({ error: 'field required' });
+
+    const item = shopStore.loadItems().find(i => i.id === req.params.id);
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('X-Accel-Buffering', 'no');
+    const send = (ev, data) => res.write(`event: ${ev}\ndata: ${JSON.stringify(data)}\n\n`);
+
+    try {
+      const config    = getConfig();
+      const llmConfig = buildShopLLMConfig(config);
+      const messages  = shopRegenPrompt.buildRegenFieldMessages(field, item, { extraHint });
+
+      let fullResponse = '';
+      await createCompletion(llmConfig, messages, {
+        stream:  true,
+        onChunk: (delta, acc) => { fullResponse = acc; send('chunk', { delta }); },
+      });
+
+      let patch;
+      try {
+        const m = fullResponse.match(/```json\s*([\s\S]*?)\s*```/i) ||
+                  fullResponse.match(/(\{[\s\S]*\})/);
+        patch = JSON.parse(m ? m[1] : fullResponse);
+      } catch (_) { send('error', { message: '解析失败，请重试' }); return res.end(); }
+
+      if (field in patch) {
+        shopStore.updateItem(item.id, { [field]: patch[field] });
+        log.shop('ITEM_REGEN', `Regenerated field "${field}" for item ${item.name}`);
+      }
+
+      send('done', { field, newValue: patch[field] });
+      res.end();
+    } catch (e) {
+      log.error('POST /api/shop/items/:id/regen-field error', e);
+      send('error', { message: e.message });
       res.end();
     }
   });

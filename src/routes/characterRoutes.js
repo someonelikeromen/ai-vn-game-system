@@ -4,13 +4,15 @@
  * POST /api/character/questions (SSE)
  * POST /api/character/generate (SSE)
  * POST /api/character/apply
+ * POST /api/character/regen-field (字段级重新生成, SSE)
  * GET/POST/DELETE /api/characters
  * GET/DELETE /api/characters/:id
  */
 
 const log             = require('../core/logger');
 const { createCompletion } = require('../core/llmClient');
-const characterPrompt = require('../features/character/characterPrompt');
+const characterPrompt      = require('../features/character/characterPrompt');
+const characterRegenPrompt = require('../features/character/characterRegenPrompt');
 const characterStore  = require('../features/character/characterStore');
 const { applyCharacterToSession } = require('../features/character/characterEngine');
 
@@ -186,6 +188,46 @@ function registerRoutes(app, deps) {
     } catch (e) {
       log.error('DELETE /api/characters/:id error', e);
       res.status(500).json({ error: e.message });
+    }
+  });
+
+  // POST /api/character/regen-field — 字段级重新生成（SSE）
+  // body: { charData, field, extraHint }
+  // charData 为当前的角色 JSON（可以是未保存的预览数据）
+  app.post('/api/character/regen-field', async (req, res) => {
+    const { charData, field, extraHint } = req.body || {};
+    if (!charData || !field) return res.status(400).json({ error: 'charData and field required' });
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('X-Accel-Buffering', 'no');
+    const send = (ev, data) => res.write(`event: ${ev}\ndata: ${JSON.stringify(data)}\n\n`);
+
+    try {
+      const config    = getConfig();
+      const llmConfig = buildShopLLMConfig(config);
+      const messages  = characterRegenPrompt.buildRegenFieldMessages(field, charData, { extraHint });
+
+      let fullResponse = '';
+      await createCompletion(llmConfig, messages, {
+        stream:  true,
+        onChunk: (delta, acc) => { fullResponse = acc; send('chunk', { delta }); },
+      });
+
+      let patch;
+      try {
+        const m = fullResponse.match(/```json\s*([\s\S]*?)\s*```/i) ||
+                  fullResponse.match(/(\{[\s\S]*\})/);
+        patch = JSON.parse(m ? m[1] : fullResponse);
+      } catch (_) { send('error', { message: '解析失败，请重试' }); return res.end(); }
+
+      log.info(`[CHAR_REGEN] field="${field}" char="${charData.name || '?'}"`);
+      send('done', { field, newValue: patch[field] });
+      res.end();
+    } catch (e) {
+      log.error('POST /api/character/regen-field error', e);
+      send('error', { message: e.message });
+      res.end();
     }
   });
 }

@@ -66,6 +66,23 @@ document.addEventListener('DOMContentLoaded', () => {
   setupResultPanel();
   setupTagEditors();
   setupArchivePanel();
+  setupCharRegenPanel();
+
+  // Day/Night theme toggle
+  (function () {
+    const btn = document.getElementById('btnThemeToggle');
+    if (!btn) return;
+    function syncIcon() {
+      btn.textContent = window.UITheme?.getTheme() === 'light' ? '🌙' : '☀️';
+    }
+    syncIcon();
+    btn.addEventListener('click', () => {
+      const curr = window.UITheme?.getTheme() || 'purple';
+      const next = curr === 'light' ? 'purple' : 'light';
+      window.UITheme?.applyTheme(next, window.UITheme.getFontPx(), window.UITheme.getChatPx(), window.UITheme.getStatPx());
+      syncIcon();
+    });
+  })();
 });
 
 // ─── Session Loading ──────────────────────────────────────────────────────────
@@ -1166,6 +1183,107 @@ function ssePost(url, body, onChunk) {
     xhr.onerror = () => { if (!resolved) reject(new Error('网络错误')); };
     xhr.ontimeout = () => { if (!resolved) reject(new Error('请求超时')); };
   });
+}
+
+// ─── Field Regen ──────────────────────────────────────────────────────────────
+
+const CHAR_REGEN_FIELD_MAP = {
+  appearance:   'fAppearance',
+  personality:  'fPersonality',
+  background:   'fBackground',
+};
+
+const CHAR_REGEN_TAG_MAP = {
+  coreDesires:  'fDesires',
+  coreFears:    'fFears',
+  quirks:       'fQuirks',
+};
+
+function setupCharRegenPanel() {
+  // 绑定 section 标题上的快捷 🔄 按钮
+  document.querySelectorAll('.char-regen-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const field = btn.dataset.field;
+      if ($('charRegenField')) $('charRegenField').value = field;
+      $('charRegenSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const detailsEl = $('charRegenSection')?.querySelector('details');
+      if (detailsEl) detailsEl.open = true;
+    });
+  });
+
+  const btnCharRegen = $('btnCharRegen');
+  if (!btnCharRegen) return;
+
+  btnCharRegen.addEventListener('click', async () => {
+    if (!state.currentCharacter) { toast('请先生成或载入角色', true); return; }
+    const field     = $('charRegenField')?.value;
+    const extraHint = $('charRegenHint')?.value.trim() || '';
+    if (!field) return;
+
+    btnCharRegen.disabled = true;
+    $('charRegenStatus').style.display = '';
+    $('charRegenText').textContent = '重新生成中…';
+
+    try {
+      const charData = collectCurrentChar();
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/character/regen-field');
+      xhr.setRequestHeader('Content-Type', 'application/json');
+
+      let lastLen = 0, newValue, doneField;
+      await new Promise((resolve, reject) => {
+        xhr.onprogress = () => {
+          const chunk = xhr.responseText.slice(lastLen);
+          lastLen = xhr.responseText.length;
+          for (const line of chunk.split('\n')) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              const d = JSON.parse(line.slice(6));
+              if (d.delta) $('charRegenText').textContent = d.delta.slice(-80);
+              if (d.newValue !== undefined) { newValue = d.newValue; doneField = d.field; resolve(); }
+              if (d.message && line.includes('error')) reject(new Error(d.message));
+            } catch (_) {}
+          }
+        };
+        xhr.onload = resolve;
+        xhr.onerror = () => reject(new Error('网络错误'));
+        xhr.send(JSON.stringify({ charData, field, extraHint }));
+      });
+
+      if (newValue !== undefined) {
+        const f = doneField || field;
+        // 更新 state
+        state.currentCharacter[f] = newValue;
+        // 更新 UI
+        if (CHAR_REGEN_FIELD_MAP[f]) {
+          const el = $(CHAR_REGEN_FIELD_MAP[f]);
+          if (el) el.value = Array.isArray(newValue) ? newValue.join('\n') : (newValue || '');
+        } else if (CHAR_REGEN_TAG_MAP[f]) {
+          setTags(CHAR_REGEN_TAG_MAP[f], Array.isArray(newValue) ? newValue : []);
+        }
+        toast(`✓ 「${$('charRegenField').options[$('charRegenField').selectedIndex]?.text || f}」已重新生成`);
+      }
+    } catch (err) {
+      toast(`重新生成失败: ${err.message}`, true);
+    } finally {
+      btnCharRegen.disabled = false;
+      $('charRegenStatus').style.display = 'none';
+    }
+  });
+}
+
+/** 收集当前角色卡中所有可编辑字段的值 */
+function collectCurrentChar() {
+  const c = state.currentCharacter || {};
+  return {
+    ...c,
+    name:        $('fName')?.value       || c.name       || '',
+    gender:      $('fGender')?.value     || c.gender     || '',
+    age:         $('fAge')?.value        || c.age        || '',
+    appearance:  $('fAppearance')?.value || c.appearance || '',
+    personality: $('fPersonality')?.value || c.personality || '',
+    background:  $('fBackground')?.value  || c.background  || '',
+  };
 }
 
 // ─── Utility ──────────────────────────────────────────────────────────────────

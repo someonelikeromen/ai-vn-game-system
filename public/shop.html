@@ -20,6 +20,7 @@
   </div>
   <div class="shop-header-right">
     <span id="apiIndicator" class="api-indicator" title="当前商城 API">⚙ 加载中…</span>
+    <button id="btnThemeToggle" class="btn btn-ghost btn-sm" title="日/夜模式切换">☀️</button>
     <a href="/hub" class="btn btn-ghost btn-sm" style="text-decoration:none" id="btnShopSettings">🧭 控制台</a>
     <label class="shop-label">当前存档：</label>
     <select id="sessionSelect" class="shop-select">
@@ -48,144 +49,19 @@
 <nav class="shop-tab-nav">
   <button class="shop-tab-btn active" data-tab="items">🏪 商品列表</button>
   <button class="shop-tab-btn" data-tab="gacha">🎰 抽卡召唤</button>
+  <button class="shop-tab-btn" data-tab="genItem">⚙️ 兑换项生成</button>
+  <button class="shop-tab-btn" data-tab="worldGen">🌐 世界生成</button>
 </nav>
 
 <!-- ── Main Layout ────────────────────────────────────────────────────────── -->
 <div class="shop-layout">
 
-  <!-- LEFT: Generate Panel -->
+  <!-- LEFT: Sidebar (return home only) -->
   <aside class="shop-sidebar" id="shopSidebar">
-    <section class="gen-panel">
-      <h2 class="gen-title">⚙️ 兑换项生成</h2>
-      <p class="gen-hint">描述你想要的能力、血统、物品或知识，AI 将按<em>三轮评估协议</em>进行客观定价</p>
-
-      <textarea
-        id="genInput"
-        class="gen-textarea"
-        placeholder="例：&#10;投影魔术 (Tracing) - 来自 Fate/stay night 的衛宫士郎&#10;&#10;或：&#10;查克拉体系 - 火影忍者基础体系&#10;&#10;可以包括来源作品、具体效果说明等"
-        rows="8"
-      ></textarea>
-
-      <!-- World selector -->
-      <div class="gen-world-row">
-        <label class="gen-opt-label gen-world-label">🌐 来源世界</label>
-        <select id="genWorldSelect" class="shop-select gen-world-select">
-          <option value="">— 选择来源世界 —</option>
-        </select>
-        <span id="genWorldHint" class="gen-world-hint"></span>
-      </div>
-
-      <div class="gen-options-row">
-        <label class="gen-opt-label" title="生成多个评估结果（1-5）">
-          数量
-          <input id="genCount" type="number" min="1" max="5" value="1" class="gen-count-input">
-        </label>
-        <label class="gen-opt-label" title="逐字流式输出，关闭后等待完整响应">
-          <input id="toggleStream" type="checkbox" checked>
-          流式输出
-        </label>
-      </div>
-
-      <div class="gen-actions">
-        <button id="btnGenerate" class="btn btn-primary btn-gen">✨ 生成评估</button>
-        <button id="btnClear" class="btn btn-ghost">清空</button>
-      </div>
-
-      <!-- Generation status -->
-      <div id="genStatus" class="gen-status" style="display:none">
-        <div class="gen-progress">
-          <div class="gen-spinner"></div>
-          <span id="genStatusText">AI 评估中…</span>
-        </div>
-        <div id="genStream" class="gen-stream"></div>
-      </div>
-    </section>
-
-    <!-- Filter / Sort -->
-    <section class="filter-panel">
-      <h3 class="filter-title">筛选</h3>
-      <div class="filter-row">
-        <label>类型：</label>
-        <select id="filterType" class="shop-select-sm">
-          <option value="">全部</option>
-          <option value="PassiveAbility">被动能力</option>
-          <option value="PowerSource">基盘能力</option>
-          <option value="ApplicationTechnique">应用技巧</option>
-          <option value="Inventory">物品</option>
-          <option value="Knowledge">知识</option>
-          <option value="WorldTraverse">穿越</option>
-          <option value="Companion">同伴/召唤体</option>
-          <option value="Mech">机体/机器人</option>
-        </select>
-      </div>
-      <div class="filter-row">
-        <label>星级：</label>
-        <select id="filterTier" class="shop-select-sm">
-          <option value="">全部</option>
-          <option value="0">0★ 常人</option>
-          <option value="1">1★ 爆墙</option>
-          <option value="2">2★ 爆屋</option>
-          <option value="3">3★ 爆楼</option>
-          <option value="4">4★ 爆街</option>
-          <option value="5">5★ 爆城</option>
-          <option value="6">6★ 爆国</option>
-          <option value="7">7★ 大陆</option>
-          <option value="8">8★ 地表</option>
-          <option value="9">9★ 行星</option>
-          <option value="10">10★ 恒星</option>
-          <option value="11">11★ 星系</option>
-          <option value="12">12★ 宇宙</option>
-          <option value="13">13★ 单体</option>
-          <option value="14">14★ 超单体</option>
-          <option value="15">15★ 多元</option>
-          <option value="16">16★ 超多元</option>
-          <option value="17">17★ 叙事层</option>
-        </select>
-      </div>
-      <div class="filter-row">
-        <label>来源世界：</label>
-        <select id="filterWorld" class="shop-select-sm">
-          <option value="">全部</option>
-        </select>
-      </div>
-      <button id="btnApplyFilter" class="btn btn-ghost btn-sm">应用</button>
-    </section>
-
-    <!-- World Anchor Panel -->
-    <section class="filter-panel world-anchor-panel">
-      <h3 class="filter-title">🌐 世界档案生成</h3>
-      <p class="gen-hint" style="font-size:11px;margin-bottom:10px">生成世界档案并加入对应危险区档案库。在右侧点击"随机穿越锚点"卡片查看并兑换。</p>
-      <input id="worldNameInput" type="text" class="gen-textarea" style="height:36px;padding:6px 10px;min-height:unset;resize:none" placeholder="输入世界名称，如 Fate/stay night">
-      <textarea id="worldContextInput" class="gen-textarea" style="min-height:60px;margin-top:6px" placeholder="补充说明（可选）：特定时间线、特定弧段、版本等" rows="3"></textarea>
-      <div style="margin-top:6px">
-        <label style="font-size:11px;color:#aaa;display:block;margin-bottom:3px">关联角色（用于生成本地身份）</label>
-        <select id="worldCharProfileSelect" class="shop-select-sm" style="width:100%">
-          <option value="">-- 不关联（生成普通本地居民）--</option>
-          <option value="__session__">当前存档角色</option>
-        </select>
-      </div>
-      <div class="gen-actions" style="margin-top:8px">
-        <button id="btnGenWorldAnchor" class="btn btn-primary btn-gen" style="background:#3a5a7a">🌐 生成并加入档案库</button>
-      </div>
-      <div id="worldAnchorStatus" class="gen-status" style="display:none">
-        <div class="gen-progress">
-          <div class="gen-spinner"></div>
-          <span id="worldAnchorStatusText">生成中…</span>
-        </div>
-        <div id="worldAnchorStream" class="gen-stream" style="max-height:80px"></div>
-      </div>
-
-      <!-- Archive pool overview -->
-      <div class="archive-pool-panel-wrap">
-        <h4 class="archive-pool-title">📦 档案库</h4>
-        <div id="archivePoolPanel" class="archive-pool-panel"></div>
-      </div>
-    </section>
-
     <!-- Return Home Panel -->
     <section class="filter-panel return-home-panel" id="returnHomePanel" style="display:none">
       <h3 class="filter-title">🏠 回归主世界</h3>
-      <p class="gen-hint" style="font-size:11px;margin-bottom:8px">
+      <p class="gen-hint" style="font-size:0.79rem;margin-bottom:8px">
         主世界：<strong id="originWorldName">—</strong><br>
         当前世界：<span id="currentWorldName">—</span>
       </p>
@@ -202,14 +78,52 @@
 
   <!-- RIGHT: Items Grid (tab=items) -->
   <main class="shop-main" id="shopMainItems">
-    <div class="items-header">
+    <!-- ── 顶部筛选栏 ── -->
+    <div class="items-filter-bar">
+      <select id="filterType" class="shop-select-sm">
+        <option value="">全部类型</option>
+        <option value="PassiveAbility">被动能力</option>
+        <option value="PowerSource">基盘能力</option>
+        <option value="ApplicationTechnique">应用技巧</option>
+        <option value="Inventory">物品</option>
+        <option value="Knowledge">知识</option>
+        <option value="WorldTraverse">穿越</option>
+        <option value="Companion">同伴/召唤体</option>
+        <option value="Mech">机体/机器人</option>
+      </select>
+      <select id="filterTier" class="shop-select-sm">
+        <option value="">全部星级</option>
+        <option value="0">0★ 常人</option>
+        <option value="1">1★ 爆墙</option>
+        <option value="2">2★ 爆屋</option>
+        <option value="3">3★ 爆楼</option>
+        <option value="4">4★ 爆街</option>
+        <option value="5">5★ 爆城</option>
+        <option value="6">6★ 爆国</option>
+        <option value="7">7★ 大陆</option>
+        <option value="8">8★ 地表</option>
+        <option value="9">9★ 行星</option>
+        <option value="10">10★ 恒星</option>
+        <option value="11">11★ 星系</option>
+        <option value="12">12★ 宇宙</option>
+        <option value="13">13★ 单体</option>
+        <option value="14">14★ 超单体</option>
+        <option value="15">15★ 多元</option>
+        <option value="16">16★ 超多元</option>
+        <option value="17">17★ 叙事层</option>
+      </select>
+      <select id="filterWorld" class="shop-select-sm">
+        <option value="">全部来源</option>
+      </select>
+      <button id="btnApplyFilter" class="btn btn-ghost btn-sm">筛选</button>
+      <div class="filter-bar-sep"></div>
       <span id="itemCount" class="items-count">0 个项目</span>
-      <select id="sortSelect" class="shop-select-sm">
-        <option value="newest">最新优先</option>
-        <option value="tier-asc">星级升序</option>
-        <option value="tier-desc">星级降序</option>
-        <option value="price-asc">价格升序</option>
-        <option value="price-desc">价格降序</option>
+      <select id="sortSelect" class="shop-select-sm items-sort">
+        <option value="newest">最新</option>
+        <option value="tier-asc">星级↑</option>
+        <option value="tier-desc">星级↓</option>
+        <option value="price-asc">价格↑</option>
+        <option value="price-desc">价格↓</option>
       </select>
     </div>
 
@@ -217,7 +131,7 @@
       <div class="items-empty" id="emptyState">
         <div class="empty-icon">🏪</div>
         <p>商城尚无兑换项</p>
-        <p class="muted">在左侧输入描述，生成第一个兑换项目</p>
+        <p class="muted">在「兑换项生成」标签页生成第一个兑换项目</p>
       </div>
     </div>
   </main>
@@ -225,11 +139,15 @@
   <!-- RIGHT: Gacha Panel (tab=gacha) -->
   <main class="shop-main gacha-main" id="shopMainGacha" style="display:none">
     <div class="gacha-header">
-      <h2 class="gacha-title">🎰 无限武库 · 召唤系统</h2>
-      <p class="gacha-hint">每次召唤前系统将自动生成10件新物品补充池子，再从全部物品中随机抽取</p>
-      <div class="gacha-balance">
-        <span class="gacha-bal-pts">积分：<strong id="gachaBalPoints">—</strong></span>
-        <span id="gachaMedalList" class="gacha-bal-medals"></span>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div>
+          <h2 class="gacha-title">🎰 无限武库 · 召唤系统</h2>
+          <p class="gacha-hint">每次召唤前系统将自动生成10件新物品补充池子，再从全部物品中随机抽取</p>
+        </div>
+        <div class="gacha-balance">
+          <span class="gacha-bal-pts">积分：<strong id="gachaBalPoints">—</strong></span>
+          <span id="gachaMedalList" class="gacha-bal-medals"></span>
+        </div>
       </div>
     </div>
 
@@ -271,6 +189,109 @@
       <div id="gachaPendingList" class="gacha-pending-list"></div>
     </div>
   </main>
+
+  <!-- ⚙️ 兑换项生成 Tab -->
+  <main class="shop-main gen-main" id="shopMainGenItem" style="display:none">
+    <div class="gen-tab-layout">
+      <div class="gen-tab-input-col">
+        <h2 class="gen-title">⚙️ 兑换项生成</h2>
+        <p class="gen-hint">描述你想要的能力、血统、物品或知识，AI 将按<em>三轮评估协议</em>进行客观定价</p>
+
+        <textarea
+          id="genInput"
+          class="gen-textarea"
+          placeholder="例：&#10;投影魔术 (Tracing) - 来自 Fate/stay night 的衛宫士郎&#10;&#10;或：&#10;查克拉体系 - 火影忍者基础体系&#10;&#10;可以包括来源作品、具体效果说明等"
+          rows="10"
+        ></textarea>
+
+        <div class="gen-world-row">
+          <label class="gen-opt-label gen-world-label">🌐 来源世界</label>
+          <select id="genWorldSelect" class="shop-select gen-world-select">
+            <option value="">— 选择来源世界 —</option>
+          </select>
+          <span id="genWorldHint" class="gen-world-hint"></span>
+        </div>
+
+        <div class="gen-options-row">
+          <label class="gen-opt-label" title="生成多个评估结果（1-5）">
+            数量
+            <input id="genCount" type="number" min="1" max="5" value="1" class="gen-count-input">
+          </label>
+          <label class="gen-opt-label" title="逐字流式输出，关闭后等待完整响应">
+            <input id="toggleStream" type="checkbox" checked>
+            流式输出
+          </label>
+        </div>
+
+        <div class="gen-actions">
+          <button id="btnGenerate" class="btn btn-primary btn-gen">✨ 生成评估</button>
+          <button id="btnClear" class="btn btn-ghost">清空</button>
+        </div>
+
+        <div id="genStatus" class="gen-status" style="display:none">
+          <div class="gen-progress">
+            <div class="gen-spinner"></div>
+            <span id="genStatusText">AI 评估中…</span>
+          </div>
+          <div id="genStream" class="gen-stream"></div>
+        </div>
+      </div>
+
+      <!-- 生成预览区 -->
+      <div class="gen-tab-preview-col" id="genItemPreviewCol">
+        <div class="gen-preview-empty">
+          <div class="empty-icon">✨</div>
+          <p>生成完成后，结果将在此处预览</p>
+          <p class="muted">可对每个字段单独编辑或重新生成</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 🌐 世界生成 Tab -->
+  <main class="shop-main gen-main" id="shopMainWorldGen" style="display:none">
+    <div class="gen-tab-layout">
+      <div class="gen-tab-input-col">
+        <h2 class="gen-title">🌐 世界生成</h2>
+        <p class="gen-hint">输入世界名称，AI 将生成完整的世界档案（规则/时间线/力量体系/本地身份等）</p>
+
+        <input id="worldNameInput" type="text" class="gen-textarea" style="height:40px;padding:8px 12px;min-height:unset;resize:none;margin-bottom:8px" placeholder="输入世界名称，如 Fate/stay night">
+        <textarea id="worldContextInput" class="gen-textarea" style="min-height:80px" placeholder="补充说明（可选）：特定时间线、特定弧段、版本等" rows="4"></textarea>
+
+        <div style="margin-top:8px">
+          <label style="font-size:12px;color:#aaa;display:block;margin-bottom:4px">关联角色（用于生成本地身份）</label>
+          <select id="worldCharProfileSelect" class="shop-select-sm" style="width:100%">
+            <option value="">-- 不关联（生成普通本地居民）--</option>
+            <option value="__session__">当前存档角色</option>
+          </select>
+        </div>
+
+        <div class="gen-actions" style="margin-top:12px">
+          <button id="btnGenWorldAnchor" class="btn btn-primary btn-gen" style="background:#3a5a7a">🌐 生成世界档案</button>
+        </div>
+
+        <div id="worldAnchorStatus" class="gen-status" style="display:none">
+          <div class="gen-progress">
+            <div class="gen-spinner"></div>
+            <span id="worldAnchorStatusText">生成中…</span>
+          </div>
+          <div id="worldAnchorStream" class="gen-stream"></div>
+        </div>
+      </div>
+
+      <!-- 世界预览 + 档案库 -->
+      <div class="gen-tab-preview-col" id="worldGenPreviewCol">
+        <!-- 生成预览 -->
+        <div id="worldAnchorPreview" style="display:none"></div>
+        <!-- 档案库总览 -->
+        <div class="archive-pool-panel-wrap" id="archivePoolWrap">
+          <h4 class="archive-pool-title">📦 档案库总览</h4>
+          <div id="archivePoolPanel" class="archive-pool-panel"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
 </div>
 
 <!-- Shop API Settings Modal removed — use /settings#shop-api -->

@@ -148,14 +148,17 @@ function updateReturnHomePanel(statData) {
   const mv         = statData?.Multiverse;
   const originKey  = mv?.OriginWorldKey;
   const curName    = Array.isArray(mv?.CurrentWorldName) ? mv.CurrentWorldName[0] : (mv?.CurrentWorldName || null);
+  const layout     = document.querySelector('.shop-layout');
 
   if (!panel) return;
   if (!originKey || curName === originKey) {
     panel.style.display = 'none';
+    layout?.classList.remove('has-return-home');
     return;
   }
 
   panel.style.display = '';
+  layout?.classList.add('has-return-home');
   $('originWorldName').textContent  = originKey;
   $('currentWorldName').textContent = curName || '未知';
 
@@ -330,7 +333,7 @@ function renderItems() {
 
 function buildCard(item) {
   const card = document.createElement('div');
-  card.className = 'item-card';
+  card.className = `item-card ${tierClass(item.tier)}`;
   card.dataset.id = item.id;
 
   // Medal string
@@ -482,6 +485,22 @@ function bindEvents() {
 
   // World anchor
   $('btnGenWorldAnchor').addEventListener('click', startWorldAnchorGen);
+
+  // Day/Night theme toggle
+  (function () {
+    const btn = $('btnThemeToggle');
+    if (!btn) return;
+    function syncIcon() {
+      btn.textContent = window.UITheme?.getTheme() === 'light' ? '🌙' : '☀️';
+    }
+    syncIcon();
+    btn.addEventListener('click', () => {
+      const curr = window.UITheme?.getTheme() || 'purple';
+      const next = curr === 'light' ? 'purple' : 'light';
+      window.UITheme?.applyTheme(next, window.UITheme.getFontPx(), window.UITheme.getChatPx(), window.UITheme.getStatPx());
+      syncIcon();
+    });
+  })();
 
   // Return home
   $('btnReturnHome')?.addEventListener('click', executeReturnHome);
@@ -691,23 +710,15 @@ async function startWorldAnchorGen() {
       xhr.onerror = () => { if (!resolved) reject(new Error('网络错误')); };
     });
 
-    // Update archive pool in state
+    // 渲染预览，不自动入库
     if (lastDoneData?.archive) {
-      if (!state.archives) state.archives = [];
-      state.archives.unshift(lastDoneData.archive);
-      if (!state.archiveCounts) state.archiveCounts = {};
-      const tr = lastDoneData.archive.tierRange;
-      state.archiveCounts[tr] = (state.archiveCounts[tr] || 0) + 1;
-      renderItems(); // refresh pool badges on base anchor cards
-      renderArchivePool(); // refresh sidebar pool panel
+      renderWorldAnchorPreview(lastDoneData.archive);
     }
 
     const tierLabel = lastDoneData?.tierLabel || '';
-    $('worldAnchorStatusText').textContent = `✓ 已加入 ${tierLabel || ''} 档案库`;
+    $('worldAnchorStatusText').textContent = `✓ 生成完成（${tierLabel}），请在右侧预览并确认保存`;
     $('worldAnchorStream').style.display = 'none';
-    toast(`✓ 「${worldName}」已加入${tierLabel ? ' ' + tierLabel : ''}档案库（${lastDoneData?.poolCount || '?'} 个世界）`);
-    $('worldNameInput').value = '';
-    $('worldContextInput').value = '';
+    toast(`✓ 「${worldName}」生成完成，请在预览区确认保存`);
   } catch (err) {
     $('worldAnchorStatusText').textContent = `✗ ${err.message}`;
     toast(`世界档案生成失败: ${err.message}`, true);
@@ -749,11 +760,39 @@ function renderArchivePool() {
       <div class="archive-tier-group">
         <div class="archive-tier-label">${TIER_LABELS[t] || t} <span class="archive-tier-count">${grouped[t].length}</span></div>
         ${grouped[t].map(a => `
-          <div class="archive-pool-row">
+          <div class="archive-pool-row" data-archive-id="${a.id}" style="cursor:pointer" title="点击预览/重新生成">
             <span class="archive-pool-name">${escHtml(a.displayName)}</span>
-            <button class="btn btn-ghost btn-xs archive-del-btn-side" data-archive-id="${a.id}" title="删除">✕</button>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-ghost btn-xs archive-edit-btn-side" data-archive-id="${a.id}" title="手动编辑">✎</button>
+              <button class="btn btn-ghost btn-xs archive-del-btn-side" data-archive-id="${a.id}" title="删除">✕</button>
+            </div>
           </div>`).join('')}
       </div>`).join('');
+
+  // Bind row clicks
+  panel.querySelectorAll('.archive-pool-row').forEach(row => {
+    row.addEventListener('click', async (e) => {
+      if (e.target.closest('.archive-del-btn-side') || e.target.closest('.archive-edit-btn-side')) return;
+      const archiveId = row.dataset.archiveId;
+      try {
+        const resp = await fetch(`/api/worldanchor/archives/${archiveId}`);
+        if (!resp.ok) throw new Error('Failed to load archive');
+        const fullArchive = await resp.json();
+        renderWorldAnchorPreview(fullArchive);
+        $('worldGenPreviewCol').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (err) {
+        toast(`加载档案失败: ${err.message}`, true);
+      }
+    });
+  });
+
+  // Bind edit buttons
+  panel.querySelectorAll('.archive-edit-btn-side').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $('detailModal').style.display = 'flex';
+      openArchiveEdit(btn.dataset.archiveId, null);
+    });
+  });
 
   // Bind delete buttons
   panel.querySelectorAll('.archive-del-btn-side').forEach(btn => {
@@ -860,16 +899,16 @@ function streamGenerate(description, sessionId, count = 1, streamEnabled = true,
       } else if (ev === 'done') {
         if (payload.item) {
           doneCount++;
-          state.allItems.unshift(payload.item);
-          renderItems();
           const total = payload.total || count;
           $('genStream').textContent = '';
+          // 渲染预览而非直接入库
+          appendItemPreview(payload.item, payload.index ?? (doneCount - 1));
           if (doneCount >= total) {
             $('genStatusText').textContent = total > 1
-              ? `✓ 全部 ${total} 项生成完成`
-              : `✓ 生成完成：${payload.item.name}`;
-            toast(total > 1 ? `✓ 已生成 ${total} 项` : `✓ 已生成：${payload.item.name}`);
-            finish(); // ← resolve immediately — don't wait for onload
+              ? `✓ 全部 ${total} 项生成完成，请在右侧预览并保存`
+              : `✓ 生成完成：${payload.item.name}，请确认后保存`;
+            toast(total > 1 ? `✓ 已生成 ${total} 项，请在预览区确认保存` : `✓ 已生成：${payload.item.name}，请在预览区确认保存`);
+            finish();
           } else {
             $('genStatusText').textContent = `已完成 ${doneCount}/${total} 项…`;
             streamBufs[(payload.index ?? 0) + 1] = '';
@@ -911,6 +950,475 @@ function streamGenerate(description, sessionId, count = 1, streamEnabled = true,
     xhr.timeout   = 300000; // 5 min timeout
 
     xhr.send(JSON.stringify({ description, sessionId, count, streamEnabled, sourceWorld }));
+  });
+}
+
+// ── Item Preview (生成后预览 + 可编辑 + 单字段重新生成) ────────────────────────────
+
+const ITEM_FIELDS_LABEL = {
+  name:         '名称',
+  description:  '效果描述',
+  appearance:   '外观描述',
+  abilities:    '能力列表',
+  restrictions: '限制条件',
+  sideEffects:  '副作用',
+  antiFeats:    '反壮举',
+  lore:         '背景设定',
+  rationale:    '定价依据',
+};
+
+/** 把一个预览项追加到 #genItemPreviewCol */
+function appendItemPreview(item, index) {
+  const col = $('genItemPreviewCol');
+  if (!col) return;
+  // 清除空状态提示
+  const empty = col.querySelector('.gen-preview-empty');
+  if (empty) empty.remove();
+
+  const card = document.createElement('div');
+  card.className = 'item-preview-card';
+  card.dataset.previewIndex = index;
+  // 深拷贝一份给本卡片用于编辑
+  const localItem = JSON.parse(JSON.stringify(item));
+  card.dataset.itemJson = JSON.stringify(localItem);
+
+  card.innerHTML = buildItemPreviewHtml(localItem, index);
+
+  col.appendChild(card);
+  bindItemPreviewEvents(card, localItem, index);
+}
+
+function buildItemPreviewHtml(item, index) {
+  const tierStr = item.tier != null ? `${item.tier}★` : '?★';
+  const priceStr = item.pricePoints != null ? `${item.pricePoints.toLocaleString()} 积分` : '?';
+
+  const fields = Object.entries(ITEM_FIELDS_LABEL)
+    .map(([key, label]) => {
+      const val = item[key];
+      if (val == null || val === '' || (Array.isArray(val) && val.length === 0)) return '';
+      const display = Array.isArray(val)
+        ? `<ul class="preview-list">${val.map(v => `<li>${escHtml(String(v))}</li>`).join('')}</ul>`
+        : `<p class="preview-text">${escHtml(String(val))}</p>`;
+      return `
+        <div class="preview-field" data-field="${key}">
+          <div class="preview-field-header">
+            <span class="preview-field-label">${label}</span>
+            <button class="btn btn-xs btn-ghost preview-regen-btn" data-field="${key}" title="重新生成该字段">🔄</button>
+          </div>
+          <div class="preview-field-body" data-field-body="${key}">${display}</div>
+          <div class="preview-field-edit" data-field-edit="${key}" style="display:none">
+            <textarea class="gen-textarea preview-edit-ta" rows="3"></textarea>
+            <div class="preview-field-actions">
+              <button class="btn btn-xs btn-primary preview-save-field-btn" data-field="${key}">✓ 确认</button>
+              <button class="btn btn-xs btn-ghost preview-cancel-field-btn" data-field="${key}">取消</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+  return `
+    <div class="preview-card-header">
+      <div class="preview-card-meta">
+        <strong class="preview-card-name">${escHtml(item.name || '未命名')}</strong>
+        <span class="preview-card-tier">${tierStr}</span>
+        <span class="preview-card-type">${escHtml(item.type || '')}</span>
+        <span class="preview-card-price">${priceStr}</span>
+      </div>
+      <div class="preview-card-actions">
+        <button class="btn btn-sm btn-primary preview-save-btn">💾 保存到商城</button>
+        <button class="btn btn-sm btn-ghost preview-discard-btn">✕ 丢弃</button>
+      </div>
+    </div>
+    <div class="preview-fields">${fields}</div>
+    <div class="preview-regen-status" style="display:none">
+      <div class="gen-spinner" style="display:inline-block;width:14px;height:14px"></div>
+      <span class="preview-regen-text">重新生成中…</span>
+    </div>
+    <div class="preview-regen-hint-row" style="display:none">
+      <input type="text" class="preview-regen-hint-input gen-textarea" style="min-height:unset;height:32px;flex:1" placeholder="附加提示词（可选）：如 偏向防御性、减少闪光效果…">
+      <button class="btn btn-sm btn-primary preview-regen-confirm-btn">确认重新生成</button>
+      <button class="btn btn-sm btn-ghost preview-regen-hint-cancel-btn">取消</button>
+    </div>`;
+}
+
+function bindItemPreviewEvents(card, localItem, index) {
+  let pendingRegenField = null;
+
+  // 保存到商城
+  card.querySelector('.preview-save-btn').addEventListener('click', async () => {
+    try {
+      const res = await fetch('/api/shop/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(localItem),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      state.allItems.unshift(data.item);
+      renderItems();
+      toast(`✓ 已保存：${data.item.name}`);
+      card.classList.add('preview-card-saved');
+      card.querySelector('.preview-save-btn').textContent = '✓ 已保存';
+      card.querySelector('.preview-save-btn').disabled = true;
+    } catch (err) {
+      toast(`保存失败: ${err.message}`, true);
+    }
+  });
+
+  // 丢弃
+  card.querySelector('.preview-discard-btn').addEventListener('click', () => {
+    card.remove();
+    const col = $('genItemPreviewCol');
+    if (col && !col.querySelector('.item-preview-card')) {
+      col.innerHTML = `<div class="gen-preview-empty"><div class="empty-icon">✨</div><p>生成完成后，结果将在此处预览</p><p class="muted">可对每个字段单独编辑或重新生成</p></div>`;
+    }
+  });
+
+  // 字段体点击 → 进入编辑
+  card.querySelectorAll('.preview-field-body').forEach(el => {
+    el.addEventListener('click', () => {
+      const field = el.dataset.fieldBody;
+      const editDiv = card.querySelector(`[data-field-edit="${field}"]`);
+      const ta = editDiv.querySelector('.preview-edit-ta');
+      const val = localItem[field];
+      ta.value = Array.isArray(val) ? val.join('\n') : (val || '');
+      el.style.display = 'none';
+      editDiv.style.display = '';
+    });
+  });
+
+  // 确认字段编辑
+  card.querySelectorAll('.preview-save-field-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const field = btn.dataset.field;
+      const editDiv = card.querySelector(`[data-field-edit="${field}"]`);
+      const body    = card.querySelector(`[data-field-body="${field}"]`);
+      const ta      = editDiv.querySelector('.preview-edit-ta');
+      const rawVal  = ta.value.trim();
+      const isArray = Array.isArray(localItem[field]);
+      const newVal  = isArray ? rawVal.split('\n').map(s => s.trim()).filter(Boolean) : rawVal;
+      localItem[field] = newVal;
+      // 重新渲染这个字段显示
+      body.innerHTML = isArray
+        ? `<ul class="preview-list">${newVal.map(v => `<li>${escHtml(String(v))}</li>`).join('')}</ul>`
+        : `<p class="preview-text">${escHtml(String(newVal))}</p>`;
+      editDiv.style.display = 'none';
+      body.style.display = '';
+    });
+  });
+
+  // 取消字段编辑
+  card.querySelectorAll('.preview-cancel-field-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const field = btn.dataset.field;
+      card.querySelector(`[data-field-edit="${field}"]`).style.display = 'none';
+      card.querySelector(`[data-field-body="${field}"]`).style.display = '';
+    });
+  });
+
+  // 🔄 重新生成按钮 → 显示附加提示词行
+  card.querySelectorAll('.preview-regen-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingRegenField = btn.dataset.field;
+      const hintRow = card.querySelector('.preview-regen-hint-row');
+      hintRow.style.display = 'flex';
+      hintRow.querySelector('.preview-regen-hint-input').focus();
+    });
+  });
+
+  // 取消附加提示词
+  card.querySelector('.preview-regen-hint-cancel-btn').addEventListener('click', () => {
+    card.querySelector('.preview-regen-hint-row').style.display = 'none';
+    pendingRegenField = null;
+  });
+
+  // 确认重新生成（预览阶段，未保存时直接 patch localItem）
+  card.querySelector('.preview-regen-confirm-btn').addEventListener('click', async () => {
+    if (!pendingRegenField) return;
+    const field     = pendingRegenField;
+    const extraHint = card.querySelector('.preview-regen-hint-input').value.trim();
+    card.querySelector('.preview-regen-hint-row').style.display = 'none';
+
+    const status   = card.querySelector('.preview-regen-status');
+    const statusTx = status.querySelector('.preview-regen-text');
+    status.style.display = '';
+    statusTx.textContent = `重新生成「${ITEM_FIELDS_LABEL[field] || field}」…`;
+
+    try {
+      // 预览阶段：商品尚未保存，使用临时 regen 接口（传完整 item）
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/shop/preview-regen-field');
+      xhr.setRequestHeader('Content-Type', 'application/json');
+
+      let fullText = '';
+      let lastLen  = 0;
+      let newValue;
+      await new Promise((resolve, reject) => {
+        xhr.onprogress = () => {
+          const chunk = xhr.responseText.slice(lastLen);
+          lastLen = xhr.responseText.length;
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const d = JSON.parse(line.slice(6));
+                if (d.delta) { fullText += d.delta; statusTx.textContent = fullText.slice(-60); }
+                if (d.newValue !== undefined) { newValue = d.newValue; resolve(); }
+                if (d.message && line.includes('"error"')) reject(new Error(d.message));
+              } catch (_) {}
+            }
+          }
+        };
+        xhr.onload = resolve;
+        xhr.onerror = () => reject(new Error('网络错误'));
+        xhr.send(JSON.stringify({ field, item: localItem, extraHint }));
+      });
+
+      if (newValue !== undefined) {
+        localItem[field] = newValue;
+        const body     = card.querySelector(`[data-field-body="${field}"]`);
+        const isArray  = Array.isArray(newValue);
+        body.innerHTML = isArray
+          ? `<ul class="preview-list">${newValue.map(v => `<li>${escHtml(String(v))}</li>`).join('')}</ul>`
+          : `<p class="preview-text">${escHtml(String(newValue))}</p>`;
+        toast(`✓ 「${ITEM_FIELDS_LABEL[field] || field}」已更新`);
+      }
+    } catch (err) {
+      toast(`重新生成失败: ${err.message}`, true);
+    } finally {
+      status.style.display = 'none';
+      pendingRegenField = null;
+    }
+  });
+}
+
+// ── World Anchor Preview ────────────────────────────────────────────────────────
+
+function renderWorldAnchorPreview(archive) {
+  const col = $('worldGenPreviewCol');
+  if (!col) return;
+  const poolWrap = col.querySelector('#archivePoolWrap');
+  let previewDiv = col.querySelector('#worldAnchorPreview');
+  if (!previewDiv) { previewDiv = document.createElement('div'); previewDiv.id = 'worldAnchorPreview'; col.insertBefore(previewDiv, poolWrap); }
+  previewDiv.style.display = '';
+
+  const localArchive = JSON.parse(JSON.stringify(archive));
+  previewDiv.innerHTML = buildWorldPreviewHtml(localArchive);
+  bindWorldPreviewEvents(previewDiv, localArchive);
+}
+
+function buildWorldPreviewHtml(archive) {
+  const worldRulesHtml = (archive.worldRules || []).map((r, i) =>
+    `<li class="world-preview-rule" data-idx="${i}">${escHtml(r)} <button class="btn btn-xs btn-ghost preview-regen-btn" data-field="singleWorldRule" data-idx="${i}" title="重新生成这条">🔄</button></li>`
+  ).join('');
+
+  const timelineHtml = (archive.timeline || []).map((t, i) =>
+    `<div class="world-preview-timeline" data-idx="${i}">
+      <strong>${escHtml(t.time || '')}</strong> — ${escHtml(t.event || '')}
+      <span class="muted">${escHtml(t.impact || '')}</span>
+      <button class="btn btn-xs btn-ghost preview-regen-btn" data-field="singleTimeline" data-idx="${i}" title="重新生成">🔄</button>
+    </div>`
+  ).join('');
+
+  const systemsHtml = (archive.powerSystems || []).map((s, i) =>
+    `<div class="world-preview-system" data-idx="${i}">
+      <strong>${escHtml(s.name || '')}</strong> [${escHtml(s.typicalTierRange || '')}]
+      <span class="muted">${escHtml(s.description || '')}</span>
+      <button class="btn btn-xs btn-ghost preview-regen-btn" data-field="singlePowerSystem" data-idx="${i}" title="重新生成">🔄</button>
+    </div>`
+  ).join('');
+
+  const textFields = [
+    { field: 'tierReason', label: '定级依据', val: archive.tierReason },
+    { field: 'recommendedEntry', label: '建议入场时间', val: archive.recommendedEntry },
+    { field: 'initialLocation', label: '初始地点', val: archive.initialLocation },
+  ].map(({ field, label, val }) => val ? `
+    <div class="preview-field" data-field="${field}">
+      <div class="preview-field-header">
+        <span class="preview-field-label">${label}</span>
+        <button class="btn btn-xs btn-ghost preview-regen-btn" data-field="${field}" title="重新生成">🔄</button>
+      </div>
+      <div class="preview-field-body" data-field-body="${field}"><p class="preview-text">${escHtml(val)}</p></div>
+    </div>` : '').join('');
+
+  const isSaved = !!archive.id;
+  const saveBtnText = isSaved ? '💾 保存修改' : '💾 保存到档案库';
+  const discardBtnText = isSaved ? '✕ 关闭' : '✕ 丢弃';
+
+  return `
+    <div class="preview-card-header" data-archive-id="${archive.id || ''}">
+      <div class="preview-card-meta">
+        <strong class="preview-card-name">${escHtml(archive.displayName || archive.worldKey || '?')}</strong>
+        <span class="preview-card-tier">${archive.worldTier ?? '?'}★</span>
+        <span class="preview-card-type">${escHtml(archive.tierRange || '')}</span>
+      </div>
+      <div class="preview-card-actions">
+        ${isSaved ? `<button class="btn btn-sm btn-ghost world-preview-edit-btn" data-archive-id="${archive.id}">✎ 手动编辑</button>` : ''}
+        <button class="btn btn-sm btn-primary world-preview-save-btn">${saveBtnText}</button>
+        <button class="btn btn-sm btn-ghost world-preview-discard-btn">${discardBtnText}</button>
+      </div>
+    </div>
+    ${textFields}
+    <div class="preview-field">
+      <div class="preview-field-header">
+        <span class="preview-field-label">世界法则</span>
+        <button class="btn btn-xs btn-ghost preview-regen-btn" data-field="worldRules" title="重新生成全部">🔄 全部</button>
+      </div>
+      <ul class="preview-list">${worldRulesHtml}</ul>
+    </div>
+    <div class="preview-field">
+      <div class="preview-field-header">
+        <span class="preview-field-label">力量体系</span>
+        <button class="btn btn-xs btn-ghost preview-regen-btn" data-field="powerSystems" title="重新生成全部">🔄 全部</button>
+      </div>
+      <div>${systemsHtml || '<span class="muted">无</span>'}</div>
+    </div>
+    <div class="preview-field">
+      <div class="preview-field-header">
+        <span class="preview-field-label">历史时间线</span>
+        <button class="btn btn-xs btn-ghost preview-regen-btn" data-field="timeline" title="重新生成全部">🔄 全部</button>
+      </div>
+      <div>${timelineHtml || '<span class="muted">无</span>'}</div>
+    </div>
+    <div class="preview-regen-hint-row" style="display:none">
+      <input type="text" class="preview-regen-hint-input gen-textarea" style="min-height:unset;height:32px;flex:1" placeholder="附加提示词（可选）">
+      <button class="btn btn-sm btn-primary world-regen-confirm-btn">确认重新生成</button>
+      <button class="btn btn-sm btn-ghost world-regen-hint-cancel-btn">取消</button>
+    </div>
+    <div class="preview-regen-status" style="display:none">
+      <div class="gen-spinner" style="display:inline-block;width:14px;height:14px"></div>
+      <span class="preview-regen-text">重新生成中…</span>
+    </div>`;
+}
+
+function bindWorldPreviewEvents(previewDiv, localArchive) {
+  let pendingField  = null;
+  let pendingIdx    = null;
+
+  // 保存到档案库 / 保存修改
+  previewDiv.querySelector('.world-preview-save-btn').addEventListener('click', async () => {
+    try {
+      const isSaved = !!localArchive.id;
+      let res;
+      if (isSaved) {
+        res = await fetch(`/api/worldanchor/archives/${localArchive.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(localArchive),
+        });
+      } else {
+        res = await fetch('/api/worldanchor/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(localArchive),
+        });
+      }
+      
+      const data = await res.json();
+      if (!isSaved && !data.ok) throw new Error(data.error || '保存失败');
+      if (isSaved && data.error) throw new Error(data.error);
+      
+      if (!isSaved) {
+        if (!state.archives) state.archives = [];
+        state.archives.unshift({
+          id: data.archive.id,
+          worldKey: data.archive.worldKey,
+          displayName: data.archive.displayName,
+          tierRange: data.archive.tierRange,
+          timePeriod: data.archive.timePeriod,
+          universe: data.archive.universe,
+          worldTier: data.archive.worldTier,
+          midTier: data.archive.midTier,
+          ruleCount: (data.archive.worldRules || []).length,
+          systemCount: (data.archive.powerSystems || []).length,
+          tierReason: data.archive.tierReason || '',
+          createdAt: data.archive.createdAt,
+        });
+        localArchive.id = data.archive.id;
+      } else {
+        const idx = state.archives.findIndex(a => a.id === localArchive.id);
+        if (idx !== -1) state.archives[idx] = data;
+      }
+      
+      renderItems();
+      renderArchivePool();
+      toast(`✓ 「${localArchive.displayName}」已保存`);
+      previewDiv.querySelector('.world-preview-save-btn').textContent = '✓ 已保存';
+      previewDiv.querySelector('.world-preview-save-btn').disabled = true;
+    } catch (err) {
+      toast(`保存失败: ${err.message}`, true);
+    }
+  });
+
+  // 丢弃
+  previewDiv.querySelector('.world-preview-discard-btn').addEventListener('click', () => {
+    previewDiv.style.display = 'none';
+    previewDiv.innerHTML = '';
+  });
+
+  // 手动编辑
+  const editBtn = previewDiv.querySelector('.world-preview-edit-btn');
+  if (editBtn) {
+    editBtn.addEventListener('click', () => {
+      $('detailModal').style.display = 'flex';
+      openArchiveEdit(localArchive.id, null);
+    });
+  }
+
+  // 🔄 按钮统一入口
+  previewDiv.querySelectorAll('.preview-regen-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingField = btn.dataset.field;
+      pendingIdx   = btn.dataset.idx != null ? parseInt(btn.dataset.idx) : null;
+      previewDiv.querySelector('.preview-regen-hint-row').style.display = 'flex';
+      previewDiv.querySelector('.preview-regen-hint-input').focus();
+    });
+  });
+
+  // 取消
+  previewDiv.querySelector('.world-regen-hint-cancel-btn').addEventListener('click', () => {
+    previewDiv.querySelector('.preview-regen-hint-row').style.display = 'none';
+    pendingField = pendingIdx = null;
+  });
+
+  // 确认重新生成（预览阶段）
+  previewDiv.querySelector('.world-regen-confirm-btn').addEventListener('click', async () => {
+    if (!pendingField) return;
+    const field     = pendingField;
+    const idx       = pendingIdx;
+    const extraHint = previewDiv.querySelector('.preview-regen-hint-input').value.trim();
+    previewDiv.querySelector('.preview-regen-hint-row').style.display = 'none';
+
+    const status   = previewDiv.querySelector('.preview-regen-status');
+    const statusTx = status.querySelector('.preview-regen-text');
+    status.style.display = '';
+    statusTx.textContent = `重新生成中…`;
+
+    try {
+      const res = await fetch('/api/worldanchor/preview-regen-field', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ field, fieldIndex: idx, archive: localArchive, extraHint }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      // 应用 patch 到 localArchive
+      if (idx != null && Array.isArray(localArchive[field.replace('single', '').toLowerCase() + 's'])) {
+        const arrKey = field.replace(/^single/, '').charAt(0).toLowerCase() + field.replace(/^single/, '').slice(1) + 's';
+        if (Array.isArray(localArchive[arrKey])) localArchive[arrKey][idx] = data.newValue;
+      } else {
+        localArchive[data.field] = data.newValue;
+      }
+      // 重新渲染整个预览
+      previewDiv.innerHTML = buildWorldPreviewHtml(localArchive);
+      bindWorldPreviewEvents(previewDiv, localArchive);
+      toast('✓ 重新生成完成');
+    } catch (err) {
+      toast(`重新生成失败: ${err.message}`, true);
+    } finally {
+      status.style.display = 'none';
+      pendingField = pendingIdx = null;
+    }
   });
 }
 
@@ -1134,6 +1642,17 @@ async function deleteArchive(archiveId) {
     state.archiveCounts = counts;
     renderArchivePool();
     renderItems(); // refresh pool badges
+    
+    // Clear preview if it was showing the deleted archive
+    const previewDiv = $('worldAnchorPreview');
+    if (previewDiv && previewDiv.style.display !== 'none') {
+      const currentId = previewDiv.querySelector('.preview-card-header')?.dataset.archiveId;
+      if (currentId === archiveId) {
+        previewDiv.style.display = 'none';
+        previewDiv.innerHTML = '';
+      }
+    }
+    
     toast('档案已删除');
   } catch (err) {
     toast(`删除出错: ${err.message}`, true);
@@ -1190,6 +1709,72 @@ async function openDetail(itemId) {
       openArchiveEdit(btn.dataset.archiveId, itemId);
     });
   });
+
+  // 字段重新生成
+  bindDetailRegenEvents(itemId);
+}
+
+function bindDetailRegenEvents(itemId) {
+  const btn = $('btnDetailRegen');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    const field     = $('detailRegenField')?.value;
+    const extraHint = $('detailRegenHint')?.value.trim() || '';
+    if (!field) return;
+
+    const item = state.allItems.find(i => i.id === itemId);
+    if (!item) { toast('商品不存在', true); return; }
+
+    btn.disabled = true;
+    $('detailRegenStatus').style.display = '';
+    $('detailRegenText').textContent = `重新生成「${$('detailRegenField').options[$('detailRegenField').selectedIndex]?.text}」…`;
+
+    try {
+      const FIELD_LABELS = {
+        description: '效果描述', appearance: '外观描述', abilities: '能力列表',
+        restrictions: '限制条件', sideEffects: '副作用', antiFeats: '反壮举',
+        lore: '背景设定', rationale: '定价依据',
+      };
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `/api/shop/items/${itemId}/regen-field`);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      let lastLen = 0;
+      let newValue;
+      await new Promise((resolve, reject) => {
+        xhr.onprogress = () => {
+          const chunk = xhr.responseText.slice(lastLen);
+          lastLen = xhr.responseText.length;
+          for (const line of chunk.split('\n')) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              const d = JSON.parse(line.slice(6));
+              if (d.delta) $('detailRegenText').textContent = d.delta.slice(-60);
+              if (d.newValue !== undefined) { newValue = d.newValue; resolve(); }
+              if (d.message && line.includes('error')) reject(new Error(d.message));
+            } catch (_) {}
+          }
+        };
+        xhr.onload = resolve;
+        xhr.onerror = () => reject(new Error('网络错误'));
+        xhr.send(JSON.stringify({ field, extraHint }));
+      });
+
+      if (newValue !== undefined) {
+        // 更新本地 state 缓存
+        const idx = state.allItems.findIndex(i => i.id === itemId);
+        if (idx >= 0) state.allItems[idx][field] = newValue;
+        toast(`✓ 「${FIELD_LABELS[field] || field}」已重新生成`);
+        // 重新打开 detail 以刷新内容
+        closeModal();
+        await openDetail(itemId);
+      }
+    } catch (err) {
+      toast(`重新生成失败: ${err.message}`, true);
+    } finally {
+      if (btn) btn.disabled = false;
+      if ($('detailRegenStatus')) $('detailRegenStatus').style.display = 'none';
+    }
+  });
 }
 
 // Dispatch to type-specific renderer
@@ -1222,6 +1807,35 @@ function detailActions(item) {
   </div>
   <button class="btn btn-success modal-redeem-btn">✓ 确认兑换</button>
   <button class="btn btn-danger modal-delete-btn">删除</button>
+</div>`;
+}
+
+// Shared: per-field regen panel (appended to all item detail modals)
+function detailRegenPanel() {
+  return `<div class="detail-regen-panel" id="detailRegenPanel">
+  <details>
+    <summary class="detail-regen-summary">🔄 字段重新生成</summary>
+    <div class="detail-regen-body">
+      <div class="detail-regen-row">
+        <select id="detailRegenField" class="shop-select-sm">
+          <option value="description">效果描述</option>
+          <option value="appearance">外观描述</option>
+          <option value="abilities">能力列表</option>
+          <option value="restrictions">限制条件</option>
+          <option value="sideEffects">副作用</option>
+          <option value="antiFeats">反壮举</option>
+          <option value="lore">背景设定</option>
+          <option value="rationale">定价依据</option>
+        </select>
+        <input type="text" id="detailRegenHint" class="gen-textarea" style="min-height:unset;height:32px;flex:1" placeholder="附加提示词（可选）">
+        <button class="btn btn-sm btn-primary" id="btnDetailRegen">🔄 重新生成</button>
+      </div>
+      <div id="detailRegenStatus" style="display:none;font-size:0.82rem;color:#8aaac0;margin-top:6px">
+        <span class="gen-spinner" style="display:inline-block;width:12px;height:12px"></span>
+        <span id="detailRegenText">重新生成中…</span>
+      </div>
+    </div>
+  </details>
 </div>`;
 }
 
@@ -1993,17 +2607,390 @@ function buildAbilityDetailHtml(item, sessionStat) {
   </div>
 
   ${detailActions(item)}
+  ${detailRegenPanel()}
 </div>`;
 }
 
 // ── WORLD TRAVERSE detail ─────────────────────────────────────────────────────
 // ── Archive Edit View ─────────────────────────────────────────────────────────
 
+/**
+ * 渲染 session 中已生成的 NPC/Monster 战斗档案列表。
+ * 数据来源：session.statData.Multiverse.Archives.<World>.NPCs[]
+ */
+// ── Session NPC helpers ───────────────────────────────────────────────────────
+const NPC_TIER_CLASS = t => {
+  if (t >= 10) return 'npc-tier-god';
+  if (t >= 7)  return 'npc-tier-myth';
+  if (t >= 5)  return 'npc-tier-epic';
+  if (t >= 3)  return 'npc-tier-rare';
+  if (t >= 1)  return 'npc-tier-low';
+  return 'npc-tier-zero';
+};
+const NPC_ATTR_LABELS = { STR:'力', DUR:'耐', VIT:'体', AGI:'敏', INT:'智', SOL:'灵', CHA:'魅' };
+
+function buildSessionNPCsHtml(npcs) {
+  if (!Array.isArray(npcs) || npcs.length === 0) return '';
+
+  const cards = npcs.map((npc, idx) => {
+    const cp      = npc.CombatProfile || {};
+    const tier    = cp.Tier?.NormalTier?.[0] ?? npc.tier ?? 0;
+    const burst   = cp.Tier?.BurstTier?.[0]  ?? tier;
+    const attrs   = cp.Attributes || {};
+    const hostile = npc.hostile ? '<span class="npc-tag npc-tag-hostile">敌对</span>' : '<span class="npc-tag npc-tag-neutral">中立</span>';
+    const typeTag = `<span class="npc-tag npc-tag-type">${escHtml(npc.type || 'Monster')}</span>`;
+
+    const attrHtml = Object.entries(NPC_ATTR_LABELS).map(([k, label]) => {
+      const val = attrs[k];
+      if (!val) return '';
+      const num  = Array.isArray(val) ? val[0] : val;
+      const note = Array.isArray(val) ? val[1] : '';
+      return `<span class="npc-attr" title="${escHtml(note)}">${label}<b>${typeof num === 'number' ? num.toFixed(1) : num}</b></span>`;
+    }).filter(Boolean).join('');
+
+    const abilities = (cp.Abilities || []).slice(0, 3).map(ab =>
+      `<div class="npc-ability"><span class="npc-ability-name">${escHtml(ab.name || '')}</span><span class="npc-ability-desc">${escHtml((ab.description || '').slice(0, 60))}…</span></div>`
+    ).join('');
+
+    const weaknesses = (cp.Weaknesses || []).slice(0, 2).map(w =>
+      `<span class="npc-weakness">${escHtml(typeof w === 'string' ? w : w.description || '')}</span>`
+    ).join('');
+
+    const tierLabel = burst > tier ? `${tier}★ <span class="npc-burst">/ 爆发 ${burst}★</span>` : `${tier}★`;
+
+    return `
+    <div class="npc-card" data-npc-idx="${idx}">
+      <div class="npc-card-header">
+        <span class="npc-tier-badge ${NPC_TIER_CLASS(tier)}">${tierLabel}</span>
+        <span class="npc-name">${escHtml(npc.name || '未知实体')}</span>
+        <div class="npc-tags">${typeTag}${hostile}</div>
+        <div class="npc-card-actions">
+          <button class="btn btn-ghost btn-xs npc-edit-btn" data-npc-idx="${idx}" title="编辑档案">✏️</button>
+          <button class="btn btn-ghost btn-xs npc-del-btn" data-npc-idx="${idx}" title="删除">🗑</button>
+        </div>
+      </div>
+      ${npc.description ? `<div class="npc-desc">${escHtml(npc.description.slice(0, 120))}${npc.description.length > 120 ? '…' : ''}</div>` : ''}
+      ${attrHtml ? `<div class="npc-attrs">${attrHtml}</div>` : ''}
+      ${abilities ? `<div class="npc-abilities">${abilities}</div>` : ''}
+      ${weaknesses ? `<div class="npc-weaknesses"><span class="npc-weakness-label">弱点：</span>${weaknesses}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="ae-section ae-session-npcs-section" id="ae-session-npcs">
+    <h3 class="ae-section-title">⚔️ 已生成实体档案 <span class="ae-count" id="npc-count-badge">${npcs.length} 个</span><span class="ae-session-npcs-hint">（当前存档 · Phase 2 生成）</span></h3>
+    <div class="session-npc-list" id="session-npc-list">${cards}</div>
+  </div>`;
+}
+
+/** 绑定 NPC 卡片的编辑/删除事件，在 openArchiveEdit 完成后调用 */
+function bindSessionNPCEvents(npcs, sessId, worldKey) {
+  const list = document.getElementById('session-npc-list');
+  if (!list) return;
+
+  list.addEventListener('click', async (e) => {
+    const editBtn = e.target.closest('.npc-edit-btn');
+    const delBtn  = e.target.closest('.npc-del-btn');
+    if (!editBtn && !delBtn) return;
+
+    const idx = parseInt((editBtn || delBtn).dataset.npcIdx, 10);
+    const npc = npcs[idx];
+    if (!npc) return;
+
+    if (delBtn) {
+      if (!confirm(`确认删除「${npc.name}」的实体档案？`)) return;
+      try {
+        const r = await fetch(`/api/sessions/${sessId}/worlds/${encodeURIComponent(worldKey)}/npcs/${encodeURIComponent(npc.name)}`, { method: 'DELETE' });
+        if (!r.ok) throw new Error((await r.json()).error);
+        npcs.splice(idx, 1);
+        refreshNPCList(npcs, sessId, worldKey);
+      } catch (err) { alert('删除失败：' + err.message); }
+      return;
+    }
+
+    if (editBtn) {
+      openNPCEditModal(npc, sessId, worldKey, async (updated) => {
+        try {
+          const r = await fetch(`/api/sessions/${sessId}/worlds/${encodeURIComponent(worldKey)}/npcs/${encodeURIComponent(npc.name)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updated),
+          });
+          if (!r.ok) throw new Error((await r.json()).error);
+          const saved = await r.json();
+          npcs[idx] = saved;
+          refreshNPCList(npcs, sessId, worldKey);
+        } catch (err) { alert('保存失败：' + err.message); }
+      });
+    }
+  });
+}
+
+function refreshNPCList(npcs, sessId, worldKey) {
+  const section = document.getElementById('ae-session-npcs');
+  if (!section) return;
+  const badge = document.getElementById('npc-count-badge');
+  if (badge) badge.textContent = `${npcs.length} 个`;
+  const list = document.getElementById('session-npc-list');
+  if (list) {
+    const cards = npcs.map((npc, idx) => {
+      const cp    = npc.CombatProfile || {};
+      const tier  = cp.Tier?.NormalTier?.[0] ?? npc.tier ?? 0;
+      const burst = cp.Tier?.BurstTier?.[0]  ?? tier;
+      const tl    = burst > tier ? `${tier}★ <span class="npc-burst">/ 爆发 ${burst}★</span>` : `${tier}★`;
+      const attrs = cp.Attributes || {};
+      const attrH = Object.entries(NPC_ATTR_LABELS).map(([k, lbl]) => {
+        const v = attrs[k]; if (!v) return '';
+        const n = Array.isArray(v) ? v[0] : v;
+        return `<span class="npc-attr" title="${escHtml(Array.isArray(v)?v[1]:'')}">${lbl}<b>${typeof n==='number'?n.toFixed(1):n}</b></span>`;
+      }).filter(Boolean).join('');
+      return `
+      <div class="npc-card" data-npc-idx="${idx}">
+        <div class="npc-card-header">
+          <span class="npc-tier-badge ${NPC_TIER_CLASS(tier)}">${tl}</span>
+          <span class="npc-name">${escHtml(npc.name||'未知')}</span>
+          <div class="npc-tags">
+            <span class="npc-tag npc-tag-type">${escHtml(npc.type||'Monster')}</span>
+            ${npc.hostile?'<span class="npc-tag npc-tag-hostile">敌对</span>':'<span class="npc-tag npc-tag-neutral">中立</span>'}
+          </div>
+          <div class="npc-card-actions">
+            <button class="btn btn-ghost btn-xs npc-edit-btn" data-npc-idx="${idx}" title="编辑档案">✏️</button>
+            <button class="btn btn-ghost btn-xs npc-del-btn" data-npc-idx="${idx}" title="删除">🗑</button>
+          </div>
+        </div>
+        ${npc.description?`<div class="npc-desc">${escHtml(npc.description.slice(0,120))}${npc.description.length>120?'…':''}</div>`:''}
+        ${attrH?`<div class="npc-attrs">${attrH}</div>`:''}
+      </div>`;
+    }).join('');
+    list.innerHTML = cards;
+  }
+  bindSessionNPCEvents(npcs, sessId, worldKey);
+}
+
+/** NPC 编辑 modal */
+function openNPCEditModal(npc, sessId, worldKey, onSave) {
+  const cp        = npc.CombatProfile || {};
+  const tier      = cp.Tier?.NormalTier?.[0] ?? npc.tier ?? 0;
+  const burstTier = cp.Tier?.BurstTier?.[0]  ?? tier;
+  const cpJson    = JSON.stringify(cp, null, 2);
+
+  const abilitiesHtml = (cp.Abilities || []).map((ab, i) => `
+    <div class="npc-edit-ability-row" data-ab-idx="${i}">
+      <input class="ae-input npc-ab-name" value="${escHtml(ab.name||'')}" placeholder="技能名">
+      <textarea class="ae-input npc-ab-desc" rows="2" placeholder="效果描述">${escHtml(ab.description||'')}</textarea>
+      <button class="btn btn-ghost btn-xs npc-del-ab" data-ab-idx="${i}">✕</button>
+    </div>`).join('');
+
+  const weaknessesHtml = (cp.Weaknesses || []).map((w, i) => {
+    const txt = typeof w === 'string' ? w : (w.description || '');
+    return `<div class="npc-edit-weak-row" data-w-idx="${i}">
+      <input class="ae-input npc-weak-val" value="${escHtml(txt)}" placeholder="弱点描述">
+      <button class="btn btn-ghost btn-xs npc-del-weak" data-w-idx="${i}">✕</button>
+    </div>`;
+  }).join('');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'npc-edit-overlay';
+  overlay.innerHTML = `
+  <div class="npc-edit-modal">
+    <div class="npc-edit-modal-header">
+      <h3>编辑实体档案</h3>
+      <button class="btn btn-ghost btn-xs npc-edit-close">✕</button>
+    </div>
+    <div class="npc-edit-modal-body">
+
+      <div class="npc-edit-tabs">
+        <button class="npc-edit-tab active" data-tab="basic">基本信息</button>
+        <button class="npc-edit-tab" data-tab="abilities">技能</button>
+        <button class="npc-edit-tab" data-tab="raw">原始 JSON</button>
+      </div>
+
+      <div class="npc-edit-tab-panel" id="npc-tab-basic">
+        <div class="ae-field-row"><label>名称</label><input class="ae-input" id="npc-ed-name" value="${escHtml(npc.name||'')}"></div>
+        <div class="ae-field-row">
+          <label>类型</label>
+          <select class="ae-input" id="npc-ed-type">
+            <option value="Monster"${npc.type==='Monster'?' selected':''}>Monster</option>
+            <option value="NPC"${npc.type==='NPC'?' selected':''}>NPC</option>
+            <option value="Boss"${npc.type==='Boss'?' selected':''}>Boss</option>
+          </select>
+        </div>
+        <div class="ae-field-row">
+          <label>敌对</label>
+          <select class="ae-input" id="npc-ed-hostile">
+            <option value="true"${npc.hostile?' selected':''}>是</option>
+            <option value="false"${!npc.hostile?' selected':''}>否</option>
+          </select>
+        </div>
+        <div class="ae-field-row"><label>常态星级</label><input class="ae-input" type="number" id="npc-ed-tier" value="${tier}" min="0" max="17"></div>
+        <div class="ae-field-row"><label>爆发星级</label><input class="ae-input" type="number" id="npc-ed-burst" value="${burstTier}" min="0" max="17"></div>
+        <div class="ae-field-row"><label>简介描述</label><textarea class="ae-input" id="npc-ed-desc" rows="4">${escHtml(npc.description||'')}</textarea></div>
+        <div class="ae-field-row"><label>状态</label>
+          <select class="ae-input" id="npc-ed-status">
+            <option value="encountered"${npc.status==='encountered'?' selected':''}>encountered</option>
+            <option value="alive"${npc.status==='alive'?' selected':''}>alive</option>
+            <option value="dead"${npc.status==='dead'?' selected':''}>dead</option>
+            <option value="fled"${npc.status==='fled'?' selected':''}>fled</option>
+          </select>
+        </div>
+        <div class="ae-field-row"><label>弱点</label>
+          <div id="npc-ed-weaknesses">${weaknessesHtml}</div>
+          <button class="btn btn-ghost btn-xs" id="npc-add-weak" style="margin-top:4px">+ 添加弱点</button>
+        </div>
+      </div>
+
+      <div class="npc-edit-tab-panel" id="npc-tab-abilities" style="display:none">
+        <div id="npc-ed-abilities">${abilitiesHtml}</div>
+        <button class="btn btn-ghost btn-xs" id="npc-add-ab" style="margin-top:6px">+ 添加技能</button>
+      </div>
+
+      <div class="npc-edit-tab-panel" id="npc-tab-raw" style="display:none">
+        <p style="font-size:0.72rem;color:#6688aa;margin-bottom:6px">直接编辑 CombatProfile JSON。保存时将替换技能/属性等全部字段。</p>
+        <textarea class="ae-input npc-raw-json" id="npc-ed-raw" rows="20" spellcheck="false">${escHtml(cpJson)}</textarea>
+      </div>
+
+    </div>
+    <div class="npc-edit-modal-footer">
+      <button class="btn btn-success" id="npc-ed-save">💾 保存</button>
+      <button class="btn btn-ghost npc-edit-close">取消</button>
+    </div>
+  </div>`;
+
+  document.body.appendChild(overlay);
+
+  // 关闭
+  overlay.querySelectorAll('.npc-edit-close').forEach(b => b.addEventListener('click', () => overlay.remove()));
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+  // Tab 切换
+  overlay.querySelectorAll('.npc-edit-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      overlay.querySelectorAll('.npc-edit-tab').forEach(t => t.classList.remove('active'));
+      overlay.querySelectorAll('.npc-edit-tab-panel').forEach(p => p.style.display = 'none');
+      tab.classList.add('active');
+      document.getElementById(`npc-tab-${tab.dataset.tab}`).style.display = '';
+    });
+  });
+
+  // 删除技能行
+  overlay.querySelector('#npc-ed-abilities').addEventListener('click', e => {
+    if (e.target.classList.contains('npc-del-ab')) e.target.closest('.npc-edit-ability-row').remove();
+  });
+
+  // 添加技能
+  overlay.querySelector('#npc-add-ab').addEventListener('click', () => {
+    const container = overlay.querySelector('#npc-ed-abilities');
+    const div = document.createElement('div');
+    div.className = 'npc-edit-ability-row';
+    div.innerHTML = `<input class="ae-input npc-ab-name" placeholder="技能名"><textarea class="ae-input npc-ab-desc" rows="2" placeholder="效果描述"></textarea><button class="btn btn-ghost btn-xs npc-del-ab">✕</button>`;
+    container.appendChild(div);
+  });
+
+  // 删除弱点行
+  overlay.querySelector('#npc-ed-weaknesses').addEventListener('click', e => {
+    if (e.target.classList.contains('npc-del-weak')) e.target.closest('.npc-edit-weak-row').remove();
+  });
+
+  // 添加弱点
+  overlay.querySelector('#npc-add-weak').addEventListener('click', () => {
+    const container = overlay.querySelector('#npc-ed-weaknesses');
+    const div = document.createElement('div');
+    div.className = 'npc-edit-weak-row';
+    div.innerHTML = `<input class="ae-input npc-weak-val" placeholder="弱点描述"><button class="btn btn-ghost btn-xs npc-del-weak">✕</button>`;
+    container.appendChild(div);
+  });
+
+  // 保存
+  overlay.querySelector('#npc-ed-save').addEventListener('click', () => {
+    const activeTab = overlay.querySelector('.npc-edit-tab.active')?.dataset.tab;
+    let newCP = JSON.parse(JSON.stringify(cp));
+
+    if (activeTab === 'raw') {
+      try { newCP = JSON.parse(overlay.querySelector('#npc-ed-raw').value); }
+      catch (e) { alert('JSON 格式错误：' + e.message); return; }
+    } else {
+      // 收集技能
+      const abilities = [...overlay.querySelectorAll('.npc-edit-ability-row')].map(row => ({
+        name:        row.querySelector('.npc-ab-name')?.value  || '',
+        description: row.querySelector('.npc-ab-desc')?.value  || '',
+      })).filter(a => a.name);
+      // 收集弱点
+      const weaknesses = [...overlay.querySelectorAll('.npc-edit-weak-row')].map(row =>
+        row.querySelector('.npc-weak-val')?.value || ''
+      ).filter(Boolean);
+
+      const newTier  = parseInt(overlay.querySelector('#npc-ed-tier').value,  10) || 0;
+      const newBurst = parseInt(overlay.querySelector('#npc-ed-burst').value, 10) || newTier;
+      if (!newCP.Tier) newCP.Tier = {};
+      newCP.Tier.NormalTier = [newTier,  newCP.Tier.NormalTier?.[1] || ''];
+      newCP.Tier.BurstTier  = [newBurst, newCP.Tier.BurstTier?.[1]  || ''];
+      newCP.Abilities  = abilities;
+      newCP.Weaknesses = weaknesses;
+    }
+
+    const updated = {
+      name:          overlay.querySelector('#npc-ed-name').value.trim()    || npc.name,
+      type:          overlay.querySelector('#npc-ed-type').value,
+      hostile:       overlay.querySelector('#npc-ed-hostile').value === 'true',
+      tier:          parseInt(overlay.querySelector('#npc-ed-tier').value, 10) || 0,
+      description:   overlay.querySelector('#npc-ed-desc').value,
+      status:        overlay.querySelector('#npc-ed-status').value,
+      CombatProfile: newCP,
+    };
+
+    onSave(updated);
+    overlay.remove();
+  });
+}
+
+function buildBetaDatabaseHtml(archive) {
+  const db = archive.betaDatabase;
+  if (!db || !Array.isArray(db.catalog) || db.catalog.length === 0) return '';
+
+  const TIER_COLOR = {
+    '0': '#5a6a7a', '1': '#7a9a7a', '2': '#6a9aaa', '3': '#9a8a5a',
+    '4': '#aa6a5a', '5': '#8a5aaa',
+  };
+  function tierColor(tier) {
+    const n = String(tier || '').match(/^(\d+)/)?.[1] || '0';
+    return TIER_COLOR[Math.min(Number(n), 5)] || '#7a9a7a';
+  }
+
+  const catalogHtml = db.catalog.map(entry => {
+    const tierStr = entry.combatTier || '—';
+    const color = tierColor(tierStr);
+    return `
+    <details class="beta-entry-details">
+      <summary class="beta-entry-summary">
+        <span class="beta-entry-name">${escHtml(entry.name || '')}</span>
+        <span class="beta-entry-latin">${escHtml(entry.latinName || '')}</span>
+        <span class="beta-entry-tier" style="color:${color};border-color:${color}">${escHtml(tierStr)}</span>
+      </summary>
+      <div class="beta-entry-body">
+        ${entry.size ? `<div class="beta-row"><span class="beta-label">尺寸</span><span class="beta-val">H ${escHtml(entry.size.h||'?')} / L ${escHtml(entry.size.l||'?')} / W ${escHtml(entry.size.w||'?')}</span></div>` : ''}
+        ${entry.mobility ? `<div class="beta-row"><span class="beta-label">机动</span><span class="beta-val">${escHtml(entry.mobility)}</span></div>` : ''}
+        ${entry.perceptionRank ? `<div class="beta-row"><span class="beta-label">探知等级</span><span class="beta-val">${escHtml(entry.perceptionRank)}</span></div>` : ''}
+        ${entry.primaryThreat ? `<div class="beta-row"><span class="beta-label">主要威胁</span><span class="beta-val">${escHtml(entry.primaryThreat)}</span></div>` : ''}
+        ${entry.tierBasis ? `<div class="beta-row"><span class="beta-label">星级依据</span><span class="beta-val beta-val-muted">${escHtml(entry.tierBasis)}</span></div>` : ''}
+        ${entry.antiFeat ? `<div class="beta-row"><span class="beta-label">Anti-Feat</span><span class="beta-val beta-val-muted">${escHtml(entry.antiFeat)}</span></div>` : ''}
+        ${entry.appearance ? `<div class="beta-row beta-row-full"><span class="beta-label">外形描述</span><p class="beta-appearance">${escHtml(entry.appearance)}</p></div>` : ''}
+      </div>
+    </details>`;
+  }).join('');
+
+  return `
+  <div class="ae-section ae-beta-section">
+    <h3 class="ae-section-title">🦠 敌人图鉴（betaDatabase）<span class="ae-count">${db.catalog.length} 种</span></h3>
+    ${db.note ? `<p class="beta-db-note">${escHtml(db.note)}</p>` : ''}
+    <div class="beta-catalog-list">${catalogHtml}</div>
+  </div>`;
+}
+
 async function openArchiveEdit(archiveId, parentItemId) {
   const mc = $('modalContent');
   mc.innerHTML = `<div style="padding:20px;color:#7a9a7a">加载档案中…</div>`;
 
-  let archive;
+  let archive, sessionNPCs = [];
   try {
     const resp = await fetch(`/api/worldanchor/archives/${archiveId}`);
     if (!resp.ok) throw new Error('加载失败');
@@ -2013,12 +3000,25 @@ async function openArchiveEdit(archiveId, parentItemId) {
     return;
   }
 
-  mc.innerHTML = buildArchiveEditHtml(archive, parentItemId);
+  // 尝试从当前选中 session 拉取该世界已生成的 NPC 档案
+  // 后端支持模糊匹配，直接用档案 displayName 查询
+  const sessId = $('sessionSelect')?.value || '';
+  if (sessId && archive.displayName) {
+    try {
+      const npcResp = await fetch(`/api/sessions/${sessId}/worlds/${encodeURIComponent(archive.displayName)}/npcs`);
+      if (npcResp.ok) sessionNPCs = await npcResp.json();
+    } catch (_) { /* 无 session 时静默失败 */ }
+  }
+
+  mc.innerHTML = buildArchiveEditHtml(archive, parentItemId, sessionNPCs);
   mc.scrollTop = 0;
   bindArchiveEditEvents(archive, parentItemId);
+  if (sessionNPCs.length > 0) {
+    bindSessionNPCEvents(sessionNPCs, sessId, archive.displayName);
+  }
 }
 
-function buildArchiveEditHtml(archive, parentItemId) {
+function buildArchiveEditHtml(archive, parentItemId, sessionNPCs = []) {
   const dis = '';
 
   // Build worldRules rows
@@ -2159,6 +3159,36 @@ function buildArchiveEditHtml(archive, parentItemId) {
     </div>
   </div>
 
+  ${buildBetaDatabaseHtml(archive)}
+
+  ${buildSessionNPCsHtml(sessionNPCs)}
+
+  <!-- 字段重新生成 -->
+  <div class="ae-section ae-regen-section">
+    <details>
+      <summary class="ae-section-title" style="cursor:pointer;list-style:none">🔄 字段重新生成</summary>
+      <div class="ae-regen-body">
+        <div class="ae-regen-row">
+          <select id="aeRegenField" class="shop-select-sm">
+            <option value="worldRules">世界法则（全部）</option>
+            <option value="timeline">历史时间线（全部）</option>
+            <option value="powerSystems">力量体系（全部）</option>
+            <option value="tierReason">定级依据</option>
+            <option value="recommendedEntry">建议入场时间点</option>
+            <option value="initialLocation">初始地点</option>
+            <option value="worldIdentity">本地身份</option>
+          </select>
+          <input type="text" id="aeRegenHint" class="gen-textarea" style="min-height:unset;height:32px;flex:1" placeholder="附加提示词（可选）">
+          <button class="btn btn-sm btn-primary" id="btnAeRegen">🔄 重新生成</button>
+        </div>
+        <div id="aeRegenStatus" style="display:none;font-size:0.82rem;color:#8aaac0;margin-top:6px">
+          <span class="gen-spinner" style="display:inline-block;width:12px;height:12px"></span>
+          <span id="aeRegenText">重新生成中…</span>
+        </div>
+      </div>
+    </details>
+  </div>
+
   <div class="ae-actions">
     <button class="btn btn-success ae-save-btn" data-archive-id="${archive.id}" data-parent-id="${parentItemId}">💾 保存修改</button>
     <button class="btn btn-ghost ae-cancel-btn" data-parent-id="${parentItemId}">取消</button>
@@ -2190,7 +3220,11 @@ function bindArchiveEditEvents(archive, parentItemId) {
 
   // Back / Cancel → reopen parent item detail
   mc.querySelectorAll('.ae-back-btn, .ae-cancel-btn').forEach(btn => {
-    btn.addEventListener('click', () => openDetail(btn.dataset.parentId));
+    btn.addEventListener('click', () => {
+      const pid = btn.dataset.parentId;
+      if (pid && pid !== 'null') openDetail(pid);
+      else $('detailModal').style.display = 'none';
+    });
   });
 
   // Time flow type selector — show/hide relevant fields and auto-fill defaults
@@ -2306,6 +3340,62 @@ function bindArchiveEditEvents(archive, parentItemId) {
   const saveBtn = mc.querySelector('.ae-save-btn');
   if (saveBtn) {
     saveBtn.addEventListener('click', () => saveArchiveEdit(saveBtn.dataset.archiveId, saveBtn.dataset.parentId));
+  }
+
+  // Archive field regen
+  const btnAeRegen = mc.querySelector('#btnAeRegen');
+  if (btnAeRegen) {
+    btnAeRegen.addEventListener('click', async () => {
+      const field     = mc.querySelector('#aeRegenField')?.value;
+      const extraHint = mc.querySelector('#aeRegenHint')?.value.trim() || '';
+      if (!field) return;
+
+      btnAeRegen.disabled = true;
+      mc.querySelector('#aeRegenStatus').style.display = '';
+      mc.querySelector('#aeRegenText').textContent = '重新生成中…';
+
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/api/worldanchor/archives/${archive.id}/regen-field`);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        let lastLen = 0, newValue, newField;
+        await new Promise((resolve, reject) => {
+          xhr.onprogress = () => {
+            const chunk = xhr.responseText.slice(lastLen);
+            lastLen = xhr.responseText.length;
+            for (const line of chunk.split('\n')) {
+              if (!line.startsWith('data: ')) continue;
+              try {
+                const d = JSON.parse(line.slice(6));
+                if (d.delta) mc.querySelector('#aeRegenText').textContent = d.delta.slice(-60);
+                if (d.newValue !== undefined) { newValue = d.newValue; newField = d.field; resolve(); }
+                if (d.message && line.includes('error')) reject(new Error(d.message));
+              } catch (_) {}
+            }
+          };
+          xhr.onload = resolve;
+          xhr.onerror = () => reject(new Error('网络错误'));
+          xhr.send(JSON.stringify({ field, extraHint }));
+        });
+
+        if (newValue !== undefined) {
+          const idx = (state.archives || []).findIndex(a => a.id === archive.id);
+          if (idx >= 0) {
+            const f = newField || field;
+            if (f === 'worldRules') state.archives[idx].ruleCount = newValue.length;
+            else if (f === 'powerSystems') state.archives[idx].systemCount = newValue.length;
+            else state.archives[idx][f] = newValue;
+          }
+          toast(`✓ 「${field}」已重新生成，正在刷新界面…`);
+          openArchiveEdit(archive.id, parentItemId);
+        }
+      } catch (err) {
+        toast(`重新生成失败: ${err.message}`, true);
+      } finally {
+        if (btnAeRegen) btnAeRegen.disabled = false;
+        if (mc.querySelector('#aeRegenStatus')) mc.querySelector('#aeRegenStatus').style.display = 'none';
+      }
+    });
   }
 }
 
@@ -2492,7 +3582,21 @@ async function saveArchiveEdit(archiveId, parentItemId) {
     }
 
     toast(`✓ 档案「${data.displayName}」已保存`);
-    openDetail(parentItemId); // return to pool view, refreshed
+    
+    if (parentItemId && parentItemId !== 'null') {
+      openDetail(parentItemId); // return to pool view, refreshed
+    } else {
+      $('detailModal').style.display = 'none';
+      renderArchivePool();
+      // If preview is showing this archive, update it
+      const previewDiv = $('worldAnchorPreview');
+      if (previewDiv && previewDiv.style.display !== 'none') {
+        const currentId = previewDiv.querySelector('.preview-card-header')?.dataset.archiveId;
+        if (currentId === data.id) {
+          renderWorldAnchorPreview(data);
+        }
+      }
+    }
   } catch (err) {
     toast(`保存失败: ${err.message}`, true);
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 保存修改'; }
@@ -2780,12 +3884,21 @@ function initTabs() {
       document.querySelectorAll('.shop-tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const tab = btn.dataset.tab;
-      $('shopMainItems').style.display = tab === 'items' ? '' : 'none';
-      $('shopMainGacha').style.display = tab === 'gacha' ? ''  : 'none';
+      $('shopMainItems').style.display    = tab === 'items'    ? '' : 'none';
+      $('shopMainGacha').style.display    = tab === 'gacha'    ? '' : 'none';
+      $('shopMainGenItem').style.display  = tab === 'genItem'  ? '' : 'none';
+      $('shopMainWorldGen').style.display = tab === 'worldGen' ? '' : 'none';
+      // 控制 sidebar 可见性（genItem/worldGen 时隐藏）
+      const layout = document.querySelector('.shop-layout');
+      if (layout) {
+        layout.classList.remove('tab-items','tab-gacha','tab-genItem','tab-worldGen');
+        layout.classList.add(`tab-${tab}`);
+      }
       if (tab === 'gacha') {
         loadGachaPools();
         loadGachaPending();
       }
+      if (tab === 'worldGen') renderArchivePool();
     });
   });
 }

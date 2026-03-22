@@ -18,6 +18,7 @@
     <a href="/" class="char-back-btn">← 主界面</a>
     <a href="/hub" class="char-back-btn">🧭 控制台</a>
     <a href="/shop" class="char-back-btn">🏪 商城</a>
+    <button id="btnThemeToggle" class="char-back-btn" style="cursor:pointer;border:1px solid rgba(0,180,255,0.2);background:transparent;border-radius:6px;padding:4px 10px" title="日/夜模式切换">☀️</button>
     <h1 class="char-title">✦ 主角生成器</h1>
   </div>
 </header>
@@ -235,7 +236,7 @@
 
       <!-- Appearance -->
       <div class="card-section">
-        <h3 class="section-title">外貌与着装</h3>
+        <h3 class="section-title">外貌与着装 <button class="btn btn-xs btn-ghost char-regen-btn" data-field="appearance" title="重新生成外貌描述">🔄</button></h3>
         <div class="card-row">
           <div class="field-block full">
             <label class="field-label">外貌描述</label>
@@ -252,7 +253,7 @@
 
       <!-- Personality -->
       <div class="card-section">
-        <h3 class="section-title">性格</h3>
+        <h3 class="section-title">性格 <button class="btn btn-xs btn-ghost char-regen-btn" data-field="personality" title="重新生成性格描述">🔄</button></h3>
         <div class="card-row">
           <div class="field-block full">
             <label class="field-label">核心标签</label>
@@ -269,7 +270,11 @@
 
       <!-- Deep Psychology -->
       <div class="card-section">
-        <h3 class="section-title">内心世界</h3>
+        <h3 class="section-title">内心世界
+          <button class="btn btn-xs btn-ghost char-regen-btn" data-field="coreDesires" title="重新生成渴望">🔄渴望</button>
+          <button class="btn btn-xs btn-ghost char-regen-btn" data-field="coreFears" title="重新生成恐惧">🔄恐惧</button>
+          <button class="btn btn-xs btn-ghost char-regen-btn" data-field="quirks" title="重新生成怪癖">🔄怪癖</button>
+        </h3>
         <div class="card-row triple-tags">
           <div class="field-block">
             <label class="field-label">⚠ 缺陷</label>
@@ -294,7 +299,7 @@
 
       <!-- Background -->
       <div class="card-section">
-        <h3 class="section-title">背景故事</h3>
+        <h3 class="section-title">背景故事 <button class="btn btn-xs btn-ghost char-regen-btn" data-field="background" title="重新生成背景故事">🔄</button></h3>
         <div class="card-row">
           <div class="field-block full">
             <textarea id="fBackground" class="card-textarea" rows="5" placeholder="背景故事…"></textarea>
@@ -379,6 +384,33 @@
       <div class="card-section" id="knowledgeSection" style="display:none">
         <h3 class="section-title">📚 知识储备</h3>
         <div id="fKnowledge" class="knowledge-list"></div>
+      </div>
+
+      <!-- Field Regen -->
+      <div class="card-section" id="charRegenSection">
+        <details>
+          <summary class="section-title" style="cursor:pointer;list-style:none">🔄 字段重新生成</summary>
+          <div class="char-regen-body">
+            <div class="char-regen-row">
+              <select id="charRegenField" class="char-select" style="width:160px">
+                <option value="appearance">外貌描述</option>
+                <option value="personality">性格描述</option>
+                <option value="background">背景故事</option>
+                <option value="coreDesires">核心渴望</option>
+                <option value="coreFears">核心恐惧</option>
+                <option value="quirks">怪癖/习惯</option>
+                <option value="speechStyle">说话风格</option>
+                <option value="skills">技能/专长</option>
+                <option value="relationships">人际关系</option>
+              </select>
+              <input type="text" id="charRegenHint" class="card-textarea" style="height:32px;flex:1;min-height:unset" placeholder="附加提示词（可选）：如 增加更多异域风情…">
+              <button id="btnCharRegen" class="btn-primary btn-sm">🔄 重新生成</button>
+            </div>
+            <div id="charRegenStatus" style="display:none;font-size:0.82rem;color:#8aaac0;margin-top:8px">
+              <span id="charRegenText">重新生成中…</span>
+            </div>
+          </div>
+        </details>
       </div>
 
       <!-- Apply Row -->

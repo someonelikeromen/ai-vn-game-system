@@ -1117,7 +1117,7 @@ body {
 }
 .hud-group > summary.hud-group-title {
   padding: 5px 14px;
-  color: #0090b8; font-size: 10px; font-weight: 700;
+  color: #0090b8; font-size: var(--font-stat); font-weight: 700;
   font-family: 'Courier New', monospace;
   cursor: pointer; user-select: none; list-style: none;
   background: rgba(0,90,130,0.06);
@@ -1129,25 +1129,25 @@ body {
 .hud-group > summary.hud-group-title::-webkit-details-marker { display: none; }
 .hud-group > summary.hud-group-title:hover { background: rgba(0,90,130,0.12); color: #00b8d8; }
 .hud-group > summary.hud-group-title::before {
-  content: '▶'; font-size: 7px; color: rgba(0,180,255,0.38);
+  content: '▶'; font-size: 0.65em; color: rgba(0,180,255,0.38);
   flex-shrink: 0; transition: transform 0.12s; display: inline-block;
 }
 .hud-group[open] > summary.hud-group-title::before { transform: rotate(90deg); }
 
 .hud-d0 { border-left: 2px solid rgba(0,200,255,0.32); margin-bottom: 2px; }
 .hud-d0 > summary.hud-group-title {
-  background: rgba(0,110,160,0.12); color: #00c0e8; font-size: 10.5px;
+  background: rgba(0,110,160,0.12); color: #00c0e8; font-size: var(--font-stat);
   letter-spacing: 0.9px; padding-left: 12px; border-top: 1px solid rgba(0,200,255,0.08);
 }
 .hud-d1 { border-left: 1px solid rgba(0,180,255,0.2); }
 .hud-d1 > summary.hud-group-title { background: rgba(0,90,130,0.09); padding-left: 18px; color: #00a8cc; }
 .hud-d2 { border-left: 1px solid rgba(0,160,220,0.12); }
-.hud-d2 > summary.hud-group-title { background: rgba(0,70,110,0.06); padding-left: 24px; color: #0090b8; font-size: 9.5px; }
+.hud-d2 > summary.hud-group-title { background: rgba(0,70,110,0.06); padding-left: 24px; color: #0090b8; font-size: calc(var(--font-stat) - 1px); }
 .hud-d3, .hud-d4 { border-left: 1px solid rgba(0,140,200,0.08); }
 .hud-d3 > summary.hud-group-title,
 .hud-d4 > summary.hud-group-title {
   background: rgba(0,50,90,0.04); padding-left: 30px;
-  color: rgba(0,160,200,0.72); font-size: 9px;
+  color: rgba(0,160,200,0.72); font-size: calc(var(--font-stat) - 1.5px);
 }
 .hud-group-pool { justify-content: space-between !important; }
 .hud-group-k { flex-shrink: 0; }
@@ -1475,16 +1475,16 @@ pre, code, .gen-stream, .stream-content,
 }
 
 /* ── Personality Dimensions in stat-float HUD ─────────────────────────────── */
-.hud-dim-container { padding: 4px 0; }
+.hud-dim-container { padding: 4px 14px; }
 .hud-dim-cat { margin-bottom: 10px; }
 .hud-dim-cat-label {
   font-size: var(--font-stat); font-weight: 600; color: #e8c87a;
-  text-transform: uppercase; letter-spacing: 0.06em;
+  letter-spacing: 0.06em;
   margin-bottom: 4px; padding-bottom: 2px;
   border-bottom: 1px solid rgba(232,200,122,0.15);
 }
-.hud-dim-row { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
-.hud-dim-label { width: 80px; font-size: var(--font-stat); color: #7cc6e8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hud-dim-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+.hud-dim-label { width: 5.5em; flex-shrink: 0; font-size: var(--font-stat); color: #7cc6e8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hud-dim-track {
   flex: 1; height: 5px;
   background: rgba(255,255,255,0.07);
@@ -1501,7 +1501,7 @@ pre, code, .gen-stream, .stream-content,
 }
 .hud-dim-fill.pos { left: 50%; background: #7c6af5; }
 .hud-dim-fill.neg { right: 50%; background: #e87c6a; }
-.hud-dim-val { width: 26px; text-align: right; font-size: var(--font-stat); font-family: monospace; color: #777; }
+.hud-dim-val { width: 2.4em; flex-shrink: 0; text-align: right; font-size: var(--font-stat); font-family: monospace; color: #777; }
 
 /* ── Emotional State ─────────────────────────────────────────────────────────── */
 .hud-mood-bar {
@@ -1690,4 +1690,28 @@ html.theme-oled {
   --bg5:  #141414;
   --border:  rgba(0,180,255,0.08);
   --border2: rgba(0,180,255,0.16);
+}
+
+/* ── 日间·浅色 ──────────────────────────────────────────────────────────────── */
+html.theme-light {
+  --bg:   #f2f5fb;
+  --bg2:  #e8ecf5;
+  --bg3:  #dde2ef;
+  --bg4:  #d0d7e8;
+  --bg5:  #c2cae0;
+  --border:  rgba(60,90,160,0.18);
+  --border2: rgba(60,90,160,0.32);
+  --accent:      #2870c0;
+  --accent2:     #1a5aa8;
+  --accent3:     #28a878;
+  --accent-glow: rgba(40,112,192,0.22);
+  --glow-accent: 0 0 20px rgba(40,112,192,0.18);
+  --text:  #0c1829;
+  --text2: #2a4060;
+  --text3: #5878a0;
+  --warning: #b07010;
+  --danger:  #b82828;
+  --success: #1a7848;
+  --info:    #1a5aa8;
+  color-scheme: light;
 }

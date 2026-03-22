@@ -119,12 +119,13 @@ ${STAR_TIER_TABLE}
 /**
  * Build messages for NPC/Monster stat generation.
  *
- * @param {string} description   - SystemSpawn tag body (name, description, type, context)
- * @param {string} worldKey      - Current world name for context
+ * @param {string}   description       - SystemSpawn tag body (name, description, type, context)
+ * @param {string}   worldKey          - Current world name for context
  * @param {object[]} worldPowerSystems - PowerSystems from the world archive
+ * @param {object|null} bestiaryEntry  - Matching betaDatabase.catalog entry (if any) for reference
  * @returns {Array<{role: string, content: string}>}
  */
-function buildMessages(description, worldKey, worldPowerSystems = []) {
+function buildMessages(description, worldKey, worldPowerSystems = [], bestiaryEntry = null) {
   let systemContent = NPC_SYSTEM_PROMPT;
 
   // Inject world power systems for accurate tier calibration
@@ -135,7 +136,26 @@ function buildMessages(description, worldKey, worldPowerSystems = []) {
     systemContent += `\n\n---\n\n## 当前世界（${worldKey}）力量体系参照\n\n${psText}\n\n请确保生成的实体星级与该世界的力量上限相匹配。`;
   }
 
-  const userContent = `请为以下实体生成完整档案：\n\n${description}`;
+  // Inject bestiary reference data when available (e.g. betaDatabase catalog entries)
+  // This gives the LLM authoritative lore data to base the NPC profile on,
+  // while still going through the standard stat-generation pipeline.
+  let userContent = `请为以下实体生成完整档案：\n\n${description}`;
+  if (bestiaryEntry) {
+    const lines = [
+      '\n\n---\n\n## 图鉴参考数据（以下为该实体的官方记录，请以此为准生成档案）',
+      bestiaryEntry.latinName   ? `- 学名：${bestiaryEntry.latinName}`          : '',
+      bestiaryEntry.nickname    ? `- 俗称：${bestiaryEntry.nickname}`           : '',
+      bestiaryEntry.size        ? `- 体型：H${bestiaryEntry.size.h || '?'} / L${bestiaryEntry.size.l || '?'} / W${bestiaryEntry.size.w || '?'}` : '',
+      bestiaryEntry.mobility    ? `- 机动：${bestiaryEntry.mobility}`           : '',
+      bestiaryEntry.perceptionRank ? `- 探知等级：${bestiaryEntry.perceptionRank}` : '',
+      bestiaryEntry.combatTier  ? `- 战力星级（Anti-Feat协议评定）：${bestiaryEntry.combatTier}` : '',
+      bestiaryEntry.tierBasis   ? `- 星级依据：${bestiaryEntry.tierBasis}`      : '',
+      bestiaryEntry.antiFeat    ? `- Anti-Feat（已知限制/弱点）：${bestiaryEntry.antiFeat}` : '',
+      bestiaryEntry.primaryThreat ? `- 主要威胁目标：${bestiaryEntry.primaryThreat}` : '',
+      bestiaryEntry.appearance  ? `- 外形描述：${bestiaryEntry.appearance}`     : '',
+    ].filter(Boolean).join('\n');
+    userContent += lines;
+  }
 
   return [
     { role: 'system', content: systemContent },

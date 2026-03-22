@@ -120,6 +120,15 @@
         <label class="check-row"><input type="checkbox" id="pe-forbid-overrides"><span>禁止覆盖</span></label>
       </div>
       <div class="form-row">
+        <label>生效阶段 (phases，留空=全部)</label>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px">
+          <label class="check-row"><input type="checkbox" class="pe-phase" value="1"><span>Phase 1 规划</span></label>
+          <label class="check-row"><input type="checkbox" class="pe-phase" value="2"><span>Phase 2 检索</span></label>
+          <label class="check-row"><input type="checkbox" class="pe-phase" value="3"><span>Phase 3 叙事</span></label>
+          <label class="check-row"><input type="checkbox" class="pe-phase" value="4"><span>Phase 4 更新</span></label>
+        </div>
+      </div>
+      <div class="form-row">
         <label>内容 (content)</label>
         <textarea class="content-area" id="pe-content" placeholder="提示词内容…"></textarea>
       </div>

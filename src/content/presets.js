@@ -2236,6 +2236,48 @@ const PROMPTS = [
     "injectionDepth": 4,
     "injectionOrder": 100,
     "forbidOverrides": false
+  },
+  {
+    "identifier": "cot_combat",
+    "name": "⚔️ 战斗CoT（Phase 3）",
+    "enabled": false,
+    "_phases": [3],
+    "content": "【战斗推演指令】在 <think> 中，请按以下步骤推演本回合战斗，再输出叙事：\n1. **态势盘点**：列出场上所有战斗方、各自当前HP/能量/位置/状态异常。\n2. **行动意图**：分析每方本回合最可能采取的行动（主动攻击/防御/撤退/使用技能）及其动机。\n3. **伤害计算**：根据攻击方数值与防御方防御力/护甲，估算伤害范围，说明是否命中、暴击、格挡。\n4. **节奏把控**：判断战斗节奏（均势/一方占优/危急反转），决定本回合叙事的紧张程度与字数比例。\n5. **输出规划**：确定叙事中需要展现的关键动作、感官细节（声音/冲击/痛感）以及情绪张力。\n完成以上推演后再生成叙事正文，确保数值逻辑自洽，战斗感官真实。",
+    "role": "system",
+    "isMainSystemPrompt": false,
+    "marker": false,
+    "injectionPosition": 0,
+    "injectionDepth": 4,
+    "injectionOrder": 200,
+    "forbidOverrides": false
+  },
+  {
+    "identifier": "cot_psychology",
+    "name": "🧠 人物心理模拟CoT（Phase 3）",
+    "enabled": false,
+    "_phases": [3],
+    "content": "【人物心理模拟指令】在 <think> 中，请对本回合涉及的主要NPC（≤3人）逐一进行心理剖析，再输出叙事：\n1. **当前情绪状态**：描述该NPC此刻的核心情绪（恐惧/愤怒/信任/怀疑等）及其强度（1-10分）。\n2. **认知与信息差**：该NPC知道什么、不知道什么、误解了什么？这些如何影响其判断？\n3. **核心动机**：驱动其行为的最深层需求（生存/权力/认同/保护他人/复仇等）。\n4. **行为决策**：综合以上因素，该NPC在本回合会做出什么决定？语气、措辞、肢体语言会有何表现？\n5. **隐藏信号**：是否有内心矛盾或压抑的情绪会通过细节泄露（微表情/语气停顿/刻意回避）？\n完成心理剖析后生成叙事，确保NPC行为逻辑自洽、心理层次丰富。",
+    "role": "system",
+    "isMainSystemPrompt": false,
+    "marker": false,
+    "injectionPosition": 0,
+    "injectionDepth": 4,
+    "injectionOrder": 201,
+    "forbidOverrides": false
+  },
+  {
+    "identifier": "cot_environment",
+    "name": "🌍 环境物理反应CoT（Phase 3）",
+    "enabled": false,
+    "_phases": [3],
+    "content": "【环境物理推演指令】在 <think> 中，请对本回合所处场景进行物理与环境分析，再输出叙事：\n1. **场景要素盘点**：当前地点的空间结构（室内/室外/封闭/开阔）、主要材质（金属/混凝土/泥土/水体）、光照与能见度。\n2. **天气与大气**：温度、湿度、风向风速，及其对人物行动的实际影响（打滑/视野受阻/声音传播）。\n3. **物理因果链**：本回合发生的动作（爆炸/撞击/跌落/火焰蔓延）会对环境产生哪些连锁物理反应？哪些结构会受损、倒塌或改变形态？\n4. **感官细节库**：列出3-5个能增强临场感的具体感官细节（气味/质感/声响/余震/温差）。\n5. **环境限制**：场景对角色行动有哪些物理限制或战术利用价值（遮蔽物/逃跑路线/地形优势）？\n完成环境分析后生成叙事，确保物理细节真实可信，场景与行动自然融合。",
+    "role": "system",
+    "isMainSystemPrompt": false,
+    "marker": false,
+    "injectionPosition": 0,
+    "injectionDepth": 4,
+    "injectionOrder": 202,
+    "forbidOverrides": false
   }
 ];
 

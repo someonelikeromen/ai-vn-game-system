@@ -363,6 +363,11 @@ function openPromptModal(identifier) {
   $('pe-forbid-overrides').checked   = !!(p.forbid_overrides);
   $('pe-content').value              = p.content || '';
 
+  const phases = Array.isArray(p._phases) ? p._phases : [];
+  document.querySelectorAll('.pe-phase').forEach(cb => {
+    cb.checked = phases.includes(parseInt(cb.value));
+  });
+
   $('btn-pe-delete').style.display = isNew ? 'none' : '';
   $('modal-prompt').style.display  = 'flex';
   $('pe-name').focus();
@@ -393,6 +398,14 @@ $('btn-pe-save').addEventListener('click', () => {
   p.injection_depth   = parseInt($('pe-injection-depth').value) ?? 4;
   p.forbid_overrides  = $('pe-forbid-overrides').checked;
   p.content           = $('pe-content').value;
+
+  const selectedPhases = [...document.querySelectorAll('.pe-phase:checked')]
+    .map(cb => parseInt(cb.value));
+  if (selectedPhases.length > 0) {
+    p._phases = selectedPhases;
+  } else {
+    delete p._phases;
+  }
 
   // If new, also add to prompt_order
   if (isNew) {

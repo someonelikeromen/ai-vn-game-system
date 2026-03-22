@@ -1,3 +1,92 @@
+## [v0.38] — SystemRedeemItem 兜底验证：商城缺失物品后台补充评估（2026-03-20）
+
+### 修改文件
+- `src/engine/gameLoop.js`
+
+### 修改内容
+- Finalize 的 SystemRedeemItem 处理块：区分"命中"与"未命中"两种情况
+  - 命中（在 shopStore 或 evaluatedItems 中找到）→ 直接 0 价格兑换（原有逻辑）
+  - 未命中 → 收集到 `fallbackRedeemNames` 并触发后台 `processRedeemFallbackAsync`
+- 新增 `processRedeemFallbackAsync(sessionId, missedNames, snapshot)`：对未命中的物品名做一次批量 LLM 评估（使用 `buildNarrativeItemBatchMessages`），评估结果入库后以 0 价格 `executeRedemption` 写入会话
+
+### 修改原因
+- Phase 4 可能输出 `<SystemRedeemItem>` 中包含 Phase 2 未评估到（如 Phase 2 评估失败或 Phase 4 生成了额外物品）的物品名
+- 原代码遇此情况仅 warn + skip，导致物品丢失；需做一次兜底验证
+
+### 修改结果
+- 所有 `<SystemRedeemItem>` 标签都能被处理：有档案的直接兑换，无档案的后台补充评估后再兑换
+- 兜底评估为异步（setImmediate），不阻塞当前回合响应
+
+## [v0.37] — Phase 4 SystemRedeemItem 标签：叙事获得物品自动免费兑换（2026-03-20）
+
+### 修改文件
+- `src/engine/gameLoop.js`
+- `src/engine/promptBuilder.js`
+
+### 修改内容
+- `gameLoop.js`：新增 `parseSystemRedeemItemTags(text)` 函数，解析 Phase 4 输出中的 `<SystemRedeemItem>物品名</SystemRedeemItem>` 标签
+- `gameLoop.js` Finalize：UpdateVariable 执行后，解析 `phase4Response` 中的 SystemRedeemItem 标签，从 `evaluatedItems` 中按名称匹配，调用 `shopEngine.executeRedemption(freeItem, session, vars)`（price=0）完成完整兑换（Loadout、ShopInventory、属性加成、能量池等）
+- `promptBuilder.js`：Phase 4 物品提示块改为 `<SystemRedeemItem>` 输出指引，明确"获得→输出标签、消耗/失去→_.remove、未发生→不输出"三种规则，不再要求 LLM 手动写 effects
+
+### 修改原因
+- 原方案要求 Phase 4 手动写入 effects 数据，容易漏写或格式错误
+- `shopEngine.executeRedemption` 已有完整的多字段写入逻辑（EnergyPools、ShopInventory、Loadout 等），应复用
+
+### 修改结果
+- Phase 4 只需判断叙事中是否确实发生了物品获取，输出对应标签
+- 系统自动调用商城兑换流程完成完整状态写入，与扭蛋/商城兑换等价
+
+## [v0.36] — Phase 2 同步物品评估 + reqItemUpdate/reqCombatEnemies 完整处理（2026-03-20）
+
+### 修改文件
+- `src/features/shop/shopPrompt.js`
+- `src/engine/gameLoop.js`
+- `src/engine/promptBuilder.js`
+
+### 修改内容
+- `shopPrompt.js`：新增 `buildNarrativeItemBatchMessages(itemDescriptions, previousItems, sessionSnapshot)` —— 使用与扭蛋批量生成相同的系统提示词框架，将最多 10 件指定物品一次性批量评估（返回 JSON 数组），并附带差价/已有物品状态上下文
+- `gameLoop.js`：Phase 2 中新增**同步** reqItemUpdate 评估步骤：调用 `buildNarrativeItemBatchMessages` + `parseGachaBatchResponse`，将物品以**正常（评估）价格**加入商店，结果存入 `evaluatedItems`
+- `gameLoop.js`：Phase 2 中对 `reqCombatEnemies` 未在现有 NPC 档案命中的敌人，异步触发 `processNarrativeSpawnsAsync` 生成实体档案（上限 10 个）
+- `promptBuilder.js`：`buildPhase3Messages` 的 `phaseContextParts` 新增 `evaluatedItems` 注入块（物品名/星级/type/描述摘要）
+- `promptBuilder.js`：`buildPhase4Messages` 新增 `evaluatedItems` 参数，在系统提示中注入每件物品的完整 `effects` JSON，并附带「获得/消耗/升级」写入指南
+
+### 修改原因
+- 之前 `reqItemUpdate` 被完全忽略；`reqCombatEnemies` 搜不到时无生成
+- 物品评估需在 Phase 3 之前完成，才能将信息注入叙事和变量更新上下文
+- 正常定价入库（而非免费自动应用）符合游戏经济系统设计，玩家仍需主动兑换
+
+### 修改结果
+- Phase 2 完成后 `evaluatedItems` 即可用：P3 知道本回合预期哪些物品，P4 有精确的 effects 数据可直接写入 statData
+- `reqCombatEnemies` 中未命中的敌人后台自动生成 NPC 档案，下次战斗即可命中
+- 物品以正常价格入库，玩家在商店页面自行兑换
+
+## [v0.35] — Preset 提示词原子支持 Phase 过滤 + 三条 CoT 原子（2026-03-19）
+
+### 修改文件
+- `public/preset.html`
+- `public/preset.js`
+- `src/engine/promptBuilder.js`
+- `src/content/presets.js`
+
+### 修改内容
+- `preset.html`：prompt 编辑模态框新增"生效阶段"勾选区（Phase 1/2/3/4 复选框），留空表示全阶段生效
+- `preset.js`：`openPromptModal` 读取 `p._phases` 并勾选对应复选框；保存时将选中值写回 `p._phases`（无选中则删除该字段）
+- `promptBuilder.js`：新增 `promptForPhase(p, phase)` helper；`buildPhase1Messages` 和 `buildPhase3Messages` 的用户消息循环与 assistant prefill 过滤均加入 `_phases` 判断
+- `presets.js`：追加三条默认禁用（`enabled: false`）、仅 Phase 3（`_phases: [3]`）的 CoT 原子：
+  - `cot_combat`（战斗推演 CoT）：五步推演战斗态势、伤害、节奏
+  - `cot_psychology`（人物心理模拟 CoT）：逐一剖析 NPC 情绪、动机、决策
+  - `cot_environment`（环境物理反应 CoT）：分析场景物理要素、感官细节、环境限制
+
+### 修改原因
+- 原 Preset 提示词无法区分阶段，战斗/心理/环境 CoT 等叙事专属指令会误入 Phase 1 规划请求
+- 需要按需开关特定 CoT 原子，不影响其他阶段
+
+### 修改结果
+- 在预设编辑器中可为任意提示词设置生效阶段，Phase 1 和 Phase 3 自动按 `_phases` 过滤
+- 三条 CoT 原子随时可在预设管理界面单独启用，仅影响 Phase 3 叙事生成
+
+---
+
 ## [v0.34] — 用户消息立即落盘，防止服务器重启导致对话丢失（2026-03-19）
 
 ### 修改文件

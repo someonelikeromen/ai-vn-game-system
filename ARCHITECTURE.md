@@ -289,6 +289,13 @@ messages[N]    assistant  prefill            — role:'assistant' prompts
 - `buildSystemPrompt(preset, charCard, userPersona, vars)` — 系统消息
 - `buildUserSuffix(preset, charCard, statData, userPersona, userInput)` — 最后用户消息
 - `buildContextWindow(preset, charCard, statData, history, userPersona, userInput)` — 完整 messages 数组
+- `promptForPhase(p, phase)` — 判断 preset prompt 是否在指定阶段生效（依据 `p._phases`，无该字段则全阶段生效）
+
+**Preset Prompt `_phases` 字段**：
+- 每条 preset.prompts 条目可携带 `_phases: number[]`（如 `[3]`、`[1,3]`）
+- `buildPhase1Messages` 和 `buildPhase3Messages` 均通过 `promptForPhase` 过滤用户消息 parts 和 assistant prefill
+- 未设置 `_phases` 的条目保持原有行为（Phase 1 和 Phase 3 均注入）
+- 可在预设编辑器 UI 的"生效阶段"复选框中配置，保存后持久化到 preset JSON
 
 ### `varEngine.js`
 

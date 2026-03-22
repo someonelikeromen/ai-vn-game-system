@@ -1172,4 +1172,143 @@ function buildGachaGenerationMessages(tierMin, tierMax, count, previousItems, se
   ];
 }
 
-module.exports = { SYSTEM_PROMPT, buildMessages, buildGachaGenerationMessages };
+// ─── Narrative Item Batch Evaluation ─────────────────────────────────────────
+
+/**
+ * Build LLM messages to batch-evaluate up to 10 specific items from Phase 1 reqItemUpdate.
+ * Uses the same SYSTEM_PROMPT and context structure as buildGachaGenerationMessages,
+ * but targets a concrete list of named items instead of random tier-range generation.
+ *
+ * @param {string[]} itemDescriptions - Array of item descriptions (e.g. "瑞士军刀（Inventory）")
+ * @param {Array}    previousItems    - Recent shop items for price consistency & dedup
+ * @param {object}   sessionSnapshot  - Character state snapshot
+ * @returns {Array}  LLM messages array
+ */
+function buildNarrativeItemBatchMessages(itemDescriptions, previousItems, sessionSnapshot) {
+  const count = Math.min(itemDescriptions.length, 10);
+  const batch = itemDescriptions.slice(0, count);
+
+  // ── Same context block as buildGachaGenerationMessages ───────────────────────
+
+  let context = '';
+
+  if (previousItems && previousItems.length > 0) {
+    const lines = previousItems
+      .slice(0, 8)
+      .map((it) => `- ${it.name} | ${it.tier}★ | ${fmtPrice(it.pricePoints)} | ${it.type}${it.sourceWorld ? ` | 来自 ${it.sourceWorld}` : ''}`)
+      .join('\n');
+    context += `\n\n---\n## 近期已评估项目（价格一致性参考）\n${lines}`;
+  }
+
+  if (sessionSnapshot) {
+    const cs     = sessionSnapshot.CharacterSheet;
+    const attrs  = cs?.CoreSystem?.Attributes || {};
+    const tier   = cs?.CoreSystem?.Tier || {};
+    const pts    = cs?.Resources?.Points ?? '?';
+    const medals = cs?.Resources?.StarMedals;
+    const lo     = cs?.Loadout || {};
+    const kb     = cs?.KnowledgeBase?.Database?.RootNodes || [];
+    const companions = Array.isArray(sessionSnapshot.CompanionRoster?.ActiveCompanions)
+      ? sessionSnapshot.CompanionRoster.ActiveCompanions
+      : Object.values(sessionSnapshot.CompanionRoster?.ActiveCompanions || {}).filter(c => c && typeof c === 'object');
+
+    const currentWorld = Array.isArray(sessionSnapshot.Multiverse?.CurrentWorldName)
+      ? sessionSnapshot.Multiverse.CurrentWorldName[0]
+      : (sessionSnapshot.Multiverse?.CurrentWorldName || '?');
+
+    const attrStr = Object.entries(attrs)
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${k}:${Array.isArray(v) ? v[0] : v}`)
+      .join(' ');
+
+    const normalTier = Array.isArray(tier.NormalTier) ? tier.NormalTier[0] : (tier.NormalTier ?? '?');
+    const burstTier  = Array.isArray(tier.BurstTier)  ? tier.BurstTier[0]  : (tier.BurstTier  ?? '?');
+
+    let medalStr = '';
+    if (medals && typeof medals === 'object') {
+      const m = Array.isArray(medals) ? medals[0] : medals;
+      medalStr = Object.entries(m)
+        .filter(([k, v]) => !k.startsWith('$') && Number(v) > 0)
+        .map(([k, v]) => `${k}×${v}`)
+        .join(' ');
+    }
+
+    const visitedWorlds = Object.keys(sessionSnapshot.Multiverse?.Archives || {})
+      .filter(k => k && !k.startsWith('$') && k !== 'TemplateWorld');
+
+    const gv1 = (obj, k) => { if (!obj) return ''; const v = obj[k]; return Array.isArray(v) ? String(v[0] ?? '') : String(v ?? ''); };
+    const loadoutParts = [];
+
+    const psList = (lo.PowerSources || []).filter(p => p && typeof p === 'object' && !String(p).startsWith('$'))
+      .map(p => { const nm = gv1(p, 'Name') || '?'; const realm = gv1(p.Cultivation, 'Realm'); return realm ? `${nm}[${realm}]` : nm; }).filter(Boolean);
+    const abList   = (lo.PassiveAbilities || []).filter(a => a && typeof a === 'object').map(a => gv1(a, 'Name') || '?').filter(Boolean);
+    const techList = (lo.ApplicationTechniques || []).filter(t => t && typeof t === 'object').map(t => gv1(t, 'Name') || '?').filter(Boolean);
+    const invList  = (lo.Inventory?.Equipped || []).filter(i => i && typeof i === 'object').map(i => {
+      const nm  = gv1(i, 'ItemName') || gv1(i, 'Name') || '?';
+      const qty = Array.isArray(i.Quantity) ? i.Quantity[0] : (i.Quantity || 1);
+      return qty > 1 ? `${nm}×${qty}` : nm;
+    }).filter(Boolean);
+    const kbList = kb.filter(n => n && typeof n === 'object').map(n => gv1(n, 'Topic') || '?').filter(Boolean);
+    const compSummaries = companions.map(c => {
+      const nm    = gv1(c.UserPanel, 'Name') || '?';
+      const ctier = Array.isArray(c.CoreSystem?.Tier?.NormalTier) ? c.CoreSystem.Tier.NormalTier[0] : (c.CoreSystem?.Tier?.NormalTier ?? '?');
+      const cLo   = c.Loadout || {};
+      const abilityCount = (cLo.PassiveAbilities || []).length + (cLo.ApplicationTechniques || []).length + (cLo.PowerSources || []).length;
+      return `${nm}(${ctier}★, 能力×${abilityCount}, 装备×${(cLo.Inventory?.Equipped || []).length})`;
+    });
+
+    if (psList.length)        loadoutParts.push(`基盘能力(${psList.length})：${psList.join('、')}`);
+    if (abList.length)        loadoutParts.push(`被动能力(${abList.length})：${abList.join('、')}`);
+    if (techList.length)      loadoutParts.push(`应用技法(${techList.length})：${techList.join('、')}`);
+    if (invList.length)       loadoutParts.push(`装备物品(${invList.length})：${invList.join('、')}`);
+    if (kbList.length)        loadoutParts.push(`知识节点(${kbList.length})：${kbList.join('、')}`);
+    if (compSummaries.length) loadoutParts.push(`同伴(${compSummaries.length})：${compSummaries.join('、')}`);
+
+    const shopHistory = Array.isArray(cs?.ShopInventory)
+      ? cs.ShopInventory.filter(i => i && i.name && i.type !== 'WorldTraverse').slice(-20)
+      : [];
+
+    context +=
+      `\n\n---\n## 当前角色状态（定价与开放权限参考）\n` +
+      `当前世界：${currentWorld} | 常态星级：${normalTier}★ | 爆发星级：${burstTier}★\n` +
+      `属性：${attrStr}\n积分：${pts}${medalStr ? `\n徽章：${medalStr}` : ''}` +
+      (visitedWorlds.length ? `\n已经历世界：${visitedWorlds.join('、')}` : '') +
+      (loadoutParts.length ? `\n${loadoutParts.join('\n')}` : '') +
+      (shopHistory.length
+        ? `\n\n### 历史兑换记录（差价计算用）\n` +
+          shopHistory.map(i => `- ${i.name} | ${i.tier ?? '?'}★ | ${fmtPrice(i.pricePoints)} | ${i.type}`).join('\n')
+        : '') +
+      `\n\n> 说明：以下物品来自本回合叙事规划（reqItemUpdate），是即将在剧情中出现、被获取或升级的道具/能力/NPC。` +
+      `请结合角色当前装备状态进行差价评估（若为升级/替换，查阅历史兑换记录获取现有版本 C）。`;
+  }
+
+  const systemContent = SYSTEM_PROMPT.trim() + context;
+
+  // ── User message ─────────────────────────────────────────────────────────────
+
+  const itemListStr = batch.map((d, i) => `${i + 1}. ${d}`).join('\n');
+
+  const userContent =
+    `请对以下 ${count} 件兑换项进行评估。这些物品来自本回合叙事规划（reqItemUpdate），即将在剧情中出现或被变更。\n\n` +
+    `**待评估列表**：\n${itemListStr}\n\n` +
+    `**硬性约束**：\n` +
+    `1. 星级应与物品描述对应的实际强度匹配\n` +
+    `2. 每件物品均须独立完成**三轮评估协议**（基础定级 → 价格修正 → 最终裁定），评估过程写入 systemEvaluation\n` +
+    `3. type 字段依括号内注明的子系统填写（如 Inventory、PassiveAbility、PowerSource 等）；**严禁使用 WorldTraverse 类型**\n` +
+    `4. 若某项为已有物品的升级版，优先查阅"历史兑换记录"按差价四步法计算价格\n\n` +
+    `**输出格式**：\n` +
+    `输出一个 JSON **数组**，包含 ${count} 个完整的兑换项 JSON 对象，字段与单件兑换评估完全一致：\n` +
+    `\`\`\`json\n` +
+    `[\n` +
+    `  { "name": "...", "type": "...", "tier": 0, "pricePoints": 0, "requiredMedals": [], "description": "...", "systemEvaluation": "...", "effects": {} },\n` +
+    `  ...\n` +
+    `]\n` +
+    `\`\`\``;
+
+  return [
+    { role: 'system', content: systemContent },
+    { role: 'user',   content: userContent   },
+  ];
+}
+
+module.exports = { SYSTEM_PROMPT, buildMessages, buildGachaGenerationMessages, buildNarrativeItemBatchMessages };

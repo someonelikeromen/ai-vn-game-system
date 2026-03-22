@@ -11,7 +11,7 @@
  * 旧版 enum 键（xs/sm/md/lg/xl）会自动迁移到 px 值。
  */
 (function () {
-  const VALID_THEMES = ['purple', 'blue', 'green', 'oled'];
+  const VALID_THEMES = ['purple', 'blue', 'green', 'oled', 'light'];
   const THEME_CLASSES = VALID_THEMES.map(t => 'theme-' + t);
 
   // 字体范围约束

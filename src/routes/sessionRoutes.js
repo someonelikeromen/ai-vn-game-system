@@ -164,6 +164,71 @@ function registerRoutes(app, deps) {
       res.status(500).json({ error: e.message });
     }
   });
+
+  // GET /api/sessions/:id/worlds/:worldKey/npcs
+  app.get('/api/sessions/:id/worlds/:worldKey/npcs', (req, res) => {
+    try {
+      const session = sessionMgr.getSession(req.params.id);
+      if (!session) return res.status(404).json({ error: 'Session not found' });
+      const worldKey = decodeURIComponent(req.params.worldKey);
+      const archives = session.statData?.Multiverse?.Archives || {};
+      const npcs     = archives[worldKey]?.NPCs || [];
+      res.json(npcs);
+    } catch (e) {
+      log.error('GET /api/sessions/:id/worlds/:worldKey/npcs error', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // PUT /api/sessions/:id/worlds/:worldKey/npcs/:npcName  — 更新单个 NPC
+  app.put('/api/sessions/:id/worlds/:worldKey/npcs/:npcName', (req, res) => {
+    try {
+      const session = sessionMgr.getSession(req.params.id);
+      if (!session) return res.status(404).json({ error: 'Session not found' });
+      const worldKey = decodeURIComponent(req.params.worldKey);
+      const npcName  = decodeURIComponent(req.params.npcName);
+      const archives = session.statData?.Multiverse?.Archives;
+      if (!archives?.[worldKey]) return res.status(404).json({ error: 'World not found' });
+
+      const npcs = archives[worldKey].NPCs || [];
+      const idx  = npcs.findIndex(n => n.name === npcName);
+      if (idx === -1) return res.status(404).json({ error: `NPC "${npcName}" not found` });
+
+      // 合并更新，保留未提交字段
+      npcs[idx] = { ...npcs[idx], ...req.body, name: npcs[idx].name };
+      archives[worldKey].NPCs = npcs;
+      sessionMgr.saveSession(session);
+      log.session('NPC_UPDATE', `Updated "${npcName}" in ${worldKey} (sess:${session.id})`);
+      res.json(npcs[idx]);
+    } catch (e) {
+      log.error('PUT /npcs/:npcName error', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // DELETE /api/sessions/:id/worlds/:worldKey/npcs/:npcName  — 删除单个 NPC
+  app.delete('/api/sessions/:id/worlds/:worldKey/npcs/:npcName', (req, res) => {
+    try {
+      const session = sessionMgr.getSession(req.params.id);
+      if (!session) return res.status(404).json({ error: 'Session not found' });
+      const worldKey = decodeURIComponent(req.params.worldKey);
+      const npcName  = decodeURIComponent(req.params.npcName);
+      const archives = session.statData?.Multiverse?.Archives;
+      if (!archives?.[worldKey]) return res.status(404).json({ error: 'World not found' });
+
+      const npcs    = archives[worldKey].NPCs || [];
+      const before  = npcs.length;
+      archives[worldKey].NPCs = npcs.filter(n => n.name !== npcName);
+      if (archives[worldKey].NPCs.length === before) return res.status(404).json({ error: `NPC "${npcName}" not found` });
+
+      sessionMgr.saveSession(session);
+      log.session('NPC_DELETE', `Deleted "${npcName}" from ${worldKey} (sess:${session.id})`);
+      res.json({ ok: true });
+    } catch (e) {
+      log.error('DELETE /npcs/:npcName error', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
 }
 
 module.exports = { registerRoutes };
