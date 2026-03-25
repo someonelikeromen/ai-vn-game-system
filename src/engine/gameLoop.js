@@ -540,44 +540,74 @@ async function runMultiPhaseTurn(session, userContent, req, res) {
     }
   }
 
-  // reqItemUpdate: synchronous batch evaluation → add to shop at normal price → inject into P3/P4
+  // reqItemUpdate: reuse existing shop rows when possible; only LLM-eval missing ones
   let evaluatedItems = [];
   if (phase1Result.reqItemUpdate.length > 0 && !clientAborted) {
-    const itemBatch   = phase1Result.reqItemUpdate.slice(0, 10);
-    const prevItems   = shopStore.loadItems().slice(0, 8);
-    const itemMsgs    = shopPrompt.buildNarrativeItemBatchMessages(itemBatch, prevItems, buildStatSnapshot(session.statData));
-    log.info(`[PHASE2] Evaluating ${itemBatch.length} reqItemUpdate items synchronously`);
-    log.shopReq('itemUpdate:p2', itemMsgs);
-    try {
-      const t0item = Date.now();
-      const itemRaw = await createCompletion(shopItemConfig, itemMsgs, {
-        stream:    false,
-        onRequest: (nReq) => { llmNodeReq = nReq; if (clientAborted) nReq.destroy(); },
-      });
-      log.shopResp('itemUpdate:p2', itemRaw, Date.now() - t0item);
-      log.llm({ model: shopItemConfig.model, baseUrl: shopItemConfig.baseUrl, msgCount: itemMsgs.length, stream: false, durationMs: Date.now() - t0item, responseChars: itemRaw.length, phase: 2 });
+    const itemBatch = phase1Result.reqItemUpdate
+      .slice(0, 10)
+      .map((r) => String(r || '').trim())
+      .filter(Boolean);
 
-      const parsed = shopEngine.parseGachaBatchResponse(itemRaw);
-      evaluatedItems = parsed.filter(item => item?.name);
+    const allShopItems = shopStore.loadItems();
+    const reusedContexts = [];
+    const reusedShopIds  = new Set();
+    const needEvalList   = [];
+    const needEvalSeen   = new Set();
 
-      // Add to shop at normal (evaluated) price — no auto-apply, player redeems manually
-      for (const item of evaluatedItems) {
-        try {
-          shopStore.addItem({
-            ...item,
-            narrativeItemUpdate:  true,
-            narrativeGrantedAt:   new Date().toISOString(),
-            sourceDescription:    item.description || item.name,
-          });
-        } catch (addErr) {
-          log.warn(`[PHASE2] shopStore.addItem "${item.name}" failed: ${addErr.message}`);
+    for (const req of itemBatch) {
+      const matched = shopStore.findItemMatchingNarrativeReq(allShopItems, req);
+      if (matched) {
+        if (!reusedShopIds.has(matched.id)) {
+          reusedContexts.push(shopStore.itemToPhase2ContextForPrompt(matched));
+          reusedShopIds.add(matched.id);
+          log.info(`[PHASE2] reqItemUpdate reuse shop item (no regen): "${req}" → "${matched.name}"`);
         }
+      } else if (!needEvalSeen.has(req)) {
+        needEvalSeen.add(req);
+        needEvalList.push(req);
       }
-      log.info(`[PHASE2] ${evaluatedItems.length} items evaluated and added to shop`);
-    } catch (itemErr) {
-      log.warn(`[PHASE2] Item evaluation failed: ${itemErr.message} — continuing without item context`);
-      evaluatedItems = [];
     }
+
+    let newlyEvaluated = [];
+    if (needEvalList.length > 0 && !clientAborted) {
+      const prevItems = shopStore.loadItems().slice(0, 8);
+      const itemMsgs  = shopPrompt.buildNarrativeItemBatchMessages(needEvalList, prevItems, buildStatSnapshot(session.statData));
+      log.info(`[PHASE2] Evaluating ${needEvalList.length} reqItemUpdate item(s) (${reusedContexts.length} reused from shop)`);
+      log.shopReq('itemUpdate:p2', itemMsgs);
+      try {
+        const t0item = Date.now();
+        const itemRaw = await createCompletion(shopItemConfig, itemMsgs, {
+          stream:    false,
+          onRequest: (nReq) => { llmNodeReq = nReq; if (clientAborted) nReq.destroy(); },
+        });
+        log.shopResp('itemUpdate:p2', itemRaw, Date.now() - t0item);
+        log.llm({ model: shopItemConfig.model, baseUrl: shopItemConfig.baseUrl, msgCount: itemMsgs.length, stream: false, durationMs: Date.now() - t0item, responseChars: itemRaw.length, phase: 2 });
+
+        const parsed = shopEngine.parseGachaBatchResponse(itemRaw);
+        newlyEvaluated = parsed.filter((item) => item?.name);
+
+        for (const item of newlyEvaluated) {
+          try {
+            shopStore.addItem({
+              ...item,
+              narrativeItemUpdate: true,
+              narrativeGrantedAt:  new Date().toISOString(),
+              sourceDescription:   item.description || item.name,
+            });
+          } catch (addErr) {
+            log.warn(`[PHASE2] shopStore.addItem "${item.name}" failed: ${addErr.message}`);
+          }
+        }
+        log.info(`[PHASE2] ${newlyEvaluated.length} new item(s) evaluated and added to shop`);
+      } catch (itemErr) {
+        log.warn(`[PHASE2] Item evaluation failed: ${itemErr.message} — continuing without new item context`);
+        newlyEvaluated = [];
+      }
+    } else if (reusedContexts.length > 0) {
+      log.info(`[PHASE2] All ${itemBatch.length} reqItemUpdate entr(y/ies) matched existing shop — skipped LLM`);
+    }
+
+    evaluatedItems = [...reusedContexts, ...newlyEvaluated];
   }
 
   send('phase', { phase: 2, label: '检索信息', status: 'done', logCount, combatCount, itemCount: evaluatedItems.length });
@@ -957,13 +987,47 @@ async function processPhase1ItemUpdatesAsync(sessionId, itemDescriptions, snapsh
   const userPersona = getUserPersona(config);
 
   const MAX_ITEMS = 10;
-  const batch = itemDescriptions.slice(0, MAX_ITEMS);
+  const batch = itemDescriptions
+    .slice(0, MAX_ITEMS)
+    .map((r) => String(r || '').trim())
+    .filter(Boolean);
+
+  const sess = sessionMgr.getSession(sessionId);
+  if (!sess || !batch.length) return;
+  applySessionCharName(userPersona, sess);
+  const vars = { userName: userPersona.name, charName: charCard.name };
 
   try {
-    log.shop('ITEM_UPDATE', `Batch evaluating ${batch.length} items for session ${sessionId}: ${batch.join(', ')}`);
+    const allShopItems = shopStore.loadItems();
+    const needEvalList = [];
+    const needEvalSeen = new Set();
+
+    for (const req of batch) {
+      const matched = shopStore.findItemMatchingNarrativeReq(allShopItems, req);
+      if (matched) {
+        try {
+          const freeItem = { ...matched, pricePoints: 0, requiredMedals: [] };
+          shopEngine.executeRedemption(freeItem, sess, vars);
+          log.shop('ITEM_UPDATE', `Reuse shop + applied "${matched.name}" (${matched.tier}★) → session ${sessionId}`);
+        } catch (err) {
+          log.error(`ItemUpdate reuse redeem "${matched.name}" failed: ${err.message}`);
+        }
+      } else if (!needEvalSeen.has(req)) {
+        needEvalSeen.add(req);
+        needEvalList.push(req);
+      }
+    }
+
+    if (!needEvalList.length) {
+      sessionMgr.saveSession(sess);
+      log.shop('ITEM_UPDATE', `All ${batch.length} item(s) matched existing shop — skipped LLM for session ${sessionId}`);
+      return;
+    }
+
+    log.shop('ITEM_UPDATE', `Batch evaluating ${needEvalList.length} item(s) (${batch.length - needEvalList.length} reused from shop) for session ${sessionId}`);
 
     const previousItems = shopStore.loadItems().slice(0, 8);
-    const messages      = shopPrompt.buildNarrativeItemBatchMessages(batch, previousItems, snapshotAtPhase);
+    const messages      = shopPrompt.buildNarrativeItemBatchMessages(needEvalList, previousItems, snapshotAtPhase);
     log.shopReq(`itemUpdate:batch`, messages);
 
     let fullResponse = '';
@@ -978,11 +1042,6 @@ async function processPhase1ItemUpdatesAsync(sessionId, itemDescriptions, snapsh
 
     const items = shopEngine.parseGachaBatchResponse(fullResponse);
     if (!items.length) throw new Error('批量评估返回空数组');
-
-    const sess = sessionMgr.getSession(sessionId);
-    if (!sess) return;
-    applySessionCharName(userPersona, sess);
-    const vars = { userName: userPersona.name, charName: charCard.name };
 
     for (const item of items) {
       if (!item?.name) continue;
@@ -1002,7 +1061,6 @@ async function processPhase1ItemUpdatesAsync(sessionId, itemDescriptions, snapsh
     }
 
     sessionMgr.saveSession(sess);
-
   } catch (err) {
     log.error(`Phase1ItemUpdates batch failed for session ${sessionId}: ${err.message}`);
   }

@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 /**
  * Shop Store 鈥?persists generated shop items to data/shop-items.json
  */
@@ -68,6 +68,90 @@ function deleteItem(id) {
   return true;
 }
 
-module.exports = { loadItems, addItem, getItem, updateItem, deleteItem };
+/** Delete many items in one write. Skips system / baseAnchor entries. */
+function deleteItems(ids) {
+  if (!Array.isArray(ids) || !ids.length) return { removed: 0, skipped: 0 };
+  const idSet = new Set(ids.map(String));
+  const items = loadItems();
+  let removed = 0;
+  let skipped = 0;
+  const next = items.filter((i) => {
+    if (!idSet.has(i.id)) return true;
+    if (i.system || i.baseAnchor) {
+      skipped++;
+      return true;
+    }
+    removed++;
+    return false;
+  });
+  if (removed > 0) saveItems(next);
+  return { removed, skipped };
+}
+
+function normalizeForShopMatch(s) {
+  return String(s || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
+function splitBilingualName(s) {
+  const n = normalizeForShopMatch(s);
+  if (!n) return [];
+  return n.split(/\s*\/\s*/).map((p) => p.trim()).filter(Boolean);
+}
+
+/**
+ * Match Phase 1 reqItemUpdate string to an existing shop row — skip re-eval / duplicate add.
+ */
+function findItemMatchingNarrativeReq(allItems, reqStr) {
+  const req = normalizeForShopMatch(reqStr);
+  if (!req || req.length < 2) return null;
+  const reqParts = splitBilingualName(reqStr);
+
+  for (const it of allItems) {
+    if (it.system || it.baseAnchor) continue;
+    const name = normalizeForShopMatch(it.name || '');
+    if (!name) continue;
+    const nameParts = splitBilingualName(it.name || '');
+
+    if (req === name) return it;
+    const shorter = req.length <= name.length ? req : name;
+    const longer = req.length > name.length ? req : name;
+    if (shorter.length >= 4 && longer.includes(shorter)) return it;
+
+    for (const rp of reqParts) {
+      for (const np of nameParts.length ? nameParts : [name]) {
+        if (!rp || !np) continue;
+        if (rp === np) return it;
+        const a = rp.length <= np.length ? rp : np;
+        const b = rp.length > np.length ? rp : np;
+        if (a.length >= 4 && b.includes(a)) return it;
+      }
+    }
+  }
+  return null;
+}
+
+/** Shape expected by Phase 3 / Phase 4 prompts (subset of full shop item). */
+function itemToPhase2ContextForPrompt(item) {
+  return {
+    name:        item.name,
+    tier:        item.tier,
+    type:        item.type,
+    description: item.description || '',
+  };
+}
+
+module.exports = {
+  loadItems,
+  addItem,
+  getItem,
+  updateItem,
+  deleteItem,
+  deleteItems,
+  findItemMatchingNarrativeReq,
+  itemToPhase2ContextForPrompt,
+};
 
 

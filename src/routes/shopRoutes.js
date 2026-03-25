@@ -3,6 +3,7 @@
  * Shop Routes — item generation, redemption, and management.
  * GET /api/shop/items
  * DELETE /api/shop/items/:id
+ * POST /api/shop/items/batch-delete
  * POST /api/shop/generate (SSE — 不自动保存，返回预览数据)
  * POST /api/shop/save    (保存预览数据到 shopStore)
  * POST /api/shop/items/:id/regen-field (字段级重新生成)
@@ -209,6 +210,20 @@ function registerRoutes(app, deps) {
       res.json({ ok: true });
     } catch (e) {
       log.error('DELETE /api/shop/items/:id error', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // POST /api/shop/items/batch-delete — body: { ids: string[] }
+  app.post('/api/shop/items/batch-delete', (req, res) => {
+    try {
+      const ids = Array.isArray(req.body?.ids) ? req.body.ids.map(String) : [];
+      if (!ids.length) return res.status(400).json({ error: 'ids 不能为空' });
+      const { removed, skipped } = shopStore.deleteItems(ids);
+      log.shop('DELETE', `Batch deleted ${removed} item(s), skipped ${skipped}`);
+      res.json({ ok: true, removed, skipped });
+    } catch (e) {
+      log.error('POST /api/shop/items/batch-delete error', e);
       res.status(500).json({ error: e.message });
     }
   });

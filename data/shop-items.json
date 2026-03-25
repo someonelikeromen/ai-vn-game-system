@@ -1,27 +1,4176 @@
 [
   {
-    "id": "3dadc5b8-6d83-4f6c-91e8-1b01891e68d8",
-    "createdAt": "2026-03-21T17:20:17.333Z",
+    "id": "b6c5ec2c-7107-4701-b518-cad56520fe13",
+    "createdAt": "2026-03-24T15:45:08.474Z",
+    "name": "香月夕呼 (Yuuko Kouzuki) — 横滨基地副司令",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 280,
+    "requiredMedals": [],
+    "description": "来源：Muv-Luv Alternative。联合国太平洋方面第11军横滨基地副司令，Alternative IV 计划总负责人。绝顶聪明的物理学家，00 Unit 的缔造者。性格恶劣、唯结果论的现实主义者，拥有足以操弄国家级政治的智谋与行动力。作为同伴，她不提供直接战斗力，但在科研、战略规划与政治博弈层面拥有无可替代的价值。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: [正向] 普通成年女性，无特殊锻炼 → 0.8~1.0\nDUR: [正向] 无超凡抗性，被枪击会死 → 0.9~1.0\nVIT: [正向] 高强度加班常态，精力旺盛 → 1.0~1.2\nMEN: [正向] 承受人类灭亡重担，绝对理性 → 1.5~2.0\nINT(PER): [正向] 独立完成因果律理论，制造00 Unit → 极高\n**1B 属性提纯汇总**\n- 纯肉体属性均为凡人水准 (0.8~1.0)\n- 覆盖维度=0项 (纯智力/功能型)\n**1C 功能维度判定**\n0维度 → -3星 → 强制下限 0★\n**1D 实战模拟裁判**\nVs 0★ 职业士兵：必败。战斗力仅限手枪自卫。\n结论：维持 0★\n\n#### 第二轮\n基准分：100 (0★)\n**修正系数**\n- 稀有才能-传奇级 (Alternative IV缔造者/天才物理学家): +100%\n- 势力权限 (基地副司令/资源调动能力): +50%\n- 剧情关键性/特殊魅力: +30%\n最终积分 = 100 × (1 + 1.0 + 0.5 + 0.3) = 280\n\n#### 第三轮\n结论：0★ | 280积分 | 无需徽章",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "队友",
+            "Sentiment": "信赖",
+            "Favorability": 10
+          },
+          "UserPanel": {
+            "Name": "香月夕呼 (Yuuko Kouzuki)",
+            "Title": "横滨基地副司令",
+            "Identity": "天才物理学家 / Alternative IV 总负责人",
+            "Appearance": {
+              "Visuals": "身高160cm左右，黑长直发，常穿白大褂与职场套装，眼神锐利且总是带着戏谑的笑意。",
+              "Clothing": "联合国军制服（改为短裙式样）/ 白大褂"
+            },
+            "Personality": {
+              "Alignment": "绝对中立 · 唯结果论",
+              "Traits": [
+                "毒舌",
+                "天才",
+                "工作狂",
+                "腹黑"
+              ],
+              "Analysis": "为了达成目的（拯救人类）可以牺牲一切，包括自己。对愚蠢没有任何耐心，但对被她认可的人会展现出别扭的关照。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "人类存续",
+                "逻辑与效率"
+              ],
+              "SpeakingStyle": "语速中等偏快，充满逻辑陷阱与嘲讽，喜欢用反问句。",
+              "EmotionalBaseline": "冷静戏谑，极少展露真心。",
+              "MotivationCore": "完成 Alternative IV，扭转因果。",
+              "RelationshipDynamic": "导师/损友。倾向于将主角视为有趣的观察样本或可用的棋子。",
+              "RoleplayDirective": "始终保持智力优越感，用最刻薄的话说出最正确的建议。关键时刻展现出作为成年人的可靠。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                0.8,
+                "缺乏锻炼"
+              ],
+              "DUR": [
+                0.9,
+                "普通女性"
+              ],
+              "VIT": [
+                1.1,
+                "精力旺盛"
+              ],
+              "REC": [
+                1,
+                "常人"
+              ],
+              "AGI": [
+                0.9,
+                "常人"
+              ],
+              "REF": [
+                1.1,
+                "思维敏捷"
+              ],
+              "PER": [
+                1.4,
+                "洞察入微"
+              ],
+              "MEN": [
+                1.8,
+                "绝对理性"
+              ],
+              "SOL": [
+                1,
+                "常人"
+              ],
+              "CHA": [
+                1.5,
+                "女王气场"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "凡人"
+              ],
+              "BurstTier": [
+                0,
+                "凡人"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                95,
+                "当前"
+              ],
+              "MaxValue": [
+                95,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*50",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [],
+            "PassiveAbilities": [
+              {
+                "Name": "天才思维 (Genius Loci)",
+                "Type": "天赋",
+                "Description": "在物理学、工程学与逻辑分析领域拥有超越时代的直觉与算力。科研效率+200%，解析未知科技时间-50%。",
+                "Specs": {
+                  "Desc": [
+                    "科研加成",
+                    "高速解析"
+                  ]
+                }
+              },
+              {
+                "Name": "政治博弈 (Political Maneuvering)",
+                "Type": "技巧",
+                "Description": "擅长在多方势力间周旋并获取资源。交涉判定+30%，获取稀有物资概率提升。",
+                "Specs": {
+                  "Desc": [
+                    "交涉",
+                    "资源获取"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "加密智能终端",
+                  "Quantity": [
+                    1,
+                    "部"
+                  ],
+                  "Type": "工具",
+                  "Description": [
+                    "存有基地高级权限密钥的通讯器",
+                    "Desc"
+                  ]
+                },
+                {
+                  "ItemName": "半包薄荷糖",
+                  "Quantity": [
+                    1,
+                    "包"
+                  ],
+                  "Type": "消耗品",
+                  "Description": [
+                    "思考时补充糖分用",
+                    "Desc"
+                  ]
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": [
+                {
+                  "Topic": "量子电动力学",
+                  "Mastery": "宗师"
+                },
+                {
+                  "Topic": "因果律导论",
+                  "Mastery": "宗师"
+                },
+                {
+                  "Topic": "战术机开发理论",
+                  "Mastery": "精通"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-24T15:45:08.472Z",
+    "sourceDescription": "来源：Muv-Luv Alternative。联合国太平洋方面第11军横滨基地副司令，Alternative IV 计划总负责人。绝顶聪明的物理学家，00 Unit 的缔造者。性格恶劣、唯结果论的现实主义者，拥有足以操弄国家级政治的智谋与行动力。作为同伴，她不提供直接战斗力，但在科研、战略规划与政治博弈层面拥有无可替代的价值。"
+  },
+  {
+    "id": "96f9f2c4-bf76-4189-9d03-13fd493b080e",
+    "createdAt": "2026-03-24T15:36:02.904Z",
+    "name": "智能手机 (Smartphone) — 现代通用型",
+    "type": "Inventory",
+    "tier": 0,
+    "pricePoints": 150,
+    "requiredMedals": [],
+    "description": "一台来自21世纪20年代标准的智能手机，具备在此时代（2001年）堪称超级计算机的算力。虽然由于缺乏配套基站无法通话或上网，但内置的离线数据库、高精度摄像模组、多功能传感器（陀螺仪/加速计/磁力计）以及超长待机模式使其成为极具价值的多功能战术终端。已预装离线百科全书、工程计算软件及媒体播放器。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: [正向] 无物理攻击力 → 下限 0.5 | [反向] 易碎电子产品 → 上限 0.5\nDUR: [正向] 无 | [反向] 跌落即碎 → 上限 0.5\nAGI/REF: 无加成\nMEN/PER: 提供计算辅助但不直接提升属性\n**1B 属性提纯汇总**\n- 全属性 +0，覆盖维度 = 0 项\n**1C 功能维度判定**\n覆盖0维度 → -3星 → 强制下限 0★\n**1D 实战模拟裁判**\n对战 0★ 凡人：作为钝器不如砖头，作为工具无法直接杀伤 → 维持 0★\n基础星级：0★\n#### 第二轮\n基准分：100\n修正系数：\n- 技术代差（2001年背景下的未来科技）：+30%\n- 多功能整合（手电/相机/计算/记录）：+20%\n- 能源限制（需充电）：-0%（默认含适配器）\n最终积分 = 100 × (1 + 0.30 + 0.20) = 150\n#### 第三轮\n结论：0★ | 150 积分 | 无需徽章",
+    "effects": {
+      "inventoryItems": [
+        {
+          "name": "智能手机 (Smartphone)",
+          "type": "Tool/Tech",
+          "quantity": 1,
+          "description": "2020s世代智能终端，含离线百科与工程软件。需定期充电（USB接口）。"
+        }
+      ],
+      "itemOperations": [
+        {
+          "type": "modify",
+          "targetItemName": "智能手机",
+          "itemType": "Inventory",
+          "modifications": [
+            {
+              "field": "description",
+              "newValue": "2020s世代智能终端，含离线百科与工程软件。需定期充电（USB接口）。",
+              "reason": "明确物品规格与功能描述"
+            }
+          ],
+          "rationale": "更新现有物品的详细规格描述"
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-24T15:36:02.902Z",
+    "sourceDescription": "一台来自21世纪20年代标准的智能手机，具备在此时代（2001年）堪称超级计算机的算力。虽然由于缺乏配套基站无法通话或上网，但内置的离线数据库、高精度摄像模组、多功能传感器（陀螺仪/加速计/磁力计）以及超长待机模式使其成为极具价值的多功能战术终端。已预装离线百科全书、工程计算软件及媒体播放器。"
+  },
+  {
+    "id": "9d9af8f1-3186-44b1-83bb-db538b027956",
+    "createdAt": "2026-03-22T13:34:17.109Z",
+    "name": "神宫司麻里莫 (Marimo Jinguuji)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 150,
+    "requiredMedals": [],
+    "description": "横滨基地207卫士训练小队的魔鬼教官。曾是优秀的战术机卫士，后转入后方培养新人。表面上严厉苛刻、不讲情面，实则对学生充满母性般的关怀，为了让他们在残酷的战场上活下去而狠下心肠。作为同伴，能提供顶尖的战术机驾驶指导与基础军事训练。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: 退役精锐卫士 → 下限1.5 | 上限1.8 | 估算=1.6\nDUR: 身体素质优秀 → 下限1.5 | 上限1.8 | 估算=1.6\nVIT: 极佳的体能 → 下限1.6 | 上限2.0 | 估算=1.8\nREC: 常人 → 下限1.0 | 估算=1.1\nAGI: 极高的反应与协调性 → 下限1.8 | 上限2.2 | 估算=2.0\nREF: 战术机驾驶员的神经反射 → 下限1.8 | 上限2.2 | 估算=2.0\nPER: 敏锐的战场直觉 → 下限1.6 | 估算=1.8\nMEN: 坚韧的军人意志，但内心有柔软处 → 下限1.8 | 上限2.2 | 估算=2.0\nSOL: 常人 → 下限1.0 | 估算=1.0\nCHA: 严厉教官的威严与内在的温柔 → 下限1.5 | 估算=1.8\n**1B 属性提纯汇总**\n- STR=1.6, DUR=1.6, VIT=1.8, REC=1.1, AGI=2.0, REF=2.0, PER=1.8, MEN=2.0, SOL=1.0, CHA=1.8, 覆盖维度=9项\n**1C 功能维度判定**\n覆盖9维度（达到人类巅峰门槛）→ 调整0星\n**1D 实战模拟裁判**\n对战0★基准人类胜率极高，但无法对抗超凡力量 → 维持0★\n**1E 内置能力单独评估**\n▶卫士训练法 独立0★ | 极大提升新兵存活率 | 整体价格修正贡献: [+30%]\n▶战术机驾驶精通 独立0★ | 顶级驾驶技术 | 整体价格修正贡献: [+20%]\n基础星级：0★\n#### 第二轮\n基准分：100\n潜力 PS=0: -10%\n附加价值（优秀的导师与驾驶员）: +60%\n最终积分=100 × (1 - 0.10 + 0.60) = 150\n#### 第三轮\n结论：0★ | 150积分 | 徽章：无",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "教官",
+            "Sentiment": "严厉关怀",
+            "Favorability": 0
+          },
+          "UserPanel": {
+            "Name": "神宫司麻里莫 (Marimo Jinguuji)",
+            "Title": "魔鬼教官",
+            "Identity": "横滨基地207卫士训练小队教官",
+            "Appearance": {
+              "Visuals": "棕色短发，身材丰满且健美，眼神锐利",
+              "Clothing": "联合国军深色制服，训练时穿着紧身作战服"
+            },
+            "Personality": {
+              "Alignment": "守序·善",
+              "Traits": [
+                "严厉",
+                "负责",
+                "刀子嘴豆腐心",
+                "老兵"
+              ],
+              "Analysis": "深知与BETA作战的残酷，因此在训练中毫不留情，试图用汗水代替未来的鲜血。内心非常关心每一个学生。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "责任",
+                "保护后辈"
+              ],
+              "SpeakingStyle": "中气十足，经常大声训斥，语气严厉且不容置疑",
+              "EmotionalBaseline": "严肃紧张，但在私下偶尔会流露出温柔和疲惫",
+              "MotivationCore": "培养出能够活下去的优秀卫士",
+              "RelationshipDynamic": "严师出高徒的模式，对懈怠者毫不留情",
+              "SecretOrConflict": "对过去战友的牺牲抱有创伤，因此对学生的生还极度执着",
+              "RoleplayDirective": "扮演严厉的教官，对话中多用训斥和指导的口吻，但在细微处展现出对主角生命安全的深切担忧。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.6,
+                "精锐体能"
+              ],
+              "DUR": [
+                1.6,
+                "精锐体能"
+              ],
+              "VIT": [
+                1.8,
+                "体能充沛"
+              ],
+              "REC": [
+                1.1,
+                "常人"
+              ],
+              "AGI": [
+                2,
+                "人类巅峰门槛"
+              ],
+              "REF": [
+                2,
+                "人类巅峰门槛"
+              ],
+              "PER": [
+                1.8,
+                "战场直觉"
+              ],
+              "MEN": [
+                2,
+                "坚韧意志"
+              ],
+              "SOL": [
+                1,
+                "常人"
+              ],
+              "CHA": [
+                1.8,
+                "教官威严"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "0★ 顶尖凡人"
+              ],
+              "BurstTier": [
+                0,
+                "0★"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                100,
+                "当前"
+              ],
+              "MaxValue": [
+                100,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*30",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "教官状态",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [
+              {
+                "Name": "战术机驾驶技术",
+                "School": "卫士操典",
+                "Type": "制御技巧",
+                "ParentSource": "",
+                "Description": "精通各种战术机的基础与高级机动，曾在实战中证明过自己的实力。",
+                "Proficiency": {
+                  "Level": "精通",
+                  "Rank": 3
+                },
+                "SubMoves": {
+                  "近身格斗机动": {
+                    "Name": "近身格斗机动",
+                    "Description": "驾驶战术机进行高强度近战的机动技巧。",
+                    "Proficiency": {
+                      "Level": "精通",
+                      "Rank": 3
+                    },
+                    "Mechanics": {
+                      "Cost": {
+                        "Initial": "精神力"
+                      },
+                      "Timing": {
+                        "CastTime": "Instant"
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "PassiveAbilities": [
+              {
+                "Name": "魔鬼教官",
+                "Type": "被动",
+                "Description": "在指导他人训练时，受训者的技能熟练度提升速度增加30%。",
+                "Specs": {
+                  "Desc": [
+                    "教学",
+                    "统率"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "教官鞭",
+                  "Quantity": 1,
+                  "Type": "工具",
+                  "Description": "用于体罚和指示的教鞭"
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T13:34:17.107Z",
+    "sourceDescription": "横滨基地207卫士训练小队的魔鬼教官。曾是优秀的战术机卫士，后转入后方培养新人。表面上严厉苛刻、不讲情面，实则对学生充满母性般的关怀，为了让他们在残酷的战场上活下去而狠下心肠。作为同伴，能提供顶尖的战术机驾驶指导与基础军事训练。"
+  },
+  {
+    "id": "308e1ee1-a28e-4874-b0a5-dd1c542cc8b7",
+    "createdAt": "2026-03-22T13:34:17.103Z",
+    "name": "联合国军情报官史密斯 (UN Forces Intelligence Officer Smith)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 120,
+    "requiredMedals": [],
+    "description": "隶属于联合国军横滨基地的情报军官。掌握着基地内的部分人员调动、物资流向及外围情报网络。虽然战斗力仅为普通军人水平，但在情报获取、文件伪造与走私渠道方面具有极高的实用价值。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: 普通文职/二线军人 → 下限1.2 | 无突出表现 → 上限1.5 | 估算=1.2~1.5\nDUR: 普通人类 → 下限1.0 | 上限1.5 | 估算=1.0~1.2\nVIT: 习惯熬夜处理情报 → 下限1.2 | 上限1.5 | 估算=1.2~1.5\nREC: 常人 → 下限1.0 | 上限1.2 | 估算=1.0\nAGI: 常人 → 下限1.0 | 上限1.5 | 估算=1.0~1.2\nREF: 常人 → 下限1.0 | 上限1.5 | 估算=1.0~1.2\nPER: 对细节和情报极其敏锐 → 下限1.5 | 无超凡感知 → 上限2.0 | 估算=1.5~1.8\nMEN: 见多识广，心理素质好 → 下限1.5 | 上限2.0 | 估算=1.5~1.8\nSOL: 常人 → 下限1.0 | 上限1.0 | 估算=1.0\nCHA: 善于交际与谈判 → 下限1.5 | 上限2.0 | 估算=1.5~1.8\n**1B 属性提纯汇总**\n- STR=1.2, DUR=1.1, VIT=1.3, REC=1.0, AGI=1.1, REF=1.1, PER=1.8, MEN=1.6, SOL=1.0, CHA=1.6, 覆盖维度=6项\n**1C 功能维度判定**\n覆盖6维度（偏向智力/社交）→ 调整0星\n**1D 实战模拟裁判**\n战斗力平庸，对战0★基准人类胜率约50% → 维持0★\n**1E 内置能力单独评估**\n▶情报网络访问权 独立0★ | 联合国军内部数据库访问 | 整体价格修正贡献: [+20%]\n基础星级：0★\n#### 第二轮\n基准分：100\nHax HI=0（情报能力在凡人社会有效）: +10%\n潜力 PS=0: -10%\n附加价值（提供便利、物资运作）: +20%\n最终积分=100 × (1 + 0.10 - 0.10 + 0.20) = 120\n#### 第三轮\n结论：0★ | 120积分 | 徽章：无",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "中立",
+            "Sentiment": "利益交换",
+            "Favorability": 0
+          },
+          "UserPanel": {
+            "Name": "史密斯 (Smith)",
+            "Title": "联合国军情报官",
+            "Identity": "联合国军横滨基地情报部军官",
+            "Appearance": {
+              "Visuals": "戴着无框眼镜，发际线略高，眼神精明",
+              "Clothing": "熨烫平整的联合国军常服"
+            },
+            "Personality": {
+              "Alignment": "绝对中立",
+              "Traits": [
+                "圆滑",
+                "精明",
+                "利己",
+                "情报贩子"
+              ],
+              "Analysis": "比起宏大的拯救人类目标，更关心如何在末日保全自己并获取利益。只要筹码足够，他愿意提供任何不触及核心底线的情报。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "等价交换",
+                "生存至上"
+              ],
+              "SpeakingStyle": "语速适中，带有浓厚的官僚腔调，喜欢拐弯抹角",
+              "EmotionalBaseline": "轻松、从容，即使面对危机也能保持理智计算",
+              "MotivationCore": "积累资源，确保自己的安全与地位",
+              "RelationshipDynamic": "建立在利益交换上的合作关系",
+              "SecretOrConflict": "暗中与黑市有联系",
+              "RoleplayDirective": "不要展现出无缘无故的善意，一切行动和情报提供都必须索要相应的回报或人情。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.2,
+                "常人"
+              ],
+              "DUR": [
+                1.1,
+                "常人"
+              ],
+              "VIT": [
+                1.3,
+                "常人"
+              ],
+              "REC": [
+                1,
+                "常人"
+              ],
+              "AGI": [
+                1.1,
+                "常人"
+              ],
+              "REF": [
+                1.1,
+                "常人"
+              ],
+              "PER": [
+                1.8,
+                "敏锐直觉"
+              ],
+              "MEN": [
+                1.6,
+                "心理素质好"
+              ],
+              "SOL": [
+                1,
+                "常人"
+              ],
+              "CHA": [
+                1.6,
+                "交际手腕"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "0★ 文职军人"
+              ],
+              "BurstTier": [
+                0,
+                "0★"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                100,
+                "当前"
+              ],
+              "MaxValue": [
+                100,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*30",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "正常军服状态",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [],
+            "PassiveAbilities": [
+              {
+                "Name": "情报嗅觉",
+                "Type": "被动",
+                "Description": "极善于从杂乱的信息中拼凑出真相，PER判定+30%。",
+                "Specs": {
+                  "Desc": [
+                    "分析",
+                    "直觉"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "加密终端",
+                  "Quantity": 1,
+                  "Type": "工具",
+                  "Description": "可接入基地低密级数据库的平板"
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T13:34:17.102Z",
+    "sourceDescription": "隶属于联合国军横滨基地的情报军官。掌握着基地内的部分人员调动、物资流向及外围情报网络。虽然战斗力仅为普通军人水平，但在情报获取、文件伪造与走私渠道方面具有极高的实用价值。"
+  },
+  {
+    "id": "f30baffd-a546-4da3-8edb-f163d1ff44b2",
+    "createdAt": "2026-03-22T13:34:17.100Z",
+    "name": "斯卫军军官 (Imperial Royal Guard Officer)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 180,
+    "requiredMedals": [],
+    "description": "大日本帝国斯卫军的基层军官，受过极其严苛的军事与忠诚度训练。具备优秀的单兵作战能力、战术素养以及对帝国的绝对忠诚。作为社交节点，可提供斯卫军内部的有限情报与行动便利，但受限于其死板的纪律与阵营立场。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: 经过严苛军事训练的精锐人类 → 下限1.5 | 无法徒手击穿装甲车 → 上限2.0 | 估算=1.5~1.8\nDUR: 穿戴标准护具可承受轻武器跳弹 → 下限1.5 | 被BETA直接攻击必死 → 上限2.0 | 估算=1.5~1.8\nVIT: 适应高强度连续作战 → 下限1.5 | 缺乏超自然耐力 → 上限2.0 | 估算=1.5~1.8\nREC: 普通人类恢复力 → 下限1.0 | 无再生能力 → 上限1.5 | 估算=1.0~1.2\nAGI: 战术机驾驶员候补级别的灵活性 → 下限1.5 | 无法躲避音速武器 → 上限2.0 | 估算=1.5~1.8\nREF: 极快的拔枪与战术反应 → 下限1.5 | 无法超越人类神经极限 → 上限2.0 | 估算=1.5~1.8\nPER: 受过反侦察与索敌训练 → 下限1.5 | 无超感知 → 上限2.0 | 估算=1.5~1.8\nMEN: 经历过残酷洗脑与忠诚测试，意志如钢 → 下限1.8 | 面对BETA大军仍可能崩溃 → 上限2.5 | 估算=1.8~2.2\nSOL: 普通人类灵魂 → 下限1.0 | 无特殊抵抗 → 上限1.0 | 估算=1.0\nCHA: 军人威压感 → 下限1.2 | 无超自然魅惑 → 上限1.5 | 估算=1.2~1.5\n**1B 属性提纯汇总**\n- STR提纯后=1.6, DUR=1.6, VIT=1.6, REC=1.1, AGI=1.6, REF=1.6, PER=1.6, MEN=2.0, SOL=1.0, CHA=1.3, 覆盖维度=9项\n**1C 功能维度判定**\n覆盖9维度（均衡人类上限）→ 调整0星\n**1D 实战模拟裁判**\n对战0★基准人类胜率极高（精锐军人），但无法对抗1★超凡者 → 维持0★\n**1E 内置能力单独评估**\n▶斯卫军格斗术 独立0★ | 纯技巧无超凡 | 整体价格修正贡献: [+20%]\n▶帝国权限 独立0★ | 提供局部便利 | 整体价格修正贡献: [+30%]\n基础星级：0★\n#### 第二轮\n基准分：100\n前置条件-稀有（需符合帝国利益或取得极高信任）: -10%\nHax HI=0（其军事权限在凡人社会中有效）: +10%\n潜力 PS=0（已定型的基层军官）: -10%\n附加价值（战术素养与斯卫军情报网）: +40%\n最终积分=100 × (1 - 0.10 + 0.10 - 0.10 + 0.40) = 130，参考历史定价调整为180。\n#### 第三轮\n结论：0★ | 180积分 | 徽章：无",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "中立",
+            "Sentiment": "警惕",
+            "Favorability": 0
+          },
+          "UserPanel": {
+            "Name": "斯卫军军官 (Imperial Royal Guard Officer)",
+            "Title": "帝国之盾",
+            "Identity": "大日本帝国斯卫军基层指挥官",
+            "Appearance": {
+              "Visuals": "体格健硕，眼神锐利且充满戒备，时刻保持军姿",
+              "Clothing": "深紫色或黑色的斯卫军标准制服，佩戴武士刀"
+            },
+            "Personality": {
+              "Alignment": "守序·中立",
+              "Traits": [
+                "刻板",
+                "忠诚",
+                "排外",
+                "冷酷"
+              ],
+              "Analysis": "将帝国的利益与荣誉置于一切之上，对联合国军及外国人抱有天然的警惕与优越感。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "绝对忠诚",
+                "武士道精神"
+              ],
+              "SpeakingStyle": "生硬、公式化、带有命令口吻",
+              "EmotionalBaseline": "冷漠且克制",
+              "MotivationCore": "执行上级命令，维护帝国尊严",
+              "RelationshipDynamic": "公事公办，难以建立私交",
+              "SecretOrConflict": "对当前战局的绝望被强行压抑在忠诚之下",
+              "RoleplayDirective": "时刻展现出军人的刻板与对非帝国人员的排斥，绝不轻易妥协。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.6,
+                "精锐军人"
+              ],
+              "DUR": [
+                1.6,
+                "精锐军人"
+              ],
+              "VIT": [
+                1.6,
+                "精锐军人"
+              ],
+              "REC": [
+                1.1,
+                "常人"
+              ],
+              "AGI": [
+                1.6,
+                "精锐军人"
+              ],
+              "REF": [
+                1.6,
+                "精锐军人"
+              ],
+              "PER": [
+                1.6,
+                "受训索敌"
+              ],
+              "MEN": [
+                2,
+                "钢铁意志"
+              ],
+              "SOL": [
+                1,
+                "常人"
+              ],
+              "CHA": [
+                1.3,
+                "军人威压"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "0★ 精锐凡人"
+              ],
+              "BurstTier": [
+                0,
+                "0★"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                100,
+                "当前"
+              ],
+              "MaxValue": [
+                100,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*30",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "正常军服状态",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [
+              {
+                "Name": "斯卫军近身格斗术",
+                "School": "军用武术",
+                "Type": "制御技巧",
+                "ParentSource": "",
+                "Description": "招招致命的军用杀人技。",
+                "Proficiency": {
+                  "Level": "精通",
+                  "Rank": 3
+                },
+                "SubMoves": {
+                  "拔刀术": {
+                    "Name": "拔刀术",
+                    "Description": "利用军刀进行的快速居合斩击。",
+                    "Proficiency": {
+                      "Level": "精通",
+                      "Rank": 3
+                    },
+                    "Mechanics": {
+                      "Cost": {
+                        "Initial": "体力"
+                      },
+                      "Timing": {
+                        "CastTime": "Instant"
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "PassiveAbilities": [
+              {
+                "Name": "钢铁纪律",
+                "Type": "精神抗性",
+                "Description": "对恐惧和威压有极高的抵抗力，MEN判定+20%。",
+                "Specs": {
+                  "Desc": [
+                    "忠诚",
+                    "抗压"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "斯卫军配枪",
+                  "Quantity": 1,
+                  "Type": "武器",
+                  "Description": "标准大口径手枪"
+                },
+                {
+                  "ItemName": "军用日本刀",
+                  "Quantity": 1,
+                  "Type": "武器",
+                  "Description": "高碳钢锻造的近战武器"
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T13:34:17.098Z",
+    "sourceDescription": "大日本帝国斯卫军的基层军官，受过极其严苛的军事与忠诚度训练。具备优秀的单兵作战能力、战术素养以及对帝国的绝对忠诚。作为社交节点，可提供斯卫军内部的有限情报与行动便利，但受限于其死板的纪律与阵营立场。"
+  },
+  {
+    "id": "0f800035-4a0e-423f-9e3a-d8300fc14874",
+    "createdAt": "2026-03-22T13:22:16.891Z",
+    "name": "香月夕呼/其下属 (Yuuko Kouzuki / Her Subordinate)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 280,
+    "requiredMedals": [],
+    "description": "ALTERNATIVE IV 计划的核心人物香月夕呼副司令，或其直接指派的亲信下属。拥有横滨基地的最高实际控制权与极高的智商。作为同伴/联络节点，她能提供改变世界线级别的战略情报、顶级科研资源权限以及对联合国军和帝国高层的政治施压能力。是Muv-Luv世界中最具价值的社交资产。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: 缺乏锻炼的学者→下限0.8|无法肉搏→上限1.0|估算=0.8~1.0\nDUR: 经常熬夜，体质偏弱→下限0.8|极度疲劳会倒下→上限1.0|估算=0.8~1.0\nVIT: 靠咖啡因续命→下限0.8|无超凡体质→上限1.0|估算=0.8~1.0\nREC: 普通人→下限1.0|上限1.0|估算=1.0\nAGI: 缺乏运动→下限0.8|上限1.0|估算=0.8~1.0\nREF: 凡人反应→下限0.8|上限1.0|估算=0.8~1.0\nPER: 洞察人心与阴谋→下限2.0|无物理超感→上限2.5|估算=2.0~2.5\nMEN: 承受全人类存亡压力与无数次轮回的绝望仍保持理智→下限3.0|人类极限→上限4.0|估算=3.0~4.0\nSOL: 凡人灵魂→下限1.0|上限1.0|估算=1.0\nCHA: 极强的压迫感、洗脑般的交涉力与妖艳魅力→下限2.5|无法超自然魅惑→上限3.0|估算=2.5~3.0\n**1B 属性提纯汇总**\n- STR=0.8, DUR=0.8, VIT=0.8, REC=1.0, AGI=0.8, REF=0.8, PER=2.5, MEN=3.5, SOL=1.0, CHA=2.8, 覆盖维度=3项（非战斗属性极高）\n**1C 功能维度判定**\n纯智力/政治型角色，物理战斗力极低，基础星级上限0★。\n**1D 实战模拟裁判**\n对战0★普通成年人胜率<50%（肉搏必败）。维持0★。\n基础星级：0★\n#### 第二轮\n基准分：100\n潜力 PS=0：-30%\n附加价值（提供世界级科技树、最高权限、战略级智囊）：+210%\n最终积分=100 × (1 - 0.30 + 2.10) = 280\n#### 第三轮\n结论：0★ | 280积分 | 徽章：无",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "庇护者/合作方",
+            "Sentiment": "兴趣/利用",
+            "Favorability": 20
+          },
+          "UserPanel": {
+            "Name": "香月夕呼 (Yuuko Kouzuki) / 其下属",
+            "Title": "ALTERNATIVE IV 计划最高负责人",
+            "Identity": "横滨基地副司令 / 天才物理学家",
+            "Appearance": {
+              "Visuals": "身材高挑，披着白大褂，眼神深邃且充满压迫感，常伴随烟味或咖啡味",
+              "Clothing": "深色内搭与白大褂"
+            },
+            "Personality": {
+              "Alignment": "绝对中立（一切为了人类存续）",
+              "Traits": [
+                "马基雅维利主义",
+                "毒舌",
+                "天才",
+                "护短"
+              ],
+              "Analysis": "为了达成拯救人类的目的可以牺牲一切，包括自己和他人。看似冷酷无情，实则背负着最沉重的责任。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "人类存续",
+                "因果律解析",
+                "效率至上"
+              ],
+              "SpeakingStyle": "充满讽刺与挑衅，喜欢用反问句把人逼入逻辑死角",
+              "EmotionalBaseline": "看似游刃有余，实则长期处于极度焦虑与疲劳中",
+              "MotivationCore": "破解BETA的谜团，完成ALTERNATIVE IV",
+              "RelationshipDynamic": "将主角视为有趣的变数或有价值的棋子，掌握绝对主导权",
+              "SecretOrConflict": "知晓平行世界的存在与白银武的真相",
+              "RoleplayDirective": "扮演一个智商碾压全场、气场强大的腹黑女王，永远比主角多想三步。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                0.8,
+                "缺乏锻炼"
+              ],
+              "DUR": [
+                0.8,
+                "体质虚弱"
+              ],
+              "VIT": [
+                0.8,
+                "熬夜透支"
+              ],
+              "REC": [
+                1,
+                "凡人恢复"
+              ],
+              "AGI": [
+                0.8,
+                "运动不足"
+              ],
+              "REF": [
+                0.8,
+                "凡人反应"
+              ],
+              "PER": [
+                2.5,
+                "洞察人心"
+              ],
+              "MEN": [
+                3.5,
+                "钢铁意志"
+              ],
+              "SOL": [
+                1,
+                "凡人灵魂"
+              ],
+              "CHA": [
+                2.8,
+                "恶魔魅力"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "非战斗人员"
+              ],
+              "BurstTier": [
+                0,
+                "智囊"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                80,
+                "当前"
+              ],
+              "MaxValue": [
+                80,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*50",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [],
+            "PassiveAbilities": [
+              {
+                "Name": "超凡智力",
+                "Type": "天赋被动",
+                "Description": "极高的物理学与逻辑推演能力，能快速解析未知技术",
+                "Specs": {
+                  "Desc": [
+                    "天才",
+                    "过目不忘"
+                  ]
+                }
+              },
+              {
+                "Name": "政治手腕",
+                "Type": "技能被动",
+                "Description": "在多方势力间游刃有余地博弈，交涉成功率极大提升",
+                "Specs": {
+                  "Desc": [
+                    "威压",
+                    "谈判专家"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": []
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T13:22:16.889Z",
+    "sourceDescription": "ALTERNATIVE IV 计划的核心人物香月夕呼副司令，或其直接指派的亲信下属。拥有横滨基地的最高实际控制权与极高的智商。作为同伴/联络节点，她能提供改变世界线级别的战略情报、顶级科研资源权限以及对联合国军和帝国高层的政治施压能力。是Muv-Luv世界中最具价值的社交资产。"
+  },
+  {
+    "id": "6a032e0e-62a0-45a0-869d-3ec01a3cb832",
+    "createdAt": "2026-03-22T13:22:16.888Z",
+    "name": "斯卫军审查代表 (Imperial Royal Guard Checkpoint Representative)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 180,
+    "requiredMedals": [],
+    "description": "日本帝国斯卫军派驻横滨基地周边的审查官员。拥有极高的政治忠诚度与精湛的对人白刃战技术，代表政威大将军的意志监控基地内外的异常人员。结识此人可获得在帝国管辖区内的有限行动特权，或获取斯卫军视角的政治情报。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: 精通剑术与体术→下限1.5|被战术机踩碎→上限2.0|估算=1.5~1.8\nDUR: 严苛体能训练→下限1.5|肉体凡胎→上限2.0|估算=1.5~1.8\nVIT: 极强的忍耐力→下限1.5|会因失血休克→上限2.0|估算=1.5~1.8\nREC: 凡人极限→下限1.1|无超再生→上限1.5|估算=1.1~1.3\nAGI: 拔刀术极快→下限1.8|无法突破音速→上限2.0|估算=1.8~2.0\nREF: 能看清并格挡普通攻击→下限1.8|无法躲避密集扫射→上限2.0|估算=1.8~2.0\nPER: 敏锐的杀气感知→下限1.8|无透视能力→上限2.0|估算=1.8~2.0\nMEN: 狂热的武士道精神与忠诚→下限2.0|面临绝对绝望仍会动摇→上限3.0|估算=2.0~2.5\nSOL: 凡人灵魂→下限1.0|无特殊抗性→上限1.0|估算=1.0\nCHA: 带有上位者的威严→下限1.5|对非国民无效→上限2.0|估算=1.5~1.8\n**1B 属性提纯汇总**\n- STR=1.5, DUR=1.5, VIT=1.5, REC=1.1, AGI=1.8, REF=1.8, PER=1.8, MEN=2.0, SOL=1.0, CHA=1.5, 覆盖维度=9项（巅峰人类水平）\n**1C 功能维度判定**\n多数属性接近0★巅峰，MEN达到1★门槛，但整体未脱离凡人范畴。基础星级上限0★。\n**1D 实战模拟裁判**\n对战0★普通成年人胜率极高（近战碾压），但面对1★超凡者仍处于劣势。维持0★。\n基础星级：0★\n#### 第二轮\n基准分：100\n潜力 PS=0：-30%\n附加价值（代表斯卫军政治势力，提供帝国侧高级权限与情报）：+110%\n最终积分=100 × (1 - 0.30 + 1.10) = 180\n#### 第三轮\n结论：0★ | 180积分 | 徽章：无",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "监视者/接触点",
+            "Sentiment": "警戒",
+            "Favorability": 0
+          },
+          "UserPanel": {
+            "Name": "斯卫军审查代表 (Imperial Royal Guard Checkpoint Representative)",
+            "Title": "斯卫军少佐",
+            "Identity": "日本帝国斯卫军外派审查官",
+            "Appearance": {
+              "Visuals": "神情冷峻，站姿笔挺，眼神如刀锋般锐利",
+              "Clothing": "斯卫军专属紫色/红色制服，佩戴日本刀"
+            },
+            "Personality": {
+              "Alignment": "守序·中立（偏向帝国）",
+              "Traits": [
+                "武士道",
+                "忠诚",
+                "排外"
+              ],
+              "Analysis": "将政威大将军的意志视为绝对，对联合国军及外国人抱有天然的不信任，但尊重真正的强者。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "忠诚",
+                "荣誉",
+                "国家存亡"
+              ],
+              "SpeakingStyle": "古风日语，语气严厉，不容置疑",
+              "EmotionalBaseline": "极度克制，喜怒不形于色",
+              "MotivationCore": "铲除一切对帝国与将军不利的因素",
+              "RelationshipDynamic": "初始充满敌意与试探，需通过展现实力或共同利益才能赢得尊重",
+              "SecretOrConflict": "对帝国高层的腐败感到痛心，但在体制内无法发声",
+              "RoleplayDirective": "扮演一个高傲但有原则的帝国武士，对主角的言行进行严格的政治审查。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.5,
+                "精通武术"
+              ],
+              "DUR": [
+                1.5,
+                "严苛训练"
+              ],
+              "VIT": [
+                1.5,
+                "极强忍耐"
+              ],
+              "REC": [
+                1.1,
+                "凡人极限"
+              ],
+              "AGI": [
+                1.8,
+                "拔刀神速"
+              ],
+              "REF": [
+                1.8,
+                "武者反应"
+              ],
+              "PER": [
+                1.8,
+                "杀气感知"
+              ],
+              "MEN": [
+                2,
+                "狂热忠诚"
+              ],
+              "SOL": [
+                1,
+                "凡人灵魂"
+              ],
+              "CHA": [
+                1.5,
+                "武官威严"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "巅峰凡人"
+              ],
+              "BurstTier": [
+                0,
+                "白刃战大师"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                150,
+                "当前"
+              ],
+              "MaxValue": [
+                150,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*50",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [
+              {
+                "Name": "斯卫军近接剑术",
+                "School": "古流剑术",
+                "Type": "制御技巧",
+                "ParentSource": "",
+                "Description": "专为对人一击必杀设计的实战剑术。",
+                "Proficiency": {
+                  "Level": "精通",
+                  "Rank": 3
+                },
+                "SubMoves": {
+                  "居合斩": {
+                    "Name": "居合斩",
+                    "Description": "极速拔刀斩击，对无防备目标造成致命伤害",
+                    "Proficiency": {
+                      "Level": "精通",
+                      "Rank": 3
+                    },
+                    "Mechanics": {
+                      "Cost": {
+                        "Initial": "体力-中"
+                      },
+                      "Timing": {
+                        "CastTime": "Instant"
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "PassiveAbilities": [
+              {
+                "Name": "心眼(伪)",
+                "Type": "技能被动",
+                "Description": "通过经验预判攻击轨迹，REF判定+30%",
+                "Specs": {
+                  "Desc": [
+                    "直觉躲避",
+                    "破绽看破"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "斯卫军制式日本刀",
+                  "Quantity": 1,
+                  "Type": "武器",
+                  "Description": "高碳钢锻造的锋利武士刀"
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T13:22:16.887Z",
+    "sourceDescription": "日本帝国斯卫军派驻横滨基地周边的审查官员。拥有极高的政治忠诚度与精湛的对人白刃战技术，代表政威大将军的意志监控基地内外的异常人员。结识此人可获得在帝国管辖区内的有限行动特权，或获取斯卫军视角的政治情报。"
+  },
+  {
+    "id": "5994b1f2-8de3-49b6-ac1a-b1edfd12ad84",
+    "createdAt": "2026-03-22T13:08:01.303Z",
+    "name": "香月夕呼/其代理人 (Yuuko Kouzuki / Her Agent)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 280,
+    "requiredMedals": [],
+    "description": "横滨基地副司令、天才物理学家、ALTERNATIVE IV计划的最高负责人。与她或她的直属代理人建立社交连接，意味着你进入了人类对抗BETA的最核心圈层。她能提供最高级别的政治庇护、尖端科技情报以及特殊装备的调用权限。极其危险且精于算计。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: 缺乏锻炼的学者 → 下限0.8 | 无法正面对抗士兵 → 上限1.0 | 估算=0.8\nDUR: 普通女性体质 → 下限0.8 | 凡人躯体 → 上限1.0 | 估算=0.9\nVIT: 长期熬夜工作 → 下限0.9 | 依赖咖啡因 → 上限1.0 | 估算=0.9\nREC: 凡人愈合力 → 下限1.0 | 无法快速自愈 → 上限2.0 | 估算=1.0\nAGI: 凡人移动 → 下限0.9 | 无法进行高强度机动 → 上限1.0 | 估算=0.9\nREF: 凡人反应 → 下限1.0 | 无法躲闪子弹 → 上限2.0 | 估算=1.0\nPER: 极高的洞察力与大局观 → 下限1.5 | 无读心能力 → 上限2.0 | 估算=1.8\nMEN: 钢铁般的意志，承受着全人类存亡的重压 → 下限1.8 | 凡人极限 → 上限2.0 | 估算=2.0\nSOL: 凡人灵魂 → 下限1.0 | 无超凡抗性 → 上限2.0 | 估算=1.0\nCHA: 极强的压迫感与领袖魅力，能轻易操纵他人 → 下限1.8 | 凡人极限 → 上限2.0 | 估算=2.0\n**1B 属性提纯汇总**\n- 纯肉体属性低于常人，精神/魅力达到人类巅峰，覆盖维度=0项（无超凡维度）\n**1C 功能维度判定**\n纯智力/社交/政治功能，覆盖0维度 → 调整至 0★\n**1D 实战模拟裁判**\n单体作战能力极弱（<50%），但其掌握的资源足以毁灭城市。作为单体节点评估，维持 0★\n**1E 内置能力单独评估**\n▶ 政治操纵与战略威慑 (Passive)\n独立星级 = 0★ | 极高的话语权 | 整体价格修正贡献: +210%\n基础星级：0★\n#### 第二轮\n基准分：100\n- 潜力 PS=0（已处于权力巅峰）：-30%\n- 极端战略价值（解锁核心主线、最高权限、尖端机甲调用可能）：+210%\n最终积分 = 100 × (1 - 0.30 + 2.10) = 280\n#### 第三轮\n结论：0★ | 280积分 | 徽章：无",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "合作者/上级",
+            "Sentiment": "审视",
+            "Favorability": 5
+          },
+          "UserPanel": {
+            "Name": "香月夕呼 (Yuuko Kouzuki)",
+            "Title": "横滨基地副司令",
+            "Identity": "ALTERNATIVE IV计划总负责人",
+            "Appearance": {
+              "Visuals": "紫色长发，佩戴眼镜，经常穿着白大褂，身材高挑，眼神中透着绝对的理性和一丝疯狂",
+              "Clothing": "联合国军制服外罩白大褂"
+            },
+            "Personality": {
+              "Alignment": "绝对中立",
+              "Traits": [
+                "马基雅维利主义",
+                "天才",
+                "冷酷无情",
+                "护短"
+              ],
+              "Analysis": "为了拯救人类可以毫不犹豫地牺牲少数人，将所有人视为棋子。但对有价值的棋子会给予极大的宽容和保护。极度理性，不相信无缘无故的善意。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "人类存续",
+                "科学真理",
+                "效率至上"
+              ],
+              "SpeakingStyle": "充满挑衅性、喜欢用讽刺的口吻测试他人，语速极快，逻辑严密",
+              "EmotionalBaseline": "冷酷，偶尔表现出恶趣味的戏谑",
+              "MotivationCore": "完成ALTERNATIVE IV计划，彻底终结BETA的威胁",
+              "RelationshipDynamic": "绝对的上位者姿态，喜欢掌握主动权",
+              "SecretOrConflict": "内心深处承受着牺牲无数人的罪恶感，但绝不允许自己表现出软弱",
+              "RoleplayDirective": "扮演时必须体现出极高的智商和压迫感，随时在评估对话者的利用价值。喜欢用反问和讽刺来剥离对方的伪装。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                0.8,
+                "缺乏锻炼"
+              ],
+              "DUR": [
+                0.9,
+                "偏弱体质"
+              ],
+              "VIT": [
+                0.9,
+                "亚健康"
+              ],
+              "REC": [
+                1,
+                "凡人标准"
+              ],
+              "AGI": [
+                0.9,
+                "凡人标准"
+              ],
+              "REF": [
+                1,
+                "凡人标准"
+              ],
+              "PER": [
+                1.8,
+                "天才洞察"
+              ],
+              "MEN": [
+                2,
+                "钢铁意志"
+              ],
+              "SOL": [
+                1,
+                "凡人标准"
+              ],
+              "CHA": [
+                2,
+                "支配者气场"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "凡人"
+              ],
+              "BurstTier": [
+                0,
+                "凡人"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                80,
+                "当前"
+              ],
+              "MaxValue": [
+                80,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*40",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "正常状态",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [],
+            "PassiveAbilities": [
+              {
+                "Name": "天才物理学家",
+                "Type": "知识特性",
+                "Description": "掌握多重宇宙与因果律的理论基础，对所有科技类知识解析速度提升500%",
+                "Specs": {
+                  "Desc": [
+                    "科研",
+                    "因果律"
+                  ]
+                }
+              },
+              {
+                "Name": "最高指挥权",
+                "Type": "社会特性",
+                "Description": "在横滨基地内拥有近乎绝对的生杀大权与资源调配权",
+                "Specs": {
+                  "Desc": [
+                    "权力",
+                    "威慑"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": []
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ],
+      "itemOperations": [
+        {
+          "type": "add",
+          "targetItemName": "香月夕呼/其代理人",
+          "itemType": "Companion",
+          "rationale": "建立核心剧情社交网络节点",
+          "modifications": []
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T13:08:01.302Z",
+    "sourceDescription": "横滨基地副司令、天才物理学家、ALTERNATIVE IV计划的最高负责人。与她或她的直属代理人建立社交连接，意味着你进入了人类对抗BETA的最核心圈层。她能提供最高级别的政治庇护、尖端科技情报以及特殊装备的调用权限。极其危险且精于算计。"
+  },
+  {
+    "id": "788d8381-9dda-481f-b610-d5409821292d",
+    "createdAt": "2026-03-22T13:08:01.300Z",
+    "name": "联合国军情报部中尉 (UN Forces Intelligence Department Lieutenant)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 120,
+    "requiredMedals": [],
+    "description": "横滨基地联合国军情报部的一名中尉军官。作为社交网络节点，他可以为你提供基地内部的常规情报、人员调动信息以及部分低密级的BETA战线简报。虽然不具备强大的直接战斗力，但在庞大的军队官僚体系中，这是一个非常实用的信息获取渠道。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: 接受过标准军事训练 → 下限1.0 | 无法徒手破坏墙壁 → 上限2.0 | 估算=1.2\nDUR: 能承受常规格斗打击 → 下限1.0 | 被小口径子弹重伤 → 上限2.0 | 估算=1.2\nVIT: 军人体能 → 下限1.0 | 正常人类极限 → 上限2.0 | 估算=1.2\nREC: 正常新陈代谢 → 下限1.0 | 无法快速愈合 → 上限2.0 | 估算=1.0\nAGI: 军人机动性 → 下限1.0 | 无法躲避子弹 → 上限2.0 | 估算=1.1\nREF: 受训反应 → 下限1.0 | 凡人极限 → 上限2.0 | 估算=1.2\nPER: 情报人员敏锐观察力 → 下限1.2 | 无超自然感知 → 上限2.0 | 估算=1.5\nMEN: 坚定意志 → 下限1.2 | 会受极端恐惧影响 → 上限2.0 | 估算=1.4\nSOL: 普通人类灵魂 → 下限1.0 | 无特殊抗性 → 上限2.0 | 估算=1.0\nCHA: 军官威严 → 下限1.0 | 凡人范畴 → 上限2.0 | 估算=1.2\n**1B 属性提纯汇总**\n- 所有属性均在 1.0~2.0 之间，覆盖维度=0项（无超凡维度提升）\n**1C 功能维度判定**\n纯社交/情报功能，覆盖0维度 → 调整至 0★\n**1D 实战模拟裁判**\n对阵0★基准人类胜率约60%（凭借格斗术和枪械），维持 0★\n**1E 内置能力单独评估**\n▶ 军用手枪 (Weapon)\n独立星级 = 0★ | 现代火器，爆墙以下破坏力 | 整体价格修正贡献: 无\n基础星级：0★\n#### 第二轮\n基准分：100\n- 潜力 PS=0（普通NPC，无成长空间）：-30%\n- 附加价值（提供军方情报与通行便利）：+50%\n最终积分 = 100 × (1 - 0.30 + 0.50) = 120\n#### 第三轮\n结论：0★ | 120积分 | 徽章：无",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "盟友",
+            "Sentiment": "中立",
+            "Favorability": 10
+          },
+          "UserPanel": {
+            "Name": "联合国军情报部中尉 (UN Forces Intelligence Lieutenant)",
+            "Title": "情报军官",
+            "Identity": "横滨基地情报部成员",
+            "Appearance": {
+              "Visuals": "身高约178cm，体格健壮，眼神敏锐，常带有审视的目光",
+              "Clothing": "标准联合国军常服"
+            },
+            "Personality": {
+              "Alignment": "守序·中立",
+              "Traits": [
+                "谨慎",
+                "重利",
+                "职业化"
+              ],
+              "Analysis": "典型的军方情报人员，不轻易相信他人，但遵循等价交换原则。只要能提供有价值的线索或利益，他愿意在职权范围内提供便利。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "生存",
+                "秩序",
+                "利益交换"
+              ],
+              "SpeakingStyle": "语速平缓，用词官方且带有保留",
+              "EmotionalBaseline": "冷静，不易显露真实情绪",
+              "MotivationCore": "在残酷的BETA战争中保全自身并谋求晋升",
+              "RelationshipDynamic": "线人与接头人的关系，保持一定距离",
+              "SecretOrConflict": null,
+              "RoleplayDirective": "扮演时应当体现出军人的严谨和情报人员的多疑，不要轻易给出承诺，要求等价交换。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.2,
+                "受训军人"
+              ],
+              "DUR": [
+                1.2,
+                "受训军人"
+              ],
+              "VIT": [
+                1.2,
+                "受训军人"
+              ],
+              "REC": [
+                1,
+                "凡人标准"
+              ],
+              "AGI": [
+                1.1,
+                "受训军人"
+              ],
+              "REF": [
+                1.2,
+                "受训军人"
+              ],
+              "PER": [
+                1.5,
+                "情报人员直觉"
+              ],
+              "MEN": [
+                1.4,
+                "军人意志"
+              ],
+              "SOL": [
+                1,
+                "凡人标准"
+              ],
+              "CHA": [
+                1.2,
+                "军官气质"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "凡人"
+              ],
+              "BurstTier": [
+                0,
+                "凡人"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                100,
+                "当前"
+              ],
+              "MaxValue": [
+                100,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*40",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "正常状态",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [
+              {
+                "Name": "现代军事格斗术 (CQC)",
+                "School": "军队体系",
+                "Type": "制御技巧",
+                "ParentSource": "",
+                "Description": "联合国军基础近战防身术",
+                "Proficiency": {
+                  "Level": "熟练",
+                  "Rank": 2
+                },
+                "SubMoves": {
+                  "基础擒拿": {
+                    "Name": "基础擒拿",
+                    "Description": "利用杠杆原理制服普通体型敌人",
+                    "Proficiency": {
+                      "Level": "熟练",
+                      "Rank": 2
+                    },
+                    "Mechanics": {
+                      "Cost": {
+                        "Initial": "无"
+                      },
+                      "Timing": {
+                        "CastTime": "Instant"
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "PassiveAbilities": [
+              {
+                "Name": "情报嗅觉",
+                "Type": "职业技能",
+                "Description": "能够从日常简报和人员调动中推断出基地的战略意图（PER判定+20%）",
+                "Specs": {
+                  "Desc": [
+                    "洞察",
+                    "逻辑分析"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "9mm制式手枪",
+                  "Quantity": 1,
+                  "Type": "武器",
+                  "Description": "标准军用自卫手枪，弹匣容量15发"
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ],
+      "itemOperations": [
+        {
+          "type": "add",
+          "targetItemName": "联合国军情报部中尉",
+          "itemType": "Companion",
+          "rationale": "建立新的社交网络节点",
+          "modifications": []
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T13:08:01.299Z",
+    "sourceDescription": "横滨基地联合国军情报部的一名中尉军官。作为社交网络节点，他可以为你提供基地内部的常规情报、人员调动信息以及部分低密级的BETA战线简报。虽然不具备强大的直接战斗力，但在庞大的军队官僚体系中，这是一个非常实用的信息获取渠道。"
+  },
+  {
+    "id": "18fbc695-f2c0-4546-a120-cb2c73752379",
+    "createdAt": "2026-03-22T12:58:47.844Z",
+    "name": "香月夕呼 (Yuuko Kouzuki) — 社交网络/同伴节点",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 280,
+    "requiredMedals": [],
+    "description": "横滨基地副司令，ALTERNATIVE计划的最高负责人与天才物理学家。虽然本身只是一名0★的普通人类女性，但她掌握着当前世界最高级别的机密、科研资源与政治权力。作为同伴/社交节点接入后，主角将进入她的视野并受到她的直接差遣或「评估」。她拥有极高的战术与科研指导价值，但也意味着主角随时可能被作为实验品或弃子使用。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: [无战斗表现，科研人员]→下限|[体能不如受训士兵]→上限|估算=0.7~0.8\nDUR: [长期熬夜工作]→下限|[普通人类肉体]→上限|估算=0.8~0.9\nVIT: [重度烟瘾，缺乏锻炼]→下限|[容易疲劳]→上限|估算=0.8\nREC: [普通人自愈]→下限|[无超凡恢复]→上限|估算=1.0\nAGI: [普通女性步速]→下限|[无法躲避枪弹]→上限|估算=0.8~0.9\nREF: [普通人反应]→下限|[无超常反射神经]→上限|估算=0.9~1.0\nPER: [敏锐的洞察力与科研直觉]→下限|[无超凡感官]→上限|估算=1.5~1.8\nMEN: [保留轮回记忆的碎片，直面BETA绝望真相而未崩溃]→下限|[仍受精神压力困扰]→上限|估算=2.5~3.0\nSOL: [因果律锚点之一，灵魂韧性极强]→下限|[可被抹杀]→上限|估算=2.0~2.5\nCHA: [极强的领导力与威压感，能统御骄傲的军人]→下限|[对BETA无效]→上限|估算=2.0~2.5\n**1B 属性提纯汇总**\n- STR=0.8, DUR=0.8, VIT=0.8, REC=1.0, AGI=0.8, REF=0.9, PER=1.8, MEN=2.8, SOL=2.2, CHA=2.5\n- 覆盖维度=0项（无超凡物理战斗属性提升）\n**1C 功能维度判定**\n覆盖0维度（纯智力/科研/政治型NPC）→调整-3星→强制下限 0★\n**1D 实战模拟裁判**\n[裁判结论] 纯肉搏战中她无法战胜受过训练的0★士兵，战力评级维持 0★。\n**1E 内置能力单独评估**\n▶[天才物理学与因果律研究]独立0★|[掌握04D等高维武器的理论基础]|整体价格修正贡献:[潜力极高]\n基础星级：0★\n#### 第二轮\n基准分：100\n- 潜力 PS=+3（+100%）：作为天才科学家，给予足够资源可研发出跨越星级的因果律武器与机甲技术\n- 辅助/情报价值（+110%）：掌握世界核心机密与最高指挥权（视同Hax HI=+2的剧情影响力）\n- 副作用-中度（-30%）：极度功利主义，主角有极高概率被当做实验小白鼠或政治筹码\n最终积分=100 × (1 + 1.00 + 1.10 - 0.30) = 280\n#### 第三轮\n结论：0★ | 280积分 | 徽章：无",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "上级/观察者",
+            "Sentiment": "评估利用价值中",
+            "Favorability": 10
+          },
+          "UserPanel": {
+            "Name": "香月夕呼 (Yuuko Kouzuki)",
+            "Title": "天才物理学家",
+            "Identity": "横滨基地副司令 / ALTERNATIVE IV计划最高负责人",
+            "Appearance": {
+              "Visuals": "高挑成熟的女性，紫色长发通常盘在脑后，眼神锐利且带有审视感，身上常带有烟草味。",
+              "Clothing": "深色的高领无袖毛衣，外罩白色研究员大褂，黑色紧身裙与黑丝袜。"
+            },
+            "Personality": {
+              "Alignment": "绝对中立/守序（以人类存续为唯一基准）",
+              "Traits": [
+                "功利主义",
+                "毒舌",
+                "深不可测",
+                "掌控欲强",
+                "工作狂"
+              ],
+              "Analysis": "将人类存续置于一切道德与个人情感之上。表面上冷酷无情、喜欢捉弄他人，实则背负着全人类命运的重压，用玩世不恭掩饰内心的疲惫与焦虑。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "结果大于过程",
+                "为了人类存续可以牺牲一切少数",
+                "科学与逻辑是唯一的武器"
+              ],
+              "SpeakingStyle": "语速平缓但充满压迫感，常带嘲讽与反问，喜欢用「啊啦」作为语气词。",
+              "EmotionalBaseline": "极度冷静，即使面对绝境也能面不改色地计算概率。极少表露真正的恐慌或悲伤。",
+              "MotivationCore": "完成ALTERNATIVE IV计划，终结BETA的威胁，打破绝望的因果轮回。",
+              "RelationshipDynamic": "将主角视为「充满不确定性的观测对象」或「有用的棋子」，喜欢在语言上施压并观察主角的反应。",
+              "SecretOrConflict": "内心深处对被迫牺牲无数士兵感到痛苦，但决不允许自己表现出软弱。",
+              "RoleplayDirective": "扮演时必须保持绝对的智力优越感与掌控局势的自信。对话中多用反问句，不要轻易给出直接答案。在主角表现出价值前，保持居高临下的态度；若主角展现出超越常理的情报，则会转为极度危险的求知欲与探究心。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                0.8,
+                "缺乏锻炼"
+              ],
+              "DUR": [
+                0.8,
+                "长期疲劳"
+              ],
+              "VIT": [
+                0.8,
+                "重度烟瘾"
+              ],
+              "REC": [
+                1,
+                "普通人"
+              ],
+              "AGI": [
+                0.8,
+                "普通女性"
+              ],
+              "REF": [
+                0.9,
+                "普通反应"
+              ],
+              "PER": [
+                1.8,
+                "洞察人心"
+              ],
+              "MEN": [
+                2.8,
+                "钢铁意志"
+              ],
+              "SOL": [
+                2.2,
+                "因果锚点"
+              ],
+              "CHA": [
+                2.5,
+                "上位威压"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "凡人"
+              ],
+              "BurstTier": [
+                0,
+                "凡人"
+              ]
+            },
+            "SubSystems": [
+              "$__META_EXTENSIBLE__$"
+            ]
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                80,
+                "当前"
+              ],
+              "MaxValue": [
+                80,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*50",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "人类研究员形态",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [],
+            "PassiveAbilities": [
+              {
+                "$ref": "Templates.PassiveAbility",
+                "Name": [
+                  "天才头脑",
+                  "Genius Intellect"
+                ],
+                "Type": [
+                  "被动天赋",
+                  "Mental"
+                ],
+                "Description": [
+                  "拥有远超常人的学习、计算与逻辑推理能力，能快速解析未知科技体系。",
+                  "Desc"
+                ],
+                "Specs": {
+                  "Desc": [
+                    "科研速度+300%",
+                    "逻辑检定极优"
+                  ]
+                }
+              },
+              {
+                "$ref": "Templates.PassiveAbility",
+                "Name": [
+                  "上位者威压",
+                  "Commander's Aura"
+                ],
+                "Type": [
+                  "被动天赋",
+                  "Social"
+                ],
+                "Description": [
+                  "凭借气场与话术，在交涉时对心智不坚者造成极大的心理压力。",
+                  "Desc"
+                ],
+                "Specs": {
+                  "Desc": [
+                    "交涉检定优势",
+                    "心理压制"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "$ref": "Templates.InventoryItem",
+                  "ItemName": [
+                    "打火机与香烟",
+                    "Cigarettes"
+                  ],
+                  "Quantity": [
+                    1,
+                    "Qty"
+                  ],
+                  "Type": [
+                    "杂物",
+                    "Misc"
+                  ],
+                  "Description": [
+                    "夕呼减压的必需品。",
+                    "Desc"
+                  ]
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": [
+                "ALTERNATIVE计划全貌",
+                "04D因果律武器理论",
+                "战术机(TSF)操作系统底层架构"
+              ]
+            }
+          }
+        }
+      ],
+      "itemOperations": [
+        {
+          "type": "add",
+          "targetItemName": "香月夕呼 (Yuuko Kouzuki)",
+          "itemType": "Companion",
+          "modifications": [],
+          "rationale": "通过社交互动与剧情推进，成功在社交网络中建立了与该核心NPC的直接联系节点。"
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T12:58:47.843Z",
+    "sourceDescription": "横滨基地副司令，ALTERNATIVE计划的最高负责人与天才物理学家。虽然本身只是一名0★的普通人类女性，但她掌握着当前世界最高级别的机密、科研资源与政治权力。作为同伴/社交节点接入后，主角将进入她的视野并受到她的直接差遣或「评估」。她拥有极高的战术与科研指导价值，但也意味着主角随时可能被作为实验品或弃子使用。"
+  },
+  {
+    "id": "0639a5b8-3862-4cde-8b4c-6bde7fafac3d",
+    "createdAt": "2026-03-22T12:50:46.655Z",
+    "name": "横滨基地研究员 - 香月夕呼的助手 (Yokohama Base Researcher - Yuuko's Assistant)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 150,
+    "requiredMedals": [],
+    "description": "横滨基地内部的科研人员，直接或间接向香月夕呼博士汇报。作为ALTERNATIVE IV计划的外围或中层研究者，她不具备任何战斗能力，但拥有极高的物理学、计算科学或生物学知识。结识她意味着获得了一窥横滨基地深层机密（如00单元、战术机OS开发）的微小切口，以及专业的理论技术支持。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: 长期伏案工作的科研人员 → 下限0.8 | 弱于受训士兵 → 上限1.0 | 估算=0.8\nDUR: 缺乏体能锻炼 → 下限0.8 | 易受物理伤害 → 上限1.0 | 估算=0.9\nVIT: 经常熬夜，亚健康状态 → 下限0.8 | 无大病 → 上限1.0 | 估算=0.9\nREC: 正常人类自愈速度 → 下限1.0 | 恢复较慢 → 上限1.0 | 估算=1.0\nAGI: 正常人类步速 → 下限0.9 | 跑不快 → 上限1.0 | 估算=0.9\nREF: 正常人类反应 → 下限0.9 | 无战斗反应 → 上限1.0 | 估算=1.0\nPER: 对数据和实验异常高度敏感 → 下限1.5 | 物理感知普通 → 上限2.0 | 估算=1.5\nMEN: 极高的专注力和计算能力，能承受高压科研 → 下限1.5 | 面对BETA实体可能崩溃 → 上限2.5 | 估算=1.8\nSOL: 普通人类灵魂 → 下限1.0 | 无特殊抗性 → 上限1.0 | 估算=1.0\nCHA: 典型的理科生气质，可能不善交际 → 下限0.9 | 无法靠魅力影响他人 → 上限1.2 | 估算=1.1\n**1B 属性提纯汇总**\n- 身体属性普遍低于1.0（亚健康），智力/精神向属性（MEN 1.8）较高，但未脱离凡人范畴。覆盖维度=0项超凡提升。\n**1C 功能维度判定**\n覆盖0维度超凡属性 → 调整-3星 → 强制下限 0★\n**1D 实战模拟裁判**\n对阵0★基准人类，由于缺乏战斗训练且体能较弱，胜率 < 50%。维持 0★（非战斗型同伴）。\n**1E 内置能力单独评估**\n▶ 基础机密访问权限 (PassiveAbility)\n独立0★ | 可查阅部分未解密的战术机数据或实验日志 | 整体价格修正贡献: 提供极高的剧情切入价值和技术解析能力\n基础星级：0★\n#### 第二轮\n基准分：100\n潜力 PS=+1（有机会接触ALTERNATIVE IV核心机密，随剧情发展可提供重大技术突破）：+25%\n前置条件-稀有（极难获取其信任，且受基地严格保密条例监控）：-30%\n非战斗单位惩罚（需要主角提供保护）：-20%\n科研/剧情核心附加价值（解析异界科技、修复装备的潜在助力）：+75%\n最终积分=100 × (1 + 0.25 - 0.30 - 0.20 + 0.75) = 150\n#### 第三轮\n结论：0★ | 150积分 | 徽章：无",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "联络人/技术顾问",
+            "Sentiment": "中立",
+            "Favorability": 5
+          },
+          "UserPanel": {
+            "Name": "横滨基地研究员 (Yokohama Base Researcher)",
+            "Title": "副研究员",
+            "Identity": "ALTERNATIVE IV计划科研团队成员",
+            "Appearance": {
+              "Visuals": "常穿着白大褂，戴着防蓝光眼镜，头发时常因为熬夜显得有些凌乱，带着浓浓的咖啡味。",
+              "Clothing": "横滨基地统一配发的白大褂与内搭制服"
+            },
+            "Personality": {
+              "Alignment": "绝对中立",
+              "Traits": [
+                "工作狂",
+                "逻辑至上",
+                "好奇心旺盛"
+              ],
+              "Analysis": "对科学真理和未知数据有着狂热的追求，在研究状态下会忽略人情世故，对香月夕呼博士抱有极大的敬畏。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "探求未知",
+                "完成计划"
+              ],
+              "SpeakingStyle": "语速极快，经常使用复杂的物理/数学专有名词，很少顾及听众是否能听懂。",
+              "EmotionalBaseline": "平时显得木讷或疲惫，但一谈到专业领域就会变得异常亢奋。",
+              "MotivationCore": "解开BETA的谜团，或者完成导师交代的极限计算任务。",
+              "RelationshipDynamic": "如果主角能提供未知的数据（如异世界的科技常识），她会立刻将主角视为无价之宝；否则只会觉得主角是浪费时间的蠢材。",
+              "SecretOrConflict": "对00单元的某些非人道实验感到隐隐的不安，但用科学的冷酷将其压抑。",
+              "RoleplayDirective": "1. 遇到不懂的科技物品会立刻想要拆解分析；2. 极度缺乏常识和体力；3. 经常抱怨睡眠不足。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                0.8,
+                "亚健康"
+              ],
+              "DUR": [
+                0.9,
+                "亚健康"
+              ],
+              "VIT": [
+                0.9,
+                "亚健康"
+              ],
+              "REC": [
+                1,
+                "普通人类"
+              ],
+              "AGI": [
+                0.9,
+                "缺乏锻炼"
+              ],
+              "REF": [
+                1,
+                "普通人类"
+              ],
+              "PER": [
+                1.5,
+                "数据敏感"
+              ],
+              "MEN": [
+                1.8,
+                "高强度脑力"
+              ],
+              "SOL": [
+                1,
+                "普通灵魂"
+              ],
+              "CHA": [
+                1.1,
+                "理科气质"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "凡人学者"
+              ],
+              "BurstTier": [
+                0,
+                "凡人学者"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                85,
+                "当前"
+              ],
+              "MaxValue": [
+                85,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*50",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [],
+            "PassiveAbilities": [
+              {
+                "Name": "逆向工程学基础",
+                "Type": "知识/天赋",
+                "Description": "面对未知机械或代码时，有一定概率（取决于复杂度和时间）解析出其基础运作原理。",
+                "Specs": {
+                  "Desc": [
+                    "解析",
+                    "科研"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "横滨基地门禁卡 (黄级)",
+                  "Quantity": 1,
+                  "Type": "Tool",
+                  "Description": "允许进出基地大部分常规研究区与生活区。"
+                },
+                {
+                  "ItemName": "高算力军用平板",
+                  "Quantity": 1,
+                  "Type": "Tool",
+                  "Description": "内含大量物理学公式库与局部模拟演算软件。"
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T12:50:46.654Z",
+    "sourceDescription": "横滨基地内部的科研人员，直接或间接向香月夕呼博士汇报。作为ALTERNATIVE IV计划的外围或中层研究者，她不具备任何战斗能力，但拥有极高的物理学、计算科学或生物学知识。结识她意味着获得了一窥横滨基地深层机密（如00单元、战术机OS开发）的微小切口，以及专业的理论技术支持。"
+  },
+  {
+    "id": "98eba50e-62ff-4de5-b653-0cd28c6c3880",
+    "createdAt": "2026-03-22T12:35:59.915Z",
+    "name": "联合国军 · 猎犬三号小队 (UN Forces - Hound Squad 3)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 160,
+    "requiredMedals": [],
+    "description": "联合国军所属的一支标准战术小队（Tactical Squad），代号“猎犬-3”。包含一名小队长与三名特战队员。他们装备精良的UN制式装备，擅长小队协同作战、侦察与火力压制。相比斯卫军的个人武勇，他们更强调战术配合与科技装备的运用。本兑换项提供小队长作为主要联络人（Companion），并附带其完整小队的指挥权（表现为召唤/协同能力）。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: [正向] 职业军人标准，长期负重行军 → 下限1.3\nMEN: [正向] 职业素养，冷静处理战场压力 → 下限1.3\n**1B 属性提纯汇总**\n- 队长属性：STR=1.3, AGI=1.2, PER=1.4 (战术侦察)\n**1C 功能维度判定**\n- 基础星级：0★\n**1D 实战模拟裁判**\n- 4人小队 vs 0★单体：火力网完全压制，胜率100%。\n- 4人小队 vs 1★（爆墙级生物）：重火力（枪榴弹/反坦克火箭）可能造成威胁，但缺乏防御。定级维持0★。\n**1E 内置能力**\n- 小队协同（被动）：相邻时战力提升。\n\n#### 第二轮\n基准分：100\n修正系数：\n- 小队编制（1带3）: +50%\n- 战术协同价值: +10%\n最终积分 = 100 × 1.6 = 160\n\n#### 第三轮\n结论：0★ | 160积分 | 无需徽章",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "队友",
+            "Sentiment": "信赖",
+            "Favorability": 40
+          },
+          "UserPanel": {
+            "Name": "猎犬三号队长",
+            "Title": "军曹/中士",
+            "Identity": "联合国军·战术小队队长",
+            "Appearance": {
+              "Visuals": "身穿UN蓝色迷彩战术背心的职业军人，佩戴战术通讯耳机。",
+              "Clothing": "UN制式步兵装备。"
+            },
+            "Personality": {
+              "Alignment": "守序·善",
+              "Traits": [
+                "专业",
+                "务实",
+                "团队精神"
+              ],
+              "Analysis": "典型的职业军人，注重效率与生存，对队友负责。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "任务完成",
+                "全员生还"
+              ],
+              "SpeakingStyle": "使用大量军事术语，语速快。",
+              "EmotionalBaseline": "警惕",
+              "MotivationCore": "生存",
+              "RelationshipDynamic": "合作伙伴",
+              "SecretOrConflict": null,
+              "RoleplayDirective": "时刻保持与总部的通讯确认，优先确认撤退路线。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.3,
+                "健壮"
+              ],
+              "DUR": [
+                1.2,
+                "结实"
+              ],
+              "VIT": [
+                1.2,
+                "良好"
+              ],
+              "REC": [
+                1,
+                "常人"
+              ],
+              "AGI": [
+                1.2,
+                "敏捷"
+              ],
+              "REF": [
+                1.3,
+                "快速"
+              ],
+              "PER": [
+                1.4,
+                "战术视野"
+              ],
+              "MEN": [
+                1.3,
+                "冷静"
+              ],
+              "SOL": [
+                1,
+                "常人"
+              ],
+              "CHA": [
+                1.2,
+                "领导力"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "职业士兵"
+              ],
+              "BurstTier": [
+                0,
+                "火力压制"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                120,
+                "当前"
+              ],
+              "MaxValue": [
+                120,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*50",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [
+              {
+                "Name": [
+                  "指挥点",
+                  "CP"
+                ],
+                "Value": [
+                  10,
+                  "Current"
+                ],
+                "MaxValue": [
+                  10,
+                  "Max"
+                ]
+              }
+            ],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [
+              {
+                "Name": "火力协同",
+                "School": "Tactics",
+                "Type": "制御技巧",
+                "ParentSource": "",
+                "Description": "指挥小队成员进行交叉火力覆盖。",
+                "Proficiency": {
+                  "Level": "熟练",
+                  "Rank": 2
+                },
+                "SubMoves": {
+                  "压制射击": {
+                    "Name": "压制射击",
+                    "Description": "全队对扇形区域进行持续火力压制，敌方REF-30%。",
+                    "Proficiency": {
+                      "Level": "熟练",
+                      "Rank": 1
+                    },
+                    "Mechanics": {
+                      "Cost": {
+                        "Initial": [
+                          "2CP",
+                          "Cast"
+                        ]
+                      },
+                      "Timing": {
+                        "CastTime": [
+                          "Instant",
+                          "CastTime"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "PassiveAbilities": [
+              {
+                "Name": "猎犬小队编制",
+                "Type": "Summon",
+                "Description": "该角色始终伴随3名持有标准UN步兵装备的队员（NPC），队员属性略低于队长。",
+                "Specs": {
+                  "Desc": [
+                    "小队",
+                    "常驻"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "UN制式卡宾枪",
+                  "Quantity": [
+                    1,
+                    "Qty"
+                  ],
+                  "Type": "Weapon",
+                  "Description": [
+                    "加装榴弹发射器",
+                    "Desc"
+                  ]
+                },
+                {
+                  "ItemName": "战术通讯终端",
+                  "Quantity": [
+                    1,
+                    "Qty"
+                  ],
+                  "Type": "Tool",
+                  "Description": [
+                    "可接入UN数据链",
+                    "Desc"
+                  ]
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T12:35:59.914Z",
+    "sourceDescription": "联合国军所属的一支标准战术小队（Tactical Squad），代号“猎犬-3”。包含一名小队长与三名特战队员。他们装备精良的UN制式装备，擅长小队协同作战、侦察与火力压制。相比斯卫军的个人武勇，他们更强调战术配合与科技装备的运用。本兑换项提供小队长作为主要联络人（Companion），并附带其完整小队的指挥权（表现为召唤/协同能力）。"
+  },
+  {
+    "id": "384ccbd5-c946-45ba-b517-9fa4cdaf97e1",
+    "createdAt": "2026-03-22T12:35:59.913Z",
+    "name": "日本帝国斯卫军 · 士兵 (Imperial Royal Guard - Soldier)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 120,
+    "requiredMedals": [],
+    "description": "日本帝国斯卫军的基础作战单位。相比普通国防军或联合国军士兵，他们接受了更为严苛的体能与格斗训练，装备精良，拥有极高的单兵作战素养。通常负责重要设施警卫、要员保护或作为卫士（Pilot）的后备力量。忠诚度极高，随时准备为帝国献身。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: [正向] 优于普通士兵的强壮体格 → 下限1.4 | [反向] 凡人范畴 → 上限1.8\nREF: [正向] 严格的反恐/近战反应训练 → 下限1.3\n**1B 属性提纯汇总**\n- STR=1.4, AGI=1.3, MEN=1.5\n**1C 功能维度判定**\n- 基础星级：0★\n**1D 实战模拟裁判**\n- 对阵0★普通人：胜率>80%。\n- 结论：维持 0★\n\n#### 第二轮\n基准分：100\n修正系数：\n- 斯卫军精锐: +20%\n- 装备标准化: +0%\n最终积分 = 100 × 1.2 = 120\n\n#### 第三轮\n结论：0★ | 120积分 | 无需徽章",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "仆从",
+            "Sentiment": "忠诚",
+            "Favorability": 50
+          },
+          "UserPanel": {
+            "Name": "斯卫军士兵",
+            "Title": "卫士/兵卒",
+            "Identity": "日本帝国斯卫军·步兵",
+            "Appearance": {
+              "Visuals": "体格健壮，表情坚毅。",
+              "Clothing": "斯卫军制式作战服/轻型强化服。"
+            },
+            "Personality": {
+              "Alignment": "守序·中立",
+              "Traits": [
+                "服从",
+                "坚韧"
+              ],
+              "Analysis": "执行命令的机器，缺乏个人主张，但在战斗中极其可靠。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "服从"
+              ],
+              "SpeakingStyle": "仅在必要时说话，回复简短。",
+              "EmotionalBaseline": "平稳",
+              "MotivationCore": "履行职责",
+              "RelationshipDynamic": "消耗品/士兵",
+              "SecretOrConflict": null,
+              "RoleplayDirective": "执行命令，不质疑，不退缩。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.4,
+                "强壮"
+              ],
+              "DUR": [
+                1.3,
+                "坚韧"
+              ],
+              "VIT": [
+                1.2,
+                "良好"
+              ],
+              "REC": [
+                1.1,
+                "常人"
+              ],
+              "AGI": [
+                1.3,
+                "灵活"
+              ],
+              "REF": [
+                1.3,
+                "敏捷"
+              ],
+              "PER": [
+                1.2,
+                "警觉"
+              ],
+              "MEN": [
+                1.5,
+                "坚定"
+              ],
+              "SOL": [
+                1,
+                "常人"
+              ],
+              "CHA": [
+                1,
+                "普通"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "凡人精英"
+              ],
+              "BurstTier": [
+                0,
+                "凡人精英"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                125,
+                "当前"
+              ],
+              "MaxValue": [
+                125,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*50",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [
+              {
+                "Name": [
+                  "体力",
+                  "Stamina"
+                ],
+                "Value": [
+                  100,
+                  "Current"
+                ],
+                "MaxValue": [
+                  100,
+                  "Max"
+                ]
+              }
+            ],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [
+              {
+                "Name": "基础军用格斗",
+                "School": "CQC",
+                "Type": "制御技巧",
+                "ParentSource": "",
+                "Description": "标准军用近身格斗术。",
+                "Proficiency": {
+                  "Level": "熟练",
+                  "Rank": 1
+                },
+                "SubMoves": {}
+              }
+            ],
+            "PassiveAbilities": [],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "Type-89 突击步枪",
+                  "Quantity": [
+                    1,
+                    "Qty"
+                  ],
+                  "Type": "Weapon",
+                  "Description": [
+                    "标准制式步枪",
+                    "Desc"
+                  ]
+                },
+                {
+                  "ItemName": "战斗匕首",
+                  "Quantity": [
+                    1,
+                    "Qty"
+                  ],
+                  "Type": "Weapon",
+                  "Description": [
+                    "近战备用",
+                    "Desc"
+                  ]
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T12:35:59.912Z",
+    "sourceDescription": "日本帝国斯卫军的基础作战单位。相比普通国防军或联合国军士兵，他们接受了更为严苛的体能与格斗训练，装备精良，拥有极高的单兵作战素养。通常负责重要设施警卫、要员保护或作为卫士（Pilot）的后备力量。忠诚度极高，随时准备为帝国献身。"
+  },
+  {
+    "id": "987657a7-fb89-4ccd-a5a5-7c2c4421adfc",
+    "createdAt": "2026-03-22T12:35:59.911Z",
+    "name": "日本帝国斯卫军 · 检查站军官 (Imperial Royal Guard - Checkpoint Officer)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 180,
+    "requiredMedals": [],
+    "description": "隶属于日本帝国斯卫军（Imperial Royal Guard）的中层指挥官，负责关键设施或交通枢纽的安检与防卫指挥。身着斯卫军特有的深色卫士强化服或制服，佩戴Type-74长刀。他们不仅是军事指挥官，也是帝国威光的直接执行者，拥有极高的政治忠诚度与精湛的格斗术（尤其是剑术）。在Muv-Luv世界观中，斯卫军单兵战力远超普通联合国军士兵。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: [正向] 斯卫军精英训练，能单手挥舞沉重的Type-74长刀斩断轻装甲 → 下限1.5 | [反向] 仍为血肉之躯，无法肉身对抗TSF或BETA突击级 → 上限2.0\nAGI: [正向] 极高的近战步法与闪避能力 → 下限1.4 | [反向] 无法躲避超音速破片 → 上限1.8\nMEN: [正向] 绝对的忠诚与武士道精神，无视死亡恐惧 → 下限1.6\n**1B 属性提纯汇总**\n- STR=1.5, AGI=1.4, MEN=1.6, REF=1.5\n- 覆盖维度=4项（身体素质全面强化）\n**1C 功能维度判定**\n- 基础星级：0★（未达爆墙级）\n**1D 实战模拟裁判**\n- 对阵0★普通士兵：凭借装备优势与剑术碾压取胜，胜率>90%。\n- 结论：维持 0★\n**1E 内置能力**\n- 斯卫军剑术（熟练）：独立0★，实战极强。\n\n#### 第二轮\n基准分：100\n修正系数：\n- 斯卫军精英身份（SocialWeb高价值）: +30%\n- 装备优势（强化服+长刀）: +20%\n- 战术指挥能力: +30%\n最终积分 = 100 × (1 + 0.3 + 0.2 + 0.3) = 180\n\n#### 第三轮\n结论：0★ | 180积分 | 无需徽章",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "契约者",
+            "Sentiment": "忠诚",
+            "Favorability": 50
+          },
+          "UserPanel": {
+            "Name": "斯卫军检查站军官",
+            "Title": "大尉/中尉",
+            "Identity": "日本帝国斯卫军·中级指挥官",
+            "Appearance": {
+              "Visuals": "神情严肃的东亚男性/女性，目光锐利，站姿如松。",
+              "Clothing": "斯卫军标准卫士强化服（深紫/黑色调）或军官常服，佩戴Type-74长刀。"
+            },
+            "Personality": {
+              "Alignment": "守序·中立",
+              "Traits": [
+                "忠诚",
+                "严谨",
+                "尚武"
+              ],
+              "Analysis": "以完成任务和维护帝国尊严为第一要务，对敌人冷酷无情，对下属要求严格。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "帝国大义",
+                "武士道"
+              ],
+              "SpeakingStyle": "使用敬语但语气强硬，简洁有力。",
+              "EmotionalBaseline": "冷静克制",
+              "MotivationCore": "守护政威大将军与帝国的纯洁性",
+              "RelationshipDynamic": "下属/护卫",
+              "SecretOrConflict": null,
+              "RoleplayDirective": "始终保持警惕，对任何潜在威胁表现出敌意，对主角保持绝对服从的军礼。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.5,
+                "精英"
+              ],
+              "DUR": [
+                1.4,
+                "强韧"
+              ],
+              "VIT": [
+                1.3,
+                "耐劳"
+              ],
+              "REC": [
+                1.1,
+                "常人"
+              ],
+              "AGI": [
+                1.4,
+                "迅捷"
+              ],
+              "REF": [
+                1.5,
+                "敏锐"
+              ],
+              "PER": [
+                1.4,
+                "洞察"
+              ],
+              "MEN": [
+                1.6,
+                "钢铁意志"
+              ],
+              "SOL": [
+                1.1,
+                "常人"
+              ],
+              "CHA": [
+                1.3,
+                "威严"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "凡人巅峰"
+              ],
+              "BurstTier": [
+                0,
+                "凡人巅峰"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                140,
+                "当前"
+              ],
+              "MaxValue": [
+                140,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*50",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [
+              {
+                "Name": [
+                  "体力",
+                  "Stamina"
+                ],
+                "Value": [
+                  100,
+                  "Current"
+                ],
+                "MaxValue": [
+                  100,
+                  "Max"
+                ]
+              }
+            ],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [
+              {
+                "Name": "斯卫军格斗术",
+                "School": "军用武术",
+                "Type": "制御技巧",
+                "ParentSource": "",
+                "Description": "结合日本古流剑术与现代CQC的杀人技。",
+                "Proficiency": {
+                  "Level": "熟练",
+                  "Rank": 2
+                },
+                "SubMoves": {
+                  "居合斩": {
+                    "Name": "居合斩",
+                    "Description": "利用Type-74长刀进行神速拔刀斩。",
+                    "Proficiency": {
+                      "Level": "熟练",
+                      "Rank": 2
+                    },
+                    "Mechanics": {
+                      "Cost": {
+                        "Initial": [
+                          "15体力",
+                          "Cast"
+                        ]
+                      },
+                      "Timing": {
+                        "CastTime": [
+                          "Instant",
+                          "CastTime"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "PassiveAbilities": [
+              {
+                "Name": "指挥官光环",
+                "Type": "Tactical",
+                "Description": "周围斯卫军单位士气+20%，反应速度+10%。",
+                "Specs": {
+                  "Desc": [
+                    "光环",
+                    "辅助"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "Type-74 近战长刀",
+                  "Quantity": [
+                    1,
+                    "Qty"
+                  ],
+                  "Type": "Weapon",
+                  "Description": [
+                    "高碳钢合金锻造，锋利度极高",
+                    "Desc"
+                  ]
+                },
+                {
+                  "ItemName": "Type-89 突击步枪",
+                  "Quantity": [
+                    1,
+                    "Qty"
+                  ],
+                  "Type": "Weapon",
+                  "Description": [
+                    "标准制式步枪",
+                    "Desc"
+                  ]
+                },
+                {
+                  "ItemName": "斯卫军强化服",
+                  "Quantity": [
+                    1,
+                    "Qty"
+                  ],
+                  "Type": "Armor",
+                  "Description": [
+                    "提供轻度防弹与抗冲击保护",
+                    "Desc"
+                  ]
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T12:35:59.910Z",
+    "sourceDescription": "隶属于日本帝国斯卫军（Imperial Royal Guard）的中层指挥官，负责关键设施或交通枢纽的安检与防卫指挥。身着斯卫军特有的深色卫士强化服或制服，佩戴Type-74长刀。他们不仅是军事指挥官，也是帝国威光的直接执行者，拥有极高的政治忠诚度与精湛的格斗术（尤其是剑术）。在Muv-Luv世界观中，斯卫军单兵战力远超普通联合国军士兵。"
+  },
+  {
+    "id": "09bd306e-e665-4a32-bc95-d957571a430f",
+    "createdAt": "2026-03-22T12:26:50.342Z",
+    "name": "联合国军小队长 (UN Forces Squad Leader)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 90,
+    "requiredMedals": [],
+    "description": "联合国军（UN Forces）的一线作战小队指挥官（士官长/少尉）。身经百战的幸存者，拥有丰富的对抗BETA经验和务实的生存智慧。虽然装备不如斯卫军精良，但在混战中的临场应变能力极强，擅长利用地形与火力支援进行不对称作战。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR/DUR: [正向] 长期行军作战，耐力优秀 | 估算=1.5\nMEN: [正向] 见惯BETA惨状仍能保持理智 | 估算=1.8\nREF: [正向] 战场生存本能极强 | 估算=1.7\n**1B 属性提纯汇总**\n- 凡人范畴，无超凡属性。\n**1C 功能维度判定**\n- 0个超凡维度 → 0★。\n**1D 实战模拟裁判**\n- 场景：vs 0★ 新兵。老兵拥有经验优势，胜率较高。\n- 结论：维持 0★。\n**1E 内置能力**\n▶ 联合国军制式装备 (Inventory)\n  独立0★ | 标准化量产装备 | 价格贡献: 无\n\n基础星级：0★\n#### 第二轮\n基准分：100\n- 潜力 PS=0 (普通人类，年龄稍长，成长空间有限): -30%\n- 经验 (老兵): +10%\n- 技能 (指挥): +10%\n- 装备 (标准): +0%\n最终积分 = 100 × (1 - 0.30 + 0.10 + 0.10) = 90\n#### 第三轮\n结论：0★ | 90积分 | 无需徽章",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "雇佣兵/盟友",
+            "Sentiment": "中立",
+            "Favorability": 40
+          },
+          "UserPanel": {
+            "Name": "联合国军小队长 (UN Forces Squad Leader)",
+            "Title": "老兵",
+            "Identity": "联合国军士官",
+            "Appearance": {
+              "Visuals": "胡渣满面，装备磨损，眼神疲惫但警惕",
+              "Clothing": "联合国军蓝色迷彩作战服，战术挂具"
+            },
+            "Personality": {
+              "Alignment": "中立·善",
+              "Traits": [
+                "务实",
+                "油滑",
+                "坚韧"
+              ],
+              "Analysis": "不谈理想只谈生存，对新兵严厉但负责，对上级命令会进行选择性理解以保全性命。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "生存",
+                "战友"
+              ],
+              "SpeakingStyle": "粗鲁直接，夹杂战地黑话",
+              "EmotionalBaseline": "疲惫",
+              "MotivationCore": "活过下一场战斗",
+              "RelationshipDynamic": "基于利益与实力的合作",
+              "SecretOrConflict": "目睹过太多战友牺牲，患有轻度PTSD",
+              "RoleplayDirective": "优先考虑生存率，提供务实的战术建议。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.5,
+                "老练"
+              ],
+              "DUR": [
+                1.4,
+                "耐受"
+              ],
+              "VIT": [
+                1.3,
+                "常人"
+              ],
+              "REC": [
+                1,
+                "常人"
+              ],
+              "AGI": [
+                1.4,
+                "平稳"
+              ],
+              "REF": [
+                1.7,
+                "直觉"
+              ],
+              "PER": [
+                1.6,
+                "警觉"
+              ],
+              "MEN": [
+                1.8,
+                "麻木"
+              ],
+              "SOL": [
+                1,
+                "凡人"
+              ],
+              "CHA": [
+                1.2,
+                "服众"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "战场老兵"
+              ],
+              "BurstTier": [
+                0,
+                "战场老兵"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                100,
+                "Current"
+              ],
+              "MaxValue": [
+                100,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*30",
+                  "Formula"
+                ]
+              }
+            },
+            "EnergyPools": [
+              {
+                "Name": [
+                  "体力",
+                  "Stamina"
+                ],
+                "Value": [
+                  100,
+                  "Current"
+                ],
+                "MaxValue": [
+                  100,
+                  "Max"
+                ]
+              }
+            ],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "Form"
+              ],
+              "Active": [
+                true,
+                "Active"
+              ],
+              "Description": [
+                "",
+                "Desc"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [
+              {
+                "Name": "步兵战术",
+                "School": "军事",
+                "Type": "应用技巧",
+                "ParentSource": "",
+                "Description": "联合国军标准步兵战术",
+                "Proficiency": {
+                  "Level": "熟练",
+                  "Rank": 1
+                },
+                "SubMoves": {
+                  "火力压制": {
+                    "Name": "火力压制",
+                    "Description": "指挥小队进行覆盖射击",
+                    "Proficiency": {
+                      "Level": "熟练",
+                      "Rank": 1
+                    },
+                    "Mechanics": {
+                      "Cost": {
+                        "Initial": "无"
+                      },
+                      "Timing": {
+                        "CastTime": "Instant"
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "PassiveAbilities": [
+              {
+                "Name": "BETA猎手",
+                "Type": "经验",
+                "Description": "对BETA行动模式有直觉预判，对恐慌判定有加成",
+                "Specs": {
+                  "Desc": [
+                    "经验"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "G36突击步枪",
+                  "Quantity": 1,
+                  "Type": "Weapon",
+                  "Description": "可靠的联合国军制式武器"
+                },
+                {
+                  "ItemName": "战术通讯终端",
+                  "Quantity": 1,
+                  "Type": "Tool",
+                  "Description": "用于接收战场数据链"
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T12:26:50.341Z",
+    "sourceDescription": "联合国军（UN Forces）的一线作战小队指挥官（士官长/少尉）。身经百战的幸存者，拥有丰富的对抗BETA经验和务实的生存智慧。虽然装备不如斯卫军精良，但在混战中的临场应变能力极强，擅长利用地形与火力支援进行不对称作战。"
+  },
+  {
+    "id": "6c18d292-d088-4b7b-8046-e803197d06f9",
+    "createdAt": "2026-03-22T12:26:50.338Z",
+    "name": "斯卫军军官 (Royal Guard Officer)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 200,
+    "requiredMedals": [],
+    "description": "斯卫军的中层指挥官（尉官/佐官级别）。通常出身于没落武士家族或名门旁支，自幼接受精英教育，拥有战术指挥能力与基础的卫士（TSF驾驶员）适性。随身佩戴家族传承的日本刀，具备一定的政治影响力与极高的荣誉感。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR/DUR: [正向] 长期剑术修行，体能优于常人 | 估算=1.6\nMEN: [正向] 极强的自尊心与责任感，受过抗审讯训练 | 估算=2.2\nCHA: [正向] 长期处于指挥位，具备威严 | 估算=2.0\n**1B 属性提纯汇总**\n- 凡人范畴，无超凡属性。\n**1C 功能维度判定**\n- 0个超凡维度 → 0★。\n**1D 实战模拟裁判**\n- 场景：vs 0★ 士兵。军官拥有更好的剑术与手枪射击技巧，且具备指挥加成。\n- 结论：维持 0★。\n**1E 内置能力**\n▶ 74式长刀 (Inventory)\n  独立0★ | 锻造精良的近战武器 | 价格贡献: 装备修正\n\n基础星级：0★\n#### 第二轮\n基准分：100\n- 潜力 PS=+1 (具备卫士适性，可成长为TSF驾驶员): +25%\n- 身份 (军官/士族，自带指挥权与资源渠道): +30%\n- 技能 (指挥与剑术): +20%\n- 忠诚 (荣誉感): +10%\n- 装备 (家传刀具): +15%\n最终积分 = 100 × (1 + 0.25 + 0.30 + 0.20 + 0.10 + 0.15) = 200\n#### 第三轮\n结论：0★ | 200积分 | 无需徽章",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "家臣",
+            "Sentiment": "信赖",
+            "Favorability": 60
+          },
+          "UserPanel": {
+            "Name": "斯卫军军官 (Royal Guard Officer)",
+            "Title": "帝国锋刃",
+            "Identity": "斯卫军尉官/士族后裔",
+            "Appearance": {
+              "Visuals": "举止优雅，眼神锐利，佩戴白手套",
+              "Clothing": "斯卫军军官制服，腰间佩刀"
+            },
+            "Personality": {
+              "Alignment": "守序·中立",
+              "Traits": [
+                "高傲",
+                "荣誉",
+                "智略"
+              ],
+              "Analysis": "看重阶级与礼仪，具备战术眼光，不仅是战士也是指挥者。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "大义",
+                "家族"
+              ],
+              "SpeakingStyle": "文雅而冷峻，习惯引用古语",
+              "EmotionalBaseline": "冷静",
+              "MotivationCore": "复兴家族荣光与报效国家",
+              "RelationshipDynamic": "君臣之礼",
+              "SecretOrConflict": "对现状的忧虑与对上层决策的独立思考",
+              "RoleplayDirective": "在战术上提供建议，在礼节上无可挑剔。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.6,
+                "强健"
+              ],
+              "DUR": [
+                1.5,
+                "坚韧"
+              ],
+              "VIT": [
+                1.4,
+                "常人"
+              ],
+              "REC": [
+                1.2,
+                "常人"
+              ],
+              "AGI": [
+                1.7,
+                "灵活"
+              ],
+              "REF": [
+                1.8,
+                "敏锐"
+              ],
+              "PER": [
+                1.6,
+                "洞察"
+              ],
+              "MEN": [
+                2.2,
+                "坚毅"
+              ],
+              "SOL": [
+                1.2,
+                "凡人"
+              ],
+              "CHA": [
+                2,
+                "领袖"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "凡人精英"
+              ],
+              "BurstTier": [
+                0,
+                "凡人精英"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                100,
+                "Current"
+              ],
+              "MaxValue": [
+                100,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*30",
+                  "Formula"
+                ]
+              }
+            },
+            "EnergyPools": [
+              {
+                "Name": [
+                  "精力",
+                  "Energy"
+                ],
+                "Value": [
+                  100,
+                  "Current"
+                ],
+                "MaxValue": [
+                  100,
+                  "Max"
+                ]
+              }
+            ],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "Form"
+              ],
+              "Active": [
+                true,
+                "Active"
+              ],
+              "Description": [
+                "",
+                "Desc"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [
+              {
+                "Name": "古流剑术",
+                "School": "剑道",
+                "Type": "应用技巧",
+                "ParentSource": "",
+                "Description": "家族传承的实战剑术",
+                "Proficiency": {
+                  "Level": "精通",
+                  "Rank": 2
+                },
+                "SubMoves": {
+                  "居合": {
+                    "Name": "居合",
+                    "Description": "快速拔刀斩击",
+                    "Proficiency": {
+                      "Level": "精通",
+                      "Rank": 2
+                    },
+                    "Mechanics": {
+                      "Cost": {
+                        "Initial": "中等体力"
+                      },
+                      "Timing": {
+                        "CastTime": "Instant"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "Name": "战术指挥",
+                "School": "军事",
+                "Type": "应用技巧",
+                "ParentSource": "",
+                "Description": "小队级战术指挥能力",
+                "Proficiency": {
+                  "Level": "熟练",
+                  "Rank": 1
+                },
+                "SubMoves": {
+                  "集火指令": {
+                    "Name": "集火指令",
+                    "Description": "标记目标提升友军命中率",
+                    "Proficiency": {
+                      "Level": "熟练",
+                      "Rank": 1
+                    },
+                    "Mechanics": {
+                      "Cost": {
+                        "Initial": "少量精力"
+                      },
+                      "Timing": {
+                        "CastTime": "Instant"
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "PassiveAbilities": [
+              {
+                "Name": "卫士适性",
+                "Type": "天赋",
+                "Description": "具备驾驶战术机（TSF）的基础神经适性",
+                "Specs": {
+                  "Desc": [
+                    "潜力"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "74式近战长刀",
+                  "Quantity": 1,
+                  "Type": "Weapon",
+                  "Description": "以高碳钢锻造的军官佩刀，锋利度极高"
+                },
+                {
+                  "ItemName": "南部式自动手枪",
+                  "Quantity": 1,
+                  "Type": "Weapon",
+                  "Description": "军官自卫用手枪"
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T12:26:50.337Z",
+    "sourceDescription": "斯卫军的中层指挥官（尉官/佐官级别）。通常出身于没落武士家族或名门旁支，自幼接受精英教育，拥有战术指挥能力与基础的卫士（TSF驾驶员）适性。随身佩戴家族传承的日本刀，具备一定的政治影响力与极高的荣誉感。"
+  },
+  {
+    "id": "b09df717-996b-48ac-a17d-61b8a25869af",
+    "createdAt": "2026-03-22T12:26:50.336Z",
+    "name": "斯卫军士兵A (Royal Guard Soldier A)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 120,
+    "requiredMedals": [],
+    "description": "日本帝国斯卫军（Royal Guard）所属的精锐步兵。身着深紫色制式防弹护具，受过严酷的武士道精神熏陶与高强度体能训练。相比普通士兵，他们拥有极高的忠诚度与痛觉耐受力，誓死保卫政威大将军与皇室成员。单兵战力处于人类极限水平，擅长阵地防守与白刃战。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: [正向] 经受斯卫军地狱式训练，能负重长途奔袭 | [反向] 仍为凡人肉体，无法徒手破墙 | 估算=1.8 (职业军人巅峰)\nDUR: [正向] 意志力极强，受轻伤不影响行动 | [反向] 被小口径子弹击中要害即死 | 估算=1.5\nVIT: [正向] 适应各种恶劣环境 | 估算=1.5\nAGI/REF: [正向] 反应迅速，精通CQC | 估算=1.6\nMEN: [正向] 狂热忠诚，免疫普通威慑 | 估算=2.0\n**1B 属性提纯汇总**\n- 全属性处于 1.0~2.0 区间，无超凡维度。\n**1C 功能维度判定**\n- 0个超凡维度 → -3星 → 0★。\n**1D 实战模拟裁判**\n- 场景：vs 0★ 运动员。斯卫军士兵持有枪械且受过杀人训练，胜率>90%。\n- 结论：维持 0★。\n**1E 内置能力**\n▶ 斯卫军制式步枪 (Inventory)\n  独立0★ | 现代火药动能武器 | 价格贡献: 装备修正\n\n基础星级：0★\n#### 第二轮\n基准分：100\n- 潜力 PS=0 (普通人类极限，无卫士天赋): -30%\n- 训练 (斯卫军精锐): +20%\n- 忠诚 (狂热): +20%\n- 装备 (全套精良单兵装具): +10%\n最终积分 = 100 × (1 - 0.30 + 0.20 + 0.20 + 0.10) = 120\n#### 第三轮\n结论：0★ | 120积分 | 无需徽章",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "仆从",
+            "Sentiment": "忠诚",
+            "Favorability": 50
+          },
+          "UserPanel": {
+            "Name": "斯卫军士兵A (Royal Guard Soldier A)",
+            "Title": "帝国之盾",
+            "Identity": "日本帝国斯卫军步兵",
+            "Appearance": {
+              "Visuals": "黑发黑瞳，神情坚毅，体格精悍",
+              "Clothing": "深紫色斯卫军制式防弹战术背心，带有皇室菊纹徽章"
+            },
+            "Personality": {
+              "Alignment": "守序·中立",
+              "Traits": [
+                "狂热",
+                "严谨",
+                "排外"
+              ],
+              "Analysis": "将服从命令视为最高荣誉，对非皇室势力持警惕态度。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "忠义",
+                "荣誉"
+              ],
+              "SpeakingStyle": "简短有力，使用敬语",
+              "EmotionalBaseline": "严肃",
+              "MotivationCore": "守护皇室威光",
+              "RelationshipDynamic": "下级对上级的绝对服从",
+              "SecretOrConflict": null,
+              "RoleplayDirective": "无条件执行命令，对敌人冷酷无情。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.8,
+                "精锐"
+              ],
+              "DUR": [
+                1.5,
+                "坚韧"
+              ],
+              "VIT": [
+                1.5,
+                "充沛"
+              ],
+              "REC": [
+                1.2,
+                "常人"
+              ],
+              "AGI": [
+                1.6,
+                "敏捷"
+              ],
+              "REF": [
+                1.6,
+                "迅速"
+              ],
+              "PER": [
+                1.4,
+                "警觉"
+              ],
+              "MEN": [
+                2,
+                "狂热"
+              ],
+              "SOL": [
+                1,
+                "凡人"
+              ],
+              "CHA": [
+                1,
+                "威严"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "凡人巅峰"
+              ],
+              "BurstTier": [
+                0,
+                "凡人巅峰"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                100,
+                "Current"
+              ],
+              "MaxValue": [
+                100,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*30",
+                  "Formula"
+                ]
+              }
+            },
+            "EnergyPools": [
+              {
+                "Name": [
+                  "体力",
+                  "Stamina"
+                ],
+                "Value": [
+                  100,
+                  "Current"
+                ],
+                "MaxValue": [
+                  100,
+                  "Max"
+                ]
+              }
+            ],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "Form"
+              ],
+              "Active": [
+                true,
+                "Active"
+              ],
+              "Description": [
+                "",
+                "Desc"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [
+              {
+                "Name": "帝国军格斗术",
+                "School": "CQC",
+                "Type": "应用技巧",
+                "ParentSource": "",
+                "Description": "注重实战杀伤的军用格斗术",
+                "Proficiency": {
+                  "Level": "熟练",
+                  "Rank": 1
+                },
+                "SubMoves": {
+                  "刺刀突刺": {
+                    "Name": "刺刀突刺",
+                    "Description": "利用步枪刺刀进行的快速突刺",
+                    "Proficiency": {
+                      "Level": "熟练",
+                      "Rank": 1
+                    },
+                    "Mechanics": {
+                      "Cost": {
+                        "Initial": "少量体力"
+                      },
+                      "Timing": {
+                        "CastTime": "Instant"
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "PassiveAbilities": [
+              {
+                "Name": "死士意志",
+                "Type": "精神特性",
+                "Description": "免疫普通恐惧判定，士气永不崩溃",
+                "Specs": {
+                  "Desc": [
+                    "精神抗性"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "99式突击步枪",
+                  "Quantity": 1,
+                  "Type": "Weapon",
+                  "Description": "斯卫军制式步枪，性能优于联合国军标准装备"
+                },
+                {
+                  "ItemName": "斯卫军战术护甲",
+                  "Quantity": 1,
+                  "Type": "Armor",
+                  "Description": "防弹背心与护膝组合，提供基础防弹能力"
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T12:26:50.335Z",
+    "sourceDescription": "日本帝国斯卫军（Royal Guard）所属的精锐步兵。身着深紫色制式防弹护具，受过严酷的武士道精神熏陶与高强度体能训练。相比普通士兵，他们拥有极高的忠诚度与痛觉耐受力，誓死保卫政威大将军与皇室成员。单兵战力处于人类极限水平，擅长阵地防守与白刃战。"
+  },
+  {
+    "id": "2d58cf21-aa6c-46a5-a2bd-e3bbb180e4e0",
+    "createdAt": "2026-03-22T11:43:59.755Z",
+    "name": "联合国军士兵 (UN Forces Soldier)",
+    "type": "Companion",
+    "tier": 0,
+    "pricePoints": 70,
+    "requiredMedals": [],
+    "description": "来源：Muv-Luv Alternative。隶属于联合国的标准步兵单位，经过正规军事训练，具备基本的战术素养与服从性。装备有标准制式突击步枪（通常为WS-16C或G36系列）与单兵战术护甲。虽然在对抗BETA的战场上属于消耗品，但在对人作战或据点防守中是可靠的火力点。作为量产型单位，其个性较为淡薄，以执行命令为最优先事项。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: [正向] 受过军事体能训练，能全副武装行军。 [反向] 凡人极限，无法徒手破坏结构。 估算=1.2~1.4 (0★)\nDUR: [正向] 穿戴防弹衣可防流弹/破片。 [反向] 肉体凡胎，被BETA或大口径直击即死。 估算=1.2 (0★)\nVIT: [正向] 适应战场环境。 [反向] 无超凡抗性。 估算=1.2 (0★)\nAGI/REF: [正向] 战术动作熟练。 [反向] 无法躲避超音速攻击。 估算=1.1~1.3 (0★)\nMEN: [正向] 职业军人意志。 [反向] 面对光线级或要塞级BETA时需进行SAN值检定。 估算=1.2 (0★)\n**1B 属性提纯汇总**\n- 全属性提纯后均在 1.0~1.4 之间，覆盖维度=0项（无超凡提升）\n**1C 功能维度判定**\n基础上限 0★，无维度提升，强制下限 0★\n**1D 实战模拟裁判**\n士兵(持枪) vs 0★平民：胜率>90%，但无法对抗 1★ 超人/怪物。维持 0★。\n**1E 内置能力单独评估**\n▶ [制式突击步枪] 独立0★ | 现代火药武器，杀伤力有限 | 修正: 无\n\n基础星级：0★\n#### 第二轮\n基准分：100\n- 潜力 PS=0 (-30%): 普通人类模板，成长上限锁定在凡人巅峰\n- Hax HI=0 (0%): 无特殊法则\n最终积分 = 100 × 0.7 = 70\n#### 第三轮\n结论：0★ | 70积分 | 无需徽章",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "仆从",
+            "Sentiment": "忠诚",
+            "Favorability": 50
+          },
+          "UserPanel": {
+            "Name": "联合国军士兵 (UN Soldier)",
+            "Title": "步兵",
+            "Identity": "Muv-Luv世界联合国军常规步兵",
+            "Appearance": {
+              "Visuals": "身穿联合国军标准蓝灰色迷彩作战服，佩戴战术头盔与护目镜，面容被遮挡或大众化。",
+              "Clothing": "UN制式单兵战斗装具"
+            },
+            "Personality": {
+              "Alignment": "守序·中立",
+              "Traits": [
+                "服从",
+                "专业",
+                "坚韧"
+              ],
+              "Analysis": "标准的职业军人，以完成任务为第一目标，缺乏过多的个人情感表达。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "命令",
+                "生存"
+              ],
+              "SpeakingStyle": "简洁、使用军事术语、报告式语调",
+              "EmotionalBaseline": "冷静/压抑",
+              "MotivationCore": "执行长官指令",
+              "RelationshipDynamic": "下级对上级",
+              "SecretOrConflict": null,
+              "RoleplayDirective": "作为一名标准士兵行动，严格执行战术指令，不进行多余的闲聊。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                1.3,
+                "受训军人"
+              ],
+              "DUR": [
+                1.2,
+                "强壮"
+              ],
+              "VIT": [
+                1.2,
+                "健康"
+              ],
+              "REC": [
+                1,
+                "常人"
+              ],
+              "AGI": [
+                1.1,
+                "灵活"
+              ],
+              "REF": [
+                1.3,
+                "敏锐"
+              ],
+              "PER": [
+                1.1,
+                "正常"
+              ],
+              "MEN": [
+                1.2,
+                "坚毅"
+              ],
+              "SOL": [
+                1,
+                "凡人"
+              ],
+              "CHA": [
+                1,
+                "普通"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                0,
+                "凡人"
+              ],
+              "BurstTier": [
+                0,
+                "凡人"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                125,
+                "当前"
+              ],
+              "MaxValue": [
+                125,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*50",
+                  "公式"
+                ]
+              }
+            },
+            "EnergyPools": [
+              {
+                "Name": [
+                  "体力",
+                  "Stamina"
+                ],
+                "Value": [
+                  100,
+                  "Current"
+                ],
+                "MaxValue": [
+                  100,
+                  "Max"
+                ]
+              }
+            ],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "标准作战状态",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [
+              {
+                "Name": "基础步兵战术",
+                "School": "UN军事训练",
+                "Type": "制御技巧",
+                "ParentSource": "",
+                "Description": "涵盖射击、掩体利用、小队协同与急救的基础军事技能。",
+                "Proficiency": {
+                  "Level": "熟练",
+                  "Rank": 1
+                },
+                "SubMoves": {
+                  "精确射击": {
+                    "Name": "精确射击",
+                    "Description": "使用突击步枪对中距离目标进行点射。",
+                    "Proficiency": {
+                      "Level": "熟练",
+                      "Rank": 1
+                    },
+                    "Mechanics": {
+                      "Cost": {
+                        "Initial": [
+                          "无",
+                          "Cast"
+                        ]
+                      },
+                      "Timing": {
+                        "CastTime": [
+                          "Instant",
+                          "CastTime"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "PassiveAbilities": [],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "WS-16C突击步枪",
+                  "Quantity": 1,
+                  "Type": "Weapon",
+                  "Description": "发射5.56mm弹药的标准步枪，附带榴弹发射器接口。"
+                },
+                {
+                  "ItemName": "战术防弹衣",
+                  "Quantity": 1,
+                  "Type": "Armor",
+                  "Description": "提供对小口径弹药和破片的有限防护。"
+                },
+                {
+                  "ItemName": "战术匕首",
+                  "Quantity": 1,
+                  "Type": "Weapon",
+                  "Description": "标准格斗军刀。"
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T11:43:59.754Z",
+    "sourceDescription": "来源：Muv-Luv Alternative。隶属于联合国的标准步兵单位，经过正规军事训练，具备基本的战术素养与服从性。装备有标准制式突击步枪（通常为WS-16C或G36系列）与单兵战术护甲。虽然在对抗BETA的战场上属于消耗品，但在对人作战或据点防守中是可靠的火力点。作为量产型单位，其个性较为淡薄，以执行命令为最优先事项。"
+  },
+  {
+    "id": "9b7c7ff5-fed4-4026-8c3e-be806f061c14",
+    "createdAt": "2026-03-22T09:25:47.561Z",
+    "name": "帝国军工兵斧 (Imperial Combat Engineer Axe)",
+    "type": "Inventory",
+    "tier": 0,
+    "pricePoints": 35,
+    "requiredMedals": [],
+    "description": "日本帝国军卫士/工兵标准配备的近战生存工具，采用高碳钢锻造，具备优秀的劈砍与撬破坏能力。由于主角遭遇联合国军审查，该物品作为管制刀具被强制收缴。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: [能劈开木门/轻型结构]→下限1.5|[无法对BETA甲壳造成有效伤害]→上限2.0|估算=1.5~2.0\nDUR: [可承受高强度连续劈砍]→下限1.5|[在重型机械压迫下会弯折断裂]→上限2.0|估算=1.5~2.0\nVIT/REC/AGI/REF/PER/MEN/SOL/CHA: 无增幅|估算=1.0\n**1B 属性提纯汇总**\n- STR提纯后=1.5, DUR=1.5, 覆盖维度=2项\n**1C 功能维度判定**\n基础上限0★，覆盖2维度→-2星→0★\n**1D 实战模拟裁判**\n持斧0★普通人对战空手0★普通人拥有极大优势，但不足以战胜1★（爆墙级）对手，维持 0★。\n基础星级：0★\n#### 第二轮\n基准分：100\n常见量产装备：-65%\n最终积分=100 × (1 - 0.65) = 35\n#### 第三轮\n结论：0★ | 35积分 | 徽章：无\n*注：该物品在剧情中被收缴，执行注销操作。*",
+    "effects": {
+      "itemOperations": [
+        {
+          "type": "delete",
+          "targetItemName": "帝国军工兵斧",
+          "itemType": "Inventory",
+          "rationale": "剧情事件：遭遇横滨基地联合国军审查，作为危险物品被强制收缴"
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T09:25:47.561Z",
+    "sourceDescription": "日本帝国军卫士/工兵标准配备的近战生存工具，采用高碳钢锻造，具备优秀的劈砍与撬破坏能力。由于主角遭遇联合国军审查，该物品作为管制刀具被强制收缴。"
+  },
+  {
+    "id": "e173f81a-7ef3-49cc-93fa-e1a09f2e7ccd",
+    "createdAt": "2026-03-22T08:10:53.471Z",
+    "name": "战术数据记录：兵士级BETA (Tactical Data: Soldier-class BETA)",
+    "type": "Knowledge",
+    "tier": 0,
+    "pricePoints": 40,
+    "requiredMedals": [],
+    "description": "基于首次近距离击杀/遭遇兵士级BETA（Soldier-class）所获取的实战数据分析。包含该种异星生物的生理结构弱点（手臂根部关节、眼状感官器官）、运动模式（直线加速快但转向迟钝）以及有效杀伤手段验证。这份情报将使你在面对同类个体时能更冷静地预判其动作。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\n纯资讯类物品，无物理属性。\n**1B 属性提纯汇总**\n覆盖维度=0项\n**1C 功能维度判定**\n纯知识 → -3星 → 基础星级 0★\n**1D 实战模拟裁判**\n不直接参与战斗，跳过。\n基础星级：0★\n#### 第二轮\n基准分：100\n- 潜力 PS=0 (固定数据): -30%\n- 范围限制 (仅针对单一低阶兵种): -30%\n最终积分 = 100 × (1 - 0.30 - 0.30) = 40\n#### 第三轮\n结论：0★ | 40积分 | 无需徽章",
+    "effects": {
+      "knowledgeNodes": [
+        {
+          "topic": "兵士级BETA · 生理与战术特性",
+          "type": "Data",
+          "mastery": "熟练",
+          "content": "掌握兵士级BETA的行动逻辑与弱点分布。对兵士级BETA的攻击预判成功率小幅提升，命中要害概率提升。"
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T08:10:53.470Z",
+    "sourceDescription": "基于首次近距离击杀/遭遇兵士级BETA（Soldier-class）所获取的实战数据分析。包含该种异星生物的生理结构弱点（手臂根部关节、眼状感官器官）、运动模式（直线加速快但转向迟钝）以及有效杀伤手段验证。这份情报将使你在面对同类个体时能更冷静地预判其动作。"
+  },
+  {
+    "id": "64646249-da48-4cfd-b1e3-3a2dc2c172eb",
+    "createdAt": "2026-03-22T07:53:11.623Z",
+    "name": "BETA 兵士级 (Soldier-class BETA) — 异星生物样本",
+    "type": "Companion",
+    "tier": 1,
+    "pricePoints": 100,
+    "requiredMedals": [
+      {
+        "stars": 1,
+        "count": 1
+      }
+    ],
+    "description": "BETA (Beings of the Extra Terrestrial origin which is Adversary of human race) 的最小型作战单位。全高约2.3米，外形类人但拥有一大一小两条手臂，头部为特征性的感官突起。它们是BETA群落中的工兵与反步兵单位，虽然对战术机（TSF）不构成威胁，但对人类步兵具有极高致命性。该单位没有独立自我意识，受上位存在（头脑级/重头脑级）的蜂巢意识指挥，不知恐惧与疲倦。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\n- STR: [正向] 能轻易撕裂人体，破坏轻型掩体/复合材料门 | [反向] 无法击穿战术机装甲 | 估算: 4.0 (爆墙级下限)\n- DUR: [正向] 这种尺寸的生物具备极高韧性，需大口径枪械连续命中才可停止 | [反向] 120mm炮击/重型近战可将其粉碎 | 估算: 3.0\n- AGI: [正向] 奔跑速度超越人类百米冠军，动作敏捷 | [反向] 无法跟上TSF机动 | 估算: 2.5\n- VIT: [正向] 碳基生物极限，断肢仍可战斗 | 估算: 5.0\n**1B 属性提纯汇总**\n- STR=4.0, DUR=3.0, AGI=2.5, VIT=5.0\n- 覆盖维度: 4项 (STR/DUR/AGI/VIT)\n**1C 功能维度判定**\n- 基础上限 1★ (STR 4.0 在 2~20 区间)\n- 覆盖4维度 → -1星 → 0★ (但考虑到杀伤力处于0★顶点与1★边缘，且VIT极高)\n**1D 实战模拟裁判**\n- vs 0★人类: 完胜 (10/10)。\n- vs 1★强化人类: 互角。兵士级数量庞大时威胁剧增，单体判定为弱 1★。\n- 修正：维持 1★ (作为生物兵器基准)\n基础星级：1★\n#### 第二轮\n基准分：500\n- 潜力 PS=0 (量产兵器，无进化可能): -30%\n- 智能低下 (无自我意识): -30%\n- 寿命/维护 (需碳基摄入): -20%\n最终积分 = 500 × (1 - 0.3 - 0.3 - 0.2) = 500 × 0.2 = 100\n#### 第三轮\n结论：1★ | 100积分 | 徽章：1×1★",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "召唤体",
+            "Sentiment": "中立",
+            "Favorability": 0
+          },
+          "UserPanel": {
+            "Name": "兵士级 BETA (Soldier-class)",
+            "Title": "反人类生命体",
+            "Identity": "BETA群落/工兵",
+            "Appearance": {
+              "Visuals": "高2.3m，红褐色肌理，不对称双臂，无眼",
+              "Clothing": "无 (外骨骼)"
+            },
+            "Personality": {
+              "Alignment": "混乱·中立",
+              "Traits": [
+                "蜂巢意识",
+                "无畏",
+                "嗜血"
+              ],
+              "Analysis": "纯粹的生物机器，仅执行‘回收’与‘排除’指令。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "繁衍",
+                "资源回收"
+              ],
+              "SpeakingStyle": "无语言 (发出刺耳嘶鸣)",
+              "EmotionalBaseline": "虚无",
+              "MotivationCore": "执行上位指令",
+              "RelationshipDynamic": "工具",
+              "SecretOrConflict": null,
+              "RoleplayDirective": "像昆虫一样行动，无视损伤，没有犹豫。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                4,
+                "力量·爆墙级 (撕裂人体)"
+              ],
+              "DUR": [
+                3,
+                "耐力·坚韧 (抗小口径)"
+              ],
+              "VIT": [
+                5,
+                "体质·极高 (生物机器)"
+              ],
+              "REC": [
+                2,
+                "恢复·较快"
+              ],
+              "AGI": [
+                2.5,
+                "敏捷·猎豹级"
+              ],
+              "REF": [
+                2,
+                "反应·本能"
+              ],
+              "PER": [
+                2,
+                "感知·嗅觉/震动"
+              ],
+              "MEN": [
+                1,
+                "精神·无"
+              ],
+              "SOL": [
+                0.5,
+                "灵魂·残缺"
+              ],
+              "CHA": [
+                0.1,
+                "魅力·恐怖"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                1,
+                "弱1★"
+              ],
+              "BurstTier": [
+                1,
+                "无爆发"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                400,
+                "HP"
+              ],
+              "MaxValue": [
+                400,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*50",
+                  "Default"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "Default"
+              ],
+              "Active": [
+                true,
+                "Active"
+              ],
+              "Description": [
+                "标准作战形态",
+                "Desc"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [],
+            "PassiveAbilities": [
+              {
+                "Name": "蜂巢意识 (Hive Mind)",
+                "Type": "种族特性",
+                "Description": "无视恐惧、疼痛与精神干涉。若无上位节点指挥，行动模式降级为单纯的索敌攻击。",
+                "Specs": {
+                  "Desc": [
+                    "精神免疫",
+                    "无痛"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": [
+                {
+                  "ItemName": "硬化异肢",
+                  "Quantity": 1,
+                  "Type": "Natural Weapon",
+                  "Description": "右臂粗壮的角质化前肢，STR判定×1.2，造成穿刺/撕裂伤害。"
+                }
+              ]
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ],
+      "knowledgeNodes": [
+        {
+          "topic": "BETA 兵士级 (Soldier-class)",
+          "type": "Data",
+          "mastery": "初窥",
+          "content": "已确认实体数据：全高2.3m，主要威胁步兵，对装甲无效。弱点为头部感官突起。行动模式单一，但数量是最大威胁。"
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T07:53:11.623Z",
+    "sourceDescription": "BETA (Beings of the Extra Terrestrial origin which is Adversary of human race) 的最小型作战单位。全高约2.3米，外形类人但拥有一大一小两条手臂，头部为特征性的感官突起。它们是BETA群落中的工兵与反步兵单位，虽然对战术机（TSF）不构成威胁，但对人类步兵具有极高致命性。该单位没有独立自我意识，受上位存在（头脑级/重头脑级）的蜂巢意识指挥，不知恐惧与疲倦。"
+  },
+  {
+    "id": "7bc3a71a-29b1-4c25-8dbd-51b2614ccaeb",
+    "createdAt": "2026-03-22T07:06:44.866Z",
     "name": "扭曲的钢筋 (Twisted Rebar)",
     "type": "Inventory",
     "tier": 0,
     "pricePoints": 15,
     "requiredMedals": [],
-    "description": "来源·Muv-Luv废墟 · 物理打击 · 射程1.2m · 简易钝器。从倒塌建筑中抽取的螺纹钢，长约1.2米，表面粗糙且带有混凝土残留。虽然重心不佳且未开刃，但依靠钢材本身的硬度与重量，足以对无防护目标造成骨折级伤害。对于缺乏正规武装的幸存者而言，是优于空手的防身铁仗。",
-    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: [正向] 钢材硬度，可砸碎普通骨骼 → 下限0★ | [反向] 无法击穿防弹衣或外骨骼 → 上限0★\n**1B 属性提纯汇总**\n- 纯物理物品，不提升持有者属性。覆盖维度=0项\n**1C 功能维度判定**\n0维度 → -3星 → 强制下限0★\n**1D 实战模拟裁判**\n持有钢筋的0★普通人 vs 空手0★普通人：钢筋提供攻击距离与硬度优势，胜率>60%，维持0★。\n#### 第二轮\n基准分：100\n- 消耗品/简易品修正：-85% (随处可见的废料，非制式武器)\n最终积分 = 100 × 0.15 = 15\n#### 第三轮\n结论：0★ | 15积分 | 无需徽章",
+    "description": "一根从废墟中抽出的建筑用螺纹钢筋。表面带有混凝土残渣与锈迹，因为某种外力（或纯粹的破坏）而略微弯曲。长度约1.2米，重约3公斤。作为钝器使用时能造成可观的打击伤害，但缺乏平衡性，且面对装甲目标（如BETA外壳）时极易脱手或严重弯曲形变。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\n- STR: 纯物理钝器，依靠使用者发力，本身不提供力量增幅 → 剥离后估算=1.0\n- DUR: 钢铁材质，能承受普通人类极限挥击而不立刻断裂 | 面对战车级BETA的咬合或高周波武器会被瞬间切断/粉碎 → 剥离后估算=1.5~2.0 (仅限物品本身硬度)\n- VIT/REC/AGI/REF/PER/MEN/SOL/CHA: 无任何加成 → 剥离后估算=1.0\n**1B 属性提纯汇总**\n- 纯粹的凡物工具，不为持有者提供任何维度的基础属性提升。\n- 覆盖的属性维度: 0 项\n**1C 功能维度判定**\n- 覆盖0个维度 → -3星\n- 基础星级上限为 0★，调整后强制下限为 0★。\n**1D 实战模拟裁判**\n- 0★人类持此钢筋对战0★空手人类，胜率显著提升，但绝对无法对抗1★（爆墙级）目标。裁判结论：维持 0★。\n基础星级：0★\n#### 第二轮\n基准分：100\n- 潜力 PS=0（凡人废品，无任何超凡成长性）：-30%\n- 材质/前置（随处可见的建筑废料，毫无技术含量）：-55%\n最终积分 = 100 × (1 - 0.30 - 0.55) = 100 × 0.15 = 15\n#### 第三轮\n结论：0★ | 15积分 | 徽章：无\n系统评语：一根毫无美感可言的建筑废料。在绝境中它是你手臂的延伸，但在真正的怪物面前，它比你的骨头硬不了多少。",
     "effects": {
       "inventoryItems": [
         {
           "name": "扭曲的钢筋",
           "type": "Weapon/Blunt",
           "quantity": 1,
-          "description": "双手/单手钝器。攻击判定+10% STR，具有破甲（轻微）效果。耐久度中等，长期使用会弯曲。"
+          "description": "长约1.2米的螺纹钢筋，重约3kg。作为临时近战钝器使用，无任何超凡属性。对无甲目标有较好打击效果，对重甲目标无效且易弯折。"
+        }
+      ],
+      "itemOperations": [
+        {
+          "type": "modify",
+          "targetItemName": "扭曲的钢筋",
+          "itemType": "Inventory",
+          "modifications": [
+            {
+              "field": "Quantity",
+              "newValue": "2",
+              "reason": "获取了另一根相同的钢筋，叠加数量"
+            }
+          ],
+          "rationale": "角色当前已持有一根相同的钢筋，且未明确要求替换或附魔，故作为同类物品获取，数量叠加处理。"
         }
       ]
     },
     "narrativeItemUpdate": true,
-    "narrativeGrantedAt": "2026-03-21T17:20:17.333Z",
-    "sourceDescription": "来源·Muv-Luv废墟 · 物理打击 · 射程1.2m · 简易钝器。从倒塌建筑中抽取的螺纹钢，长约1.2米，表面粗糙且带有混凝土残留。虽然重心不佳且未开刃，但依靠钢材本身的硬度与重量，足以对无防护目标造成骨折级伤害。对于缺乏正规武装的幸存者而言，是优于空手的防身铁仗。"
+    "narrativeRedeemFallback": true,
+    "narrativeGrantedAt": "2026-03-22T07:06:44.866Z",
+    "sourceDescription": "一根从废墟中抽出的建筑用螺纹钢筋。表面带有混凝土残渣与锈迹，因为某种外力（或纯粹的破坏）而略微弯曲。长度约1.2米，重约3公斤。作为钝器使用时能造成可观的打击伤害，但缺乏平衡性，且面对装甲目标（如BETA外壳）时极易脱手或严重弯曲形变。"
+  },
+  {
+    "id": "5507e6a0-d8e7-4707-9f71-3a0b2b2eba80",
+    "createdAt": "2026-03-22T07:03:18.919Z",
+    "name": "BETA 兵士级 (Soldier-class BETA)",
+    "type": "Companion",
+    "tier": 1,
+    "pricePoints": 100,
+    "requiredMedals": [
+      {
+        "stars": 1,
+        "count": 1
+      }
+    ],
+    "description": "来自《Muv-Luv Alternative》宇宙的硅/碳基混合外星生命体（BETA）中的对人特化兵种。全高约2.5米，呈现出如同被剥皮的畸形人类上半身与粗壮下肢结合的恐怖外貌。拥有极其发达的臂力和巨大的口器，能够轻易将身穿强化服的人类士兵连同装甲一起撕碎。此兑换项提供一只脱离主巢网络、受系统契约绝对控制的个体。",
+    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: [能轻易撕裂强化服、掀翻轻型民用车辆]→下限|[无法破坏战术机装甲或重型掩体]→上限|估算=20~30 (2★)\nDUR: [无视普通轻武器射击，需大口径机枪或反器材武器才能有效杀伤]→下限|[被战术机36mm机炮轻易扫碎]→上限|估算=20~30 (2★)\nVIT: [即使失去半数躯体或内脏外露仍能持续攻击]→下限|[被摧毁中枢后彻底死亡]→上限|估算=30\nREC: [无明显快速再生能力]→估算=1.5\nAGI: [奔跑速度超过普通人类，能快速拉近距离]→下限|[远不及截击级或突击级的机动性]→估算=5.0\nREF: [具备野兽般的扑击本能]→估算=4.0\nPER: [能精准感知周围生命体和视觉目标]→估算=5.0\nMEN/SOL/CHA: [作为主巢终端，个体无独立心智，灵魂微弱，外观极其惊悚]→估算=0.1~1.0\n**1B 属性提纯汇总**\n- STR=25, DUR=25, VIT=30, AGI=5, REF=4, PER=5。覆盖维度=6项（分布极不均衡，集中在物理侧）\n**1C 功能维度判定**\n最高属性对应 2★。覆盖6维度且分布不均 → 调整-1星。基础星级 = 1★\n**1D 实战模拟裁判**\n一只兵士级BETA足以屠杀大量0★武装人类，但在面对具备1★破坏力（爆墙级）的重火力或超凡者时会被迅速消灭，符合1★标准。维持 1★\n**1E 内置能力单独评估**\n▶ 碳基强韧肉体 (PassiveAbility)\n独立星级 = 1★ | 免疫轻武器，痛觉遮断 | 整体价格修正贡献: 作为核心面板属性体现。\n基础星级：1★\n#### 第二轮\n基准分：500\n潜力 PS=0：作为量产型生物兵器，个体无任何成长或进化空间（-30%）\n副作用-严重：外观极度惊悚，无法进入任何正常人类社会，且会引起所有人类的本能敌意（-40%）\n前置条件-普通：脱离主巢后仅依靠基础捕食本能行动，战术价值极低（-10%）\n最终积分=500 × (1 - 0.30 - 0.40 - 0.10) = 100\n#### 第三轮\n结论：1★ | 100积分 | 徽章：1×1★",
+    "effects": {
+      "companions": [
+        {
+          "RelationshipSystem": {
+            "Status": "召唤体",
+            "Sentiment": "契约绑定",
+            "Favorability": 50
+          },
+          "UserPanel": {
+            "Name": "BETA 兵士级 (Soldier-class BETA)",
+            "Title": "对人特化种",
+            "Identity": "外星硅/碳基生物兵器",
+            "Appearance": {
+              "Visuals": "全高2.5米，皮肤呈现剥皮般的暗红色肌肉纹理，上半身极度膨胀，双臂粗壮且末端长有巨爪，头部被巨大的布满利齿的口器取代，下肢相对短小但充满爆发力。",
+              "Clothing": "无"
+            },
+            "Personality": {
+              "Alignment": "绝对中立 (生物本能)",
+              "Traits": [
+                "无心智",
+                "嗜血",
+                "服从指令"
+              ],
+              "Analysis": "没有独立思考能力，切断主巢网络后完全依赖系统赋予的底层指令和生物捕食本能行动。"
+            },
+            "PersonalityModel": {
+              "CoreValues": [
+                "消灭契约者指定的碳基目标"
+              ],
+              "SpeakingStyle": "无法发声，仅会发出令人毛骨悚然的嘶吼与骨骼摩擦声",
+              "EmotionalBaseline": "无情绪波动，永远处于攻击或待机状态",
+              "MotivationCore": "执行系统契约指令",
+              "RelationshipDynamic": "将主角视为绝对的'上位节点'，无条件服从，但缺乏保护主人的智能",
+              "SecretOrConflict": null,
+              "RoleplayDirective": "把它当做一台血肉机器，不需要描述它的心理活动，只描述它的残暴动作、血腥气味和令人不适的咀嚼声。"
+            }
+          },
+          "CoreSystem": {
+            "Attributes": {
+              "STR": [
+                25,
+                "力量极大，能徒手撕裂钢板与人类躯体"
+              ],
+              "DUR": [
+                25,
+                "肉体致密，免疫9mm及以下口径枪械"
+              ],
+              "VIT": [
+                30,
+                "生命力极强，无明显致命弱点，需大面积破坏"
+              ],
+              "REC": [
+                1.5,
+                "无超速再生，依赖进食缓慢恢复"
+              ],
+              "AGI": [
+                5,
+                "直线奔跑速度较快，灵活性一般"
+              ],
+              "REF": [
+                4,
+                "基于生物本能的扑击反应"
+              ],
+              "PER": [
+                5,
+                "能敏锐感知周围生命体的活动"
+              ],
+              "MEN": [
+                0.1,
+                "无独立心智，极易被精神类攻击摧毁或无视"
+              ],
+              "SOL": [
+                0.1,
+                "灵魂微弱"
+              ],
+              "CHA": [
+                0.1,
+                "令人作呕的怪物"
+              ]
+            },
+            "Tier": {
+              "NormalTier": [
+                1,
+                "爆墙级战力"
+              ],
+              "BurstTier": [
+                1,
+                "无爆发手段"
+              ]
+            },
+            "SubSystems": []
+          },
+          "DynamicStatus": {
+            "HP": {
+              "Value": [
+                2750,
+                "当前"
+              ],
+              "MaxValue": [
+                2750,
+                "Max"
+              ],
+              "Formula": {
+                "Cap": [
+                  "(VIT+DUR)*50",
+                  "怪物模板公式"
+                ]
+              }
+            },
+            "EnergyPools": [],
+            "CurrentForm": {
+              "Name": [
+                "常态",
+                "形态"
+              ],
+              "Active": [
+                true,
+                "激活"
+              ],
+              "Description": [
+                "基础狩猎形态",
+                "描述"
+              ]
+            }
+          },
+          "Loadout": {
+            "PowerSources": [],
+            "ApplicationTechniques": [],
+            "PassiveAbilities": [
+              {
+                "Name": [
+                  "痛觉遮断与异星躯体",
+                  "Alien Physiology"
+                ],
+                "Type": [
+                  "生物特性",
+                  "Passive"
+                ],
+                "Description": [
+                  "完全没有痛觉，即使失去手臂或下半身也会用剩余部位继续攻击，直到生命体征彻底归零。",
+                  "特性"
+                ],
+                "Specs": {
+                  "Desc": [
+                    "免疫士气崩溃",
+                    "无视轻伤硬直"
+                  ]
+                }
+              }
+            ],
+            "Inventory": {
+              "Equipped": []
+            },
+            "MechanizedUnits": []
+          },
+          "KnowledgeBase": {
+            "Database": {
+              "RootNodes": []
+            }
+          }
+        }
+      ]
+    },
+    "narrativeItemUpdate": true,
+    "narrativeGrantedAt": "2026-03-22T07:03:18.919Z",
+    "sourceDescription": "来自《Muv-Luv Alternative》宇宙的硅/碳基混合外星生命体（BETA）中的对人特化兵种。全高约2.5米，呈现出如同被剥皮的畸形人类上半身与粗壮下肢结合的恐怖外貌。拥有极其发达的臂力和巨大的口器，能够轻易将身穿强化服的人类士兵连同装甲一起撕碎。此兑换项提供一只脱离主巢网络、受系统契约绝对控制的个体。"
   },
   {
     "id": "4f7d7718-88f3-40cb-8125-8a0f083620c6",
@@ -112,38 +4261,6 @@
     "sourceDescription": "99式卫士强化装备",
     "generatedSessionId": "c143713b-36c9-485d-b883-2260835a3d78",
     "sourceWorld": "Muv-Luv (Alternative篇)"
-  },
-  {
-    "id": "a019d075-0b14-48c5-9ec7-aeba75007238",
-    "createdAt": "2026-03-17T11:43:40.003Z",
-    "name": "复合合金消防斧 (Composite Alloy Fire Axe)",
-    "type": "Inventory",
-    "tier": 0,
-    "pricePoints": 100,
-    "requiredMedals": [],
-    "description": "材质全面升级的现代消防斧。斧柄采用轻量化高强度复合材料，斧刃使用高碳合金钢打造，表面经过防锈与防反光处理。相比普通消防斧，它在保持绝佳配重平衡的同时，大幅降低了在连续劈砍丧尸骨骼时卷刃或断柄的风险，是末日求生中极为可靠的近战破拆与自卫工具。",
-    "systemEvaluation": "### 三轮评估报告\n#### 第一轮\n**1A 逐属性表现审查**\nSTR: 纯物理近战武器，不提供使用者力量增幅。估算=1.0\nDUR: 采用复合合金材质，具备极高的结构强度，但不提升使用者肉体耐力。估算=1.0\nVIT: 无毒素/环境抵抗提升。估算=1.0\nREC: 无恢复提升。估算=1.0\nAGI: 武器配重合理，但不提升使用者基础敏捷。估算=1.0\nREF: 无神经反应提升。估算=1.0\nPER: 无感知提升。估算=1.0\nMEN: 无精神力提升。估算=1.0\nSOL: 无灵魂强度提升。估算=1.0\nCHA: 无魅力提升。估算=1.0\n**1B 属性提纯汇总**\n- 纯物品，不提供任何基础属性数值，覆盖维度=0项。\n**1C 功能维度判定**\n覆盖0维度→调整-3星，强制下限0★。\n**1D 实战模拟裁判**\n持有该武器的0★人类对阵空手0★人类，凭借武器致命性优势胜率显著提高（>50%），但其破坏力上限受限于使用者体能，不足以对抗1★（爆墙级）对手。维持 0★。\n基础星级：0★\n#### 第二轮\n触发升级/替换类差价定价规则：\n- 目标版本全价 (T)：复合合金消防斧，材质精良，0★全价估算 T = 150 积分。\n- 现有版本估价 (C)：角色当前持有的普通消防斧，高强度战斗易损耗，0★白板估价 C = 50 积分。\n- 差价 (D)：T - C = 150 - 50 = 100 积分。\n- 修正：无（单纯材质替换，不涉及潜力成长或特殊法则）。\n最终积分 = 100 × (1 + 0) = 100\n#### 第三轮\n结论：0★ | 100积分 | 徽章：无",
-    "effects": {
-      "inventoryItems": [
-        {
-          "name": "复合合金消防斧 (Composite Alloy Fire Axe)",
-          "type": "Weapon",
-          "quantity": 1,
-          "description": "全长约90cm，重约3.5kg。斧柄采用轻量化高强度复合材料，斧刃使用高碳合金钢打造。劈砍丧尸头骨等硬物时极难卷刃，斧柄能承受极大的弯折应力而不断裂。"
-        }
-      ],
-      "itemOperations": [
-        {
-          "type": "delete",
-          "targetItemName": "消防斧",
-          "itemType": "Inventory",
-          "rationale": "升级为复合合金消防斧，原普通消防斧被替换销毁"
-        }
-      ]
-    },
-    "sourceDescription": "复合合金消防斧",
-    "generatedSessionId": "c143713b-36c9-485d-b883-2260835a3d78",
-    "sourceWorld": "学园默示录"
   },
   {
     "id": "5ee34170-555c-4246-8cbc-d4612458e625",

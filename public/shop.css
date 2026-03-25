@@ -334,6 +334,52 @@ body {
 .items-count { font-size: 0.82rem; color: #667; white-space: nowrap; }
 .items-sort { min-width: 76px; flex-shrink: 0; }
 
+/* 商品列表多选批量删除 */
+.items-batch-bar {
+  display: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 14px;
+  margin-bottom: 10px;
+  background: rgba(224, 82, 82, 0.08);
+  border: 1px solid rgba(224, 82, 82, 0.22);
+  border-radius: var(--radius-md);
+}
+.items-batch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-main, #ddeeff);
+  cursor: pointer;
+  user-select: none;
+}
+.items-batch-count {
+  font-size: 0.82rem;
+  color: #e8a0a0;
+  font-family: 'Courier New', monospace;
+}
+
+.item-card-selectable .card-name {
+  padding-left: 26px;
+}
+.card-select-label {
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.card-select-label input {
+  width: 16px;
+  height: 16px;
+  accent-color: #00d4ff;
+  cursor: pointer;
+}
+
 /* ── Items Grid ───────────────────────────────────────────────────────────── */
 .items-grid {
   display: grid;

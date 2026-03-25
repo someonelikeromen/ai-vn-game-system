@@ -12,6 +12,7 @@ const state = {
   generating:   false,
   cart:         [], // Array of itemId strings
   cartOpen:     false,
+  selectedIds:  new Set(), // 商品列表多选删除
 };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
@@ -324,16 +325,44 @@ function renderItems() {
       const text = empty.querySelector('.muted');
       if (text) text.textContent = '输入描述并点击「生成评估」后，这里会出现可兑换条目。';
     }
+    updateItemsBatchBar();
     return;
   }
   if (empty) empty.style.display = 'none';
   grid.innerHTML = '';
   items.forEach((item) => grid.appendChild(buildCard(item)));
+  updateItemsBatchBar();
+}
+
+function updateItemsBatchBar() {
+  const bar = $('itemsBatchBar');
+  const countEl = $('batchSelectedCount');
+  const selAll = $('batchSelectAll');
+  if (!bar || !countEl) return;
+
+  const deletableSelected = Array.from(state.selectedIds).filter((id) => {
+    const it = state.allItems.find((x) => x.id === id);
+    return it && !it.system && !it.baseAnchor;
+  });
+  const n = deletableSelected.length;
+  countEl.textContent = `已选 ${n} 项`;
+  bar.style.display = n > 0 ? 'flex' : 'none';
+
+  if (selAll) {
+    const visible = getFilteredSorted().filter((i) => !i.system && !i.baseAnchor);
+    const selVis = visible.filter((i) => state.selectedIds.has(i.id)).length;
+    selAll.checked = visible.length > 0 && selVis === visible.length;
+    selAll.indeterminate = selVis > 0 && selVis < visible.length;
+  }
 }
 
 function buildCard(item) {
   const card = document.createElement('div');
-  card.className = `item-card ${tierClass(item.tier)}`;
+  const isSystem        = !!item.system;
+  const isWorldTraverse = item.type === 'WorldTraverse';
+  const isBaseAnchor    = !!item.baseAnchor;
+  const canBatchSelect  = !isSystem && !isBaseAnchor;
+  card.className = `item-card ${tierClass(item.tier)}${canBatchSelect ? ' item-card-selectable' : ''}`;
   card.dataset.id = item.id;
 
   // Medal string
@@ -346,10 +375,6 @@ function buildCard(item) {
     .map(([k, v]) => `${k} ${v > 0 ? '+' : ''}${v}`)
     .slice(0, 4).join('  ') || '';
 
-  const isSystem       = !!item.system;
-  const isWorldTraverse = item.type === 'WorldTraverse';
-  const isBaseAnchor   = !!item.baseAnchor;
-
   const poolCount = isBaseAnchor ? (state.archiveCounts?.[item.tierRange] || 0) : 0;
   const poolBadge = isBaseAnchor
     ? `<div class="card-pool-badge ${poolCount > 0 ? 'pool-ok' : 'pool-empty'}">
@@ -358,6 +383,7 @@ function buildCard(item) {
     : '';
 
   card.innerHTML = `
+    ${canBatchSelect ? `<label class="card-select-label" title="多选删除"><input type="checkbox" class="card-select-cb" data-select-id="${item.id}" ${state.selectedIds.has(item.id) ? 'checked' : ''}></label>` : ''}
     <div class="card-tier-badge ${tierClass(item.tier)}">${tierStars(item.tier)}</div>
     ${isSystem && !isBaseAnchor ? '<div class="card-system-badge">🔒 系统</div>' : ''}
     <div class="card-name">${escHtml(item.name || '未命名')}</div>
@@ -468,6 +494,16 @@ function bindEvents() {
   });
 
   // Card actions (delegated)
+  $('itemsGrid').addEventListener('change', (e) => {
+    const cb = e.target;
+    if (!cb.classList?.contains('card-select-cb')) return;
+    const id = cb.dataset.selectId;
+    if (!id) return;
+    if (cb.checked) state.selectedIds.add(id);
+    else state.selectedIds.delete(id);
+    updateItemsBatchBar();
+  });
+
   $('itemsGrid').addEventListener('click', (e) => {
     const el = e.target;
     const id = el.dataset.id;
@@ -476,6 +512,22 @@ function bindEvents() {
     if (el.classList.contains('btn-redeem'))    quickRedeem(id);
     if (el.classList.contains('btn-delete'))    deleteItem(id);
     if (el.classList.contains('btn-add-cart'))  toggleCart(id);
+  });
+
+  $('batchSelectAll')?.addEventListener('change', (e) => {
+    const visible = getFilteredSorted().filter((i) => !i.system && !i.baseAnchor);
+    if (e.target.checked) {
+      visible.forEach((i) => state.selectedIds.add(i.id));
+    } else {
+      visible.forEach((i) => state.selectedIds.delete(i.id));
+    }
+    renderItems();
+  });
+
+  $('btnBatchDelete')?.addEventListener('click', () => deleteItemsBatch());
+  $('btnBatchClear')?.addEventListener('click', () => {
+    state.selectedIds.clear();
+    renderItems();
   });
 
   // Modal
@@ -1621,10 +1673,42 @@ async function deleteItem(itemId) {
     const resp = await fetch(`/api/shop/items/${itemId}`, { method: 'DELETE' });
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) { toast(data.error || '删除失败', true); return; }
+    state.selectedIds.delete(itemId);
     state.allItems = state.allItems.filter((i) => i.id !== itemId);
     renderItems();
     closeModal();
     toast('已删除');
+  } catch (err) {
+    toast(`删除出错: ${err.message}`, true);
+  }
+}
+
+async function deleteItemsBatch() {
+  const ids = Array.from(state.selectedIds).filter((id) => {
+    const it = state.allItems.find((x) => x.id === id);
+    return it && !it.system && !it.baseAnchor;
+  });
+  if (!ids.length) {
+    toast('请选择要删除的商品（系统项与随机锚点不可选）', true);
+    return;
+  }
+  if (!await confirmRisk({
+    title:   '批量删除',
+    message: `确认删除已选的 ${ids.length} 件商品？此操作不可恢复。`,
+    confirmText: '确认删除',
+  })) return;
+  try {
+    const resp = await fetch('/api/shop/items/batch-delete', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ ids }),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) { toast(data.error || '批量删除失败', true); return; }
+    ids.forEach((id) => state.selectedIds.delete(id));
+    await loadItems();
+    closeModal();
+    toast(`已删除 ${data.removed ?? ids.length} 件`);
   } catch (err) {
     toast(`删除出错: ${err.message}`, true);
   }

@@ -127,6 +127,13 @@
       </select>
     </div>
 
+    <div id="itemsBatchBar" class="items-batch-bar" style="display:none" aria-live="polite">
+      <label class="items-batch-label"><input type="checkbox" id="batchSelectAll" /> 全选当前列表</label>
+      <span id="batchSelectedCount" class="items-batch-count">已选 0</span>
+      <button type="button" id="btnBatchDelete" class="btn btn-danger btn-sm">删除选中</button>
+      <button type="button" id="btnBatchClear" class="btn btn-ghost btn-sm">取消选择</button>
+    </div>
+
     <div id="itemsGrid" class="items-grid">
       <div class="items-empty" id="emptyState">
         <div class="empty-icon">🏪</div>
