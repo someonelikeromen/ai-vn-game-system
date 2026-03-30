@@ -32,17 +32,14 @@ if %errorlevel% neq 0 (
 
 echo  [1/3] 正在拉取最新代码...
 echo.
-git pull
+echo  （若有本地修改：可按「脚本 / JSON / 代码 / 其他」分别选择覆盖或保留）
+echo.
+node scripts/update-pull.js
 if %errorlevel% neq 0 (
     echo.
-    echo  [错误] 代码更新失败！
-    echo  可能原因：
-    echo    - 网络连接问题
-    echo    - 本地有未提交的修改（如手动改过代码）
-    echo.
-    echo  如果你修改过本地文件，可以尝试先运行：
-    echo    git stash
-    echo  然后再双击本脚本重试。
+    echo  [错误] 代码更新未完成。
+    echo  若因本地有修改：请在 CMD 中运行本目录下的 update.bat 以便选择选项，
+    echo  或先自行用 git stash / git commit 处理后再试。
     echo.
     pause
     exit /b 1
