@@ -294,7 +294,11 @@ async function main() {
 
   console.log('\n更新流程结束。');
   if (overwriteFiles.length) console.log(`  · 已用远端覆盖：${overwriteFiles.length} 个文件`);
-  if (keepFiles.length) console.log(`  · 已保留本地：${keepFiles.length} 个文件`);
+  if (keepFiles.length) {
+    console.log(`  · 已保留本地：${keepFiles.length} 个文件`);
+    console.log('\n说明：选择「保留本地」的文件并未提交，执行 git status 时仍可能显示为 modified，这是正常现象。');
+    console.log('若希望工作区干净，可自行 git add / git commit，或改选「远端覆盖」。');
+  }
   process.exit(0);
 }
 
