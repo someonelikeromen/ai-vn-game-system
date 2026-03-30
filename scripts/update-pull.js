@@ -107,17 +107,18 @@ function stashPullPop() {
   }
   const hadStash = st.status === 0 && !noLocal;
 
-  const pull = spawnSync('git', ['pull'], { stdio: 'inherit', cwd: ROOT, shell: process.platform === 'win32' });
+  // 勿对 git 使用 shell:true（Windows 下易导致参数被错误拼接，checkout 静默失败）
+  const pull = spawnSync('git', ['pull'], { stdio: 'inherit', cwd: ROOT });
   if (pull.status !== 0) {
     console.error('\n[错误] git pull 失败。');
     if (hadStash) {
-      spawnSync('git', ['stash', 'pop'], { stdio: 'inherit', cwd: ROOT, shell: process.platform === 'win32' });
+      spawnSync('git', ['stash', 'pop'], { stdio: 'inherit', cwd: ROOT });
     }
     process.exit(1);
   }
 
   if (hadStash) {
-    const pop = spawnSync('git', ['stash', 'pop'], { stdio: 'inherit', cwd: ROOT, shell: process.platform === 'win32' });
+    const pop = spawnSync('git', ['stash', 'pop'], { stdio: 'inherit', cwd: ROOT });
     if (pop.status !== 0) {
       console.error('\n[提示] git stash pop 出现冲突，请手动解决后继续使用仓库。');
       process.exit(1);
@@ -128,7 +129,7 @@ function stashPullPop() {
 function checkoutRemotePaths(upstream, relPaths) {
   if (!relPaths.length) return;
   const args = ['checkout', upstream, '--', ...relPaths];
-  const r = spawnSync('git', args, { stdio: 'inherit', cwd: ROOT, shell: process.platform === 'win32' });
+  const r = spawnSync('git', args, { stdio: 'inherit', cwd: ROOT });
   if (r.status !== 0) {
     console.error(`\n[错误] 无法从 ${upstream} 检出指定文件。`);
     process.exit(1);
@@ -245,7 +246,7 @@ function collectByDecision(buckets, decisions) {
 async function main() {
   process.chdir(ROOT);
 
-  const fetchR = spawnSync('git', ['fetch'], { stdio: 'inherit', cwd: ROOT, shell: process.platform === 'win32' });
+  const fetchR = spawnSync('git', ['fetch'], { stdio: 'inherit', cwd: ROOT });
   if (fetchR.status !== 0) {
     console.error('\n[错误] git fetch 失败，请检查网络与远程配置。');
     process.exit(1);
@@ -255,7 +256,7 @@ async function main() {
   const upstream = getUpstreamBranch();
 
   if (modified.length === 0) {
-    const pull = spawnSync('git', ['pull'], { stdio: 'inherit', cwd: ROOT, shell: process.platform === 'win32' });
+    const pull = spawnSync('git', ['pull'], { stdio: 'inherit', cwd: ROOT });
     process.exit(pull.status === 0 ? 0 : 1);
   }
 
@@ -269,7 +270,7 @@ async function main() {
   }
 
   if (mode === 'hard-reset') {
-    const r = spawnSync('git', ['reset', '--hard', upstream], { stdio: 'inherit', cwd: ROOT, shell: process.platform === 'win32' });
+    const r = spawnSync('git', ['reset', '--hard', upstream], { stdio: 'inherit', cwd: ROOT });
     process.exit(r.status === 0 ? 0 : 1);
   }
 
