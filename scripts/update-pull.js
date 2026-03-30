@@ -73,6 +73,74 @@ function getUpstreamBranch() {
   return `origin/${b}`;
 }
 
+/** 未纳入 Git 但会被 pull/merge 写入同路径时，Git 会直接中止；需先处理 */
+const UNTRACKED_BACKUP_SUFFIX = '.ai-vn-untracked-backup';
+
+function getUntrackedFiles() {
+  const r = spawnSync('git', ['ls-files', '-o', '--exclude-standard', '-z'], {
+    encoding: 'utf8',
+    cwd: ROOT,
+  });
+  if (r.status !== 0) return [];
+  const out = r.stdout || '';
+  if (!out) return [];
+  return out.split('\0').map((s) => s.trim()).filter(Boolean);
+}
+
+/** 远端 ref 的树里是否存在该路径（blob） */
+function remoteTreeHasPath(upstream, relPosix) {
+  const spec = `${upstream}:${relPosix}`;
+  const r = spawnSync('git', ['cat-file', '-e', spec], { encoding: 'utf8', cwd: ROOT });
+  return r.status === 0;
+}
+
+/**
+ * 备份并删除「未跟踪但与远端同路径」的文件，避免 pull 报错：
+ * The following untracked working tree files would be overwritten by merge
+ */
+function prepareWorkingTreeForPull(upstream) {
+  const untracked = getUntrackedFiles();
+  if (!untracked.length) return;
+
+  const moved = [];
+  for (const rel of untracked) {
+    const posix = toPosix(rel);
+    if (!remoteTreeHasPath(upstream, posix)) continue;
+
+    const abs = path.join(ROOT, rel);
+    let st;
+    try {
+      st = fs.statSync(abs);
+    } catch (_) {
+      continue;
+    }
+    if (!st.isFile()) continue;
+
+    const backupAbs = abs + UNTRACKED_BACKUP_SUFFIX;
+    try {
+      fs.copyFileSync(abs, backupAbs);
+      fs.unlinkSync(abs);
+      moved.push({
+        rel: posix,
+        backup: toPosix(path.relative(ROOT, backupAbs)),
+      });
+    } catch (e) {
+      console.error(`[错误] 无法处理与远端冲突的未跟踪文件：${posix}`);
+      console.error(e.message || e);
+      process.exit(1);
+    }
+  }
+
+  if (moved.length) {
+    console.log('\n[提示] 以下路径在本地为「未跟踪」，但远端仓库已有同名文件（常见于事先手动复制过脚本）。');
+    console.log('已备份并临时移除，以便 git pull 能继续；拉取完成后将使用仓库内版本。\n');
+    moved.forEach(({ rel, backup }) => {
+      console.log(`  · ${rel}`);
+      console.log(`    备份：${backup}（不需要时可删除该备份文件）\n`);
+    });
+  }
+}
+
 function readBackups(relPaths) {
   const backups = new Map();
   for (const rel of relPaths) {
@@ -254,6 +322,7 @@ async function main() {
 
   const modified = getModifiedFiles();
   const upstream = getUpstreamBranch();
+  prepareWorkingTreeForPull(upstream);
 
   if (modified.length === 0) {
     const pull = spawnSync('git', ['pull'], { stdio: 'inherit', cwd: ROOT });
