@@ -37,7 +37,7 @@ if errorlevel 1 (
   if exist "scripts\update-pull.js" (
     echo.
     echo  [提示] 检测到未入库的 scripts\update-pull.js（例如他人单独发来的更新脚本）。
-    echo        已备份为 scripts\update-pull.js.ai-vn-untracked-backup 并移除，随后从仓库拉取正式版。
+    echo        已备份为 scripts\update-pull.js.ai-vn-untracked-backup 并移除，随后仅从远程检出该文件。
     echo.
     copy /Y "scripts\update-pull.js" "scripts\update-pull.js.ai-vn-untracked-backup" >nul
     if errorlevel 1 (
@@ -49,11 +49,22 @@ if errorlevel 1 (
   )
 )
 if not exist "scripts\update-pull.js" (
-  echo  [引导] 正在拉取仓库以获取 scripts\update-pull.js ...
-  git pull
+  echo  [引导] 正在 fetch 并仅从远程检出 scripts\update-pull.js …
+  echo        （不执行整库 pull/merge，避免与你其他已修改文件冲突；完整更新仍由下一步 Node 脚本处理。）
+  echo.
+  git fetch origin
   if %errorlevel% neq 0 (
     echo.
-    echo  [错误] 引导拉取失败（可能仍有本地修改冲突）。请在项目目录手动 git pull 解决后再运行本脚本。
+    echo  [错误] git fetch 失败，请检查网络与远程 origin。
+    pause
+    exit /b 1
+  )
+  git checkout FETCH_HEAD -- scripts/update-pull.js
+  if %errorlevel% neq 0 (
+    echo.
+    echo  [错误] 无法检出该文件。可手动在项目根目录执行：
+    echo    git fetch origin
+    echo    git checkout FETCH_HEAD -- scripts/update-pull.js
     pause
     exit /b 1
   )
