@@ -30,6 +30,36 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+:: 若单独拷贝过 scripts\update-pull.js（未 git add），git pull 会报「未跟踪文件将被覆盖」；
+:: 脚本逻辑又在 update-pull.js 里，形成死锁。先备份移除，再拉取仓库里的正式版本。
+git ls-files --error-unmatch scripts/update-pull.js >nul 2>&1
+if errorlevel 1 (
+  if exist "scripts\update-pull.js" (
+    echo.
+    echo  [提示] 检测到未入库的 scripts\update-pull.js（例如他人单独发来的更新脚本）。
+    echo        已备份为 scripts\update-pull.js.ai-vn-untracked-backup 并移除，随后从仓库拉取正式版。
+    echo.
+    copy /Y "scripts\update-pull.js" "scripts\update-pull.js.ai-vn-untracked-backup" >nul
+    if errorlevel 1 (
+      echo  [错误] 无法备份，请手动移走或重命名 scripts\update-pull.js 后再运行。
+      pause
+      exit /b 1
+    )
+    del "scripts\update-pull.js"
+  )
+)
+if not exist "scripts\update-pull.js" (
+  echo  [引导] 正在拉取仓库以获取 scripts\update-pull.js ...
+  git pull
+  if %errorlevel% neq 0 (
+    echo.
+    echo  [错误] 引导拉取失败（可能仍有本地修改冲突）。请在项目目录手动 git pull 解决后再运行本脚本。
+    pause
+    exit /b 1
+  )
+  echo.
+)
+
 echo  [1/3] 正在拉取最新代码...
 echo.
 echo  （若有本地修改：可按「脚本 / JSON / 代码 / 其他」分别选择覆盖或保留）
