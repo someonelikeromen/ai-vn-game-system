@@ -363,6 +363,9 @@ function registerRoutes(app, deps) {
         reviewRound1:       data.reviewRound1 || '',
         reviewRound2:       data.reviewRound2 || '',
         reviewRound3:       data.reviewRound3 || '',
+        requiredMedals:     Array.isArray(data.requiredMedals) ? data.requiredMedals : [],
+        systemEvaluation:   data.systemEvaluation || '',
+        effects:            data.effects && typeof data.effects === 'object' ? data.effects : {},
       });
       log.shop('SAVED', `${savedItem.name} | ${savedItem.tier}★ | ${savedItem.pricePoints}pt`);
       res.json({ ok: true, item: savedItem });

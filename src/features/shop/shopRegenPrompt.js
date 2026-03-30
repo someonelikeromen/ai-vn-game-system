@@ -46,6 +46,11 @@ const FIELD_SCHEMAS = {
     schema: '{ "rationale": "定价依据文本" }',
     hint:   '说明该星级/定价的具体理由，引用比较对象',
   },
+  systemEvaluation: {
+    label:  '三轮评估报告',
+    schema: '{ "systemEvaluation": "含第一轮属性审查、第二轮计价、第三轮结论的完整 Markdown 文本" }',
+    hint:   '保持与卷一评估协议一致的结构化报告，可含 1A/1B/1C/1D、基准分与徽章结论',
+  },
 };
 
 function buildItemContext(item) {

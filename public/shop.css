@@ -3036,6 +3036,21 @@ html.theme-light .api-indicator { color: #5878a0; }
 .preview-edit-ta { min-height: 80px; font-size: 0.9rem; padding: 10px; border-radius: 8px; background: #05050a; border: 1px solid rgba(100,150,255,0.2); color: #e2e8f0; }
 .preview-field-actions { display: flex; gap: 8px; }
 
+.preview-effects-block {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.preview-effects-block .preview-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #6a8aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 12px;
+}
+.preview-effects-block .eff-items-list { max-height: 420px; overflow-y: auto; }
+
 .preview-regen-btn {
   opacity: 0.5;
   padding: 1px 5px;

@@ -1008,15 +1008,16 @@ function streamGenerate(description, sessionId, count = 1, streamEnabled = true,
 // ── Item Preview (生成后预览 + 可编辑 + 单字段重新生成) ────────────────────────────
 
 const ITEM_FIELDS_LABEL = {
-  name:         '名称',
-  description:  '效果描述',
-  appearance:   '外观描述',
-  abilities:    '能力列表',
-  restrictions: '限制条件',
-  sideEffects:  '副作用',
-  antiFeats:    '反壮举',
-  lore:         '背景设定',
-  rationale:    '定价依据',
+  name:               '名称',
+  description:        '效果描述',
+  appearance:         '外观描述',
+  abilities:          '能力列表',
+  restrictions:       '限制条件',
+  sideEffects:        '副作用',
+  antiFeats:          '反壮举',
+  lore:               '背景设定',
+  rationale:          '定价依据',
+  systemEvaluation:   '三轮评估报告',
 };
 
 /** 把一个预览项追加到 #genItemPreviewCol */
@@ -1068,6 +1069,14 @@ function buildItemPreviewHtml(item, index) {
         </div>`;
     }).join('');
 
+  const effRows   = collectShopEffectRows(item.effects);
+  const effPreview = effRows.length
+    ? `<div class="preview-effects-block">
+        <h3 class="preview-section-title">获得内容（兑换时写入存档的结构）</h3>
+        <div class="eff-items-list">${renderShopEffectRowsHtml(effRows)}</div>
+      </div>`
+    : '';
+
   return `
     <div class="preview-card-header">
       <div class="preview-card-meta">
@@ -1082,6 +1091,7 @@ function buildItemPreviewHtml(item, index) {
       </div>
     </div>
     <div class="preview-fields">${fields}</div>
+    ${effPreview}
     <div class="preview-regen-status" style="display:none">
       <div class="gen-spinner" style="display:inline-block;width:14px;height:14px"></div>
       <span class="preview-regen-text">重新生成中…</span>
@@ -1817,7 +1827,7 @@ function bindDetailRegenEvents(itemId) {
       const FIELD_LABELS = {
         description: '效果描述', appearance: '外观描述', abilities: '能力列表',
         restrictions: '限制条件', sideEffects: '副作用', antiFeats: '反壮举',
-        lore: '背景设定', rationale: '定价依据',
+        lore: '背景设定', rationale: '定价依据', systemEvaluation: '三轮评估报告',
       };
       const xhr = new XMLHttpRequest();
       xhr.open('POST', `/api/shop/items/${itemId}/regen-field`);
@@ -1910,6 +1920,7 @@ function detailRegenPanel() {
           <option value="antiFeats">反壮举</option>
           <option value="lore">背景设定</option>
           <option value="rationale">定价依据</option>
+          <option value="systemEvaluation">三轮评估报告</option>
         </select>
         <input type="text" id="detailRegenHint" class="gen-textarea" style="min-height:unset;height:32px;flex:1" placeholder="附加提示词（可选）">
         <button class="btn btn-sm btn-primary" id="btnDetailRegen">🔄 重新生成</button>
@@ -2619,6 +2630,38 @@ function buildLoadoutCompare(item, sessionStat) {
 </div>`;
 }
 
+/** LLM `effects` 对象 → 与详情页一致的展示行（被动/物品/流派/招式等） */
+function collectShopEffectRows(effects) {
+  if (!effects || typeof effects !== 'object') return [];
+  const effRows = [];
+  (effects.newEnergyPools || []).forEach((p) => effRows.push({ tag: '能量池', cls: 'tag-pool', name: `${p.name} (0 / ${p.max})`, desc: p.description || '' }));
+  (effects.passiveAbilities || []).forEach((a) => effRows.push({ tag: '被动', cls: 'tag-passive', name: a.name || '?', desc: a.description || '' }));
+  (effects.powerSources || []).forEach((p) => effRows.push({ tag: '基盘', cls: 'tag-ps', name: `${p.name}${p.initialRealm ? ` [${p.initialRealm}]` : ''}`, desc: p.description || '' }));
+  (effects.applicationTechniques || []).forEach((t) => {
+    const schoolName = t.schoolName || t.name || '?';
+    effRows.push({ tag: '流派', cls: 'tag-tech', name: schoolName, desc: t.description || '' });
+    (t.subTechniques || []).forEach((s) => {
+      const lvl = s.proficiencyLevel ? `[${s.proficiencyLevel}] ` : '';
+      const cost = s.costInitial && s.costInitial !== '无消耗' ? ` | 消耗：${s.costInitial}` : '';
+      const cd = s.cooldown && s.cooldown !== '无' ? ` | 冷却：${s.cooldown}` : '';
+      effRows.push({ tag: '招式', cls: 'tag-submove', name: `${lvl}${s.name || '?'}`, desc: `${s.desc || s.description || ''}${cost}${cd}` });
+    });
+  });
+  (effects.inventoryItems || []).forEach((i) => effRows.push({ tag: '物品', cls: 'tag-inv', name: `${i.name} ×${i.quantity || 1}`, desc: i.description || '' }));
+  (effects.knowledgeNodes || []).forEach((n) => effRows.push({ tag: '知识', cls: 'tag-know', name: n.topic || '?', desc: n.content || '' }));
+  return effRows;
+}
+
+function renderShopEffectRowsHtml(effRows) {
+  return effRows.map((e) => `<div class="eff-item ${e.cls}">
+    <div class="eff-item-header">
+      <span class="eff-item-tag">${e.tag}</span>
+      <span class="eff-item-name">${escHtml(e.name)}</span>
+    </div>
+    ${e.desc ? `<div class="eff-item-desc">${escHtml(e.desc)}</div>` : ''}
+  </div>`).join('');
+}
+
 function buildAbilityDetailHtml(item, sessionStat) {
   const medStr  = (item.requiredMedals || []).map((m) => `${m.stars}星徽章 × ${m.count}`).join(' + ') || '无需徽章';
   const attrs   = item.effects?.attributeDeltas || {};
@@ -2627,31 +2670,8 @@ function buildAbilityDetailHtml(item, sessionStat) {
     .map(([k, v]) => `<span class="attr-delta ${v > 0 ? 'pos' : 'neg'}">${k} ${v > 0 ? '+' : ''}${v}</span>`)
     .join('');
 
-  // Build enhanced effect rows (label + name + full description)
-  const effRows = [];
-  (item.effects?.newEnergyPools    || []).forEach((p) => effRows.push({ tag: '能量池', cls: 'tag-pool',    name: `${p.name} (0 / ${p.max})`,          desc: p.description || '' }));
-  (item.effects?.passiveAbilities  || []).forEach((a) => effRows.push({ tag: '被动',   cls: 'tag-passive', name: a.name || '?',                       desc: a.description || '' }));
-  (item.effects?.powerSources      || []).forEach((p) => effRows.push({ tag: '基盘',   cls: 'tag-ps',      name: `${p.name}${p.initialRealm ? ` [${p.initialRealm}]` : ''}`, desc: p.description || '' }));
-  (item.effects?.applicationTechniques || []).forEach((t) => {
-    const schoolName = t.schoolName || t.name || '?';
-    effRows.push({ tag: '流派', cls: 'tag-tech', name: schoolName, desc: t.description || '' });
-    (t.subTechniques || []).forEach((s) => {
-      const lvl = s.proficiencyLevel ? `[${s.proficiencyLevel}] ` : '';
-      const cost = s.costInitial && s.costInitial !== '无消耗' ? ` | 消耗：${s.costInitial}` : '';
-      const cd   = s.cooldown && s.cooldown !== '无' ? ` | 冷却：${s.cooldown}` : '';
-      effRows.push({ tag: '招式', cls: 'tag-submove', name: `${lvl}${s.name || '?'}`, desc: `${s.desc || s.description || ''}${cost}${cd}` });
-    });
-  });
-  (item.effects?.inventoryItems    || []).forEach((i) => effRows.push({ tag: '物品',   cls: 'tag-inv',     name: `${i.name} ×${i.quantity || 1}`,     desc: i.description || '' }));
-  (item.effects?.knowledgeNodes    || []).forEach((n) => effRows.push({ tag: '知识',   cls: 'tag-know',    name: n.topic || '?',                      desc: n.content || '' }));
-
-  const effH = effRows.map((e) => `<div class="eff-item ${e.cls}">
-    <div class="eff-item-header">
-      <span class="eff-item-tag">${e.tag}</span>
-      <span class="eff-item-name">${escHtml(e.name)}</span>
-    </div>
-    ${e.desc ? `<div class="eff-item-desc">${escHtml(e.desc)}</div>` : ''}
-  </div>`).join('');
+  const effRows = collectShopEffectRows(item.effects);
+  const effH    = renderShopEffectRowsHtml(effRows);
 
   const opsCompareH = buildItemOpsCompare(item, sessionStat);
   const compareH    = buildLoadoutCompare(item, sessionStat);
