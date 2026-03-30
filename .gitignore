@@ -11,6 +11,9 @@ data/characters.json
 data/world-archives.json
 # 商城商品列表（本地生成，不参与仓库分发）
 data/shop-items.json
+# Beta 导出脚本与数据（本地工具输出）
+data/beta-items-export.json
+scripts/export-beta.js
 server-out.txt
 server-err.txt
 server.log
