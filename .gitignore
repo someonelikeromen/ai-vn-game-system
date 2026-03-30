@@ -9,6 +9,8 @@ data/logs/
 data/sessions/
 data/characters.json
 data/world-archives.json
+# 商城商品列表（本地生成，不参与仓库分发）
+data/shop-items.json
 server-out.txt
 server-err.txt
 server.log
