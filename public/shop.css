@@ -866,6 +866,11 @@ body {
 .comp-ability.comp-mech-body { border-left-color: #e08a52; background: rgba(224,138,82,0.05); }
 .comp-ab-tag { font-size: 0.68rem; background: rgba(0,180,255,0.08); padding: 1px 6px; border-radius: 8px; margin-right: 6px; color: rgba(0,180,255,0.6); font-family: 'Courier New', monospace; }
 .comp-ab-name { font-size: 0.84rem; color: #ddeeff; font-weight: 600; }
+.comp-ab-name-wrap, .comp-ab-desc-wrap { min-width: 0; }
+/* SillyTavern [值, 键名, …] 分行，不合并为一串 */
+.st-tuple-block { display: flex; flex-direction: column; gap: 3px; }
+.st-tuple-line.st-tuple-primary { font-weight: 600; color: #ddeeff; font-size: 0.84rem; line-height: 1.45; }
+.st-tuple-line.st-tuple-meta { font-size: 0.74rem; color: #7a9aaa; line-height: 1.4; }
 .comp-ab-desc { font-size: 0.79rem; color: rgba(0,180,255,0.45); line-height: 1.55; margin-top: 4px; }
 .dc-eval { margin-top: 10px; }
 .redeemed-badge { color: #00ff88 !important; }
@@ -923,7 +928,10 @@ body {
 .eff-item.tag-submove { border-left-color: #4a3a6a; margin-left: 14px; }
 .eff-item.tag-inv     { border-left-color: #3a7a4a; }
 .eff-item.tag-know    { border-left-color: #5a7a4a; }
-.eff-item-header { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.eff-item-header { display: flex; align-items: flex-start; gap: 7px; flex-wrap: wrap; }
+.eff-item-name.eff-item-tuple { flex: 1; min-width: 0; }
+.eff-item-desc.eff-item-tuple { width: 100%; margin-top: 4px; padding-left: 2px; }
+.mech-wp-tuple .st-tuple-block, .mech-sys-name.mech-wp-tuple .st-tuple-block { margin: 0; }
 .eff-item-tag  { font-size: 0.68rem; background: #1e1e30; padding: 1px 6px; border-radius: 8px; color: #7a8ab0; white-space: nowrap; }
 .eff-item-name { font-size: 0.85rem; color: #c8d0da; font-weight: 600; }
 .eff-item-desc { font-size: 0.79rem; color: #7888a0; line-height: 1.55; margin-top: 5px; }

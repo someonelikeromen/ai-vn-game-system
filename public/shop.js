@@ -1929,6 +1929,29 @@ function gv(obj, key, fallback = '') {
   return Array.isArray(v) ? v[0] : (v ?? fallback);
 }
 
+/**
+ * SillyTavern 式 [主值, 字段键, …]：每项单独一行展示，不合并为「a,b」字符串。
+ * 非数组则单行。
+ */
+function tupleToLinesHtml(raw) {
+  if (raw == null || raw === '') return '';
+  if (Array.isArray(raw)) {
+    if (raw.length === 0) return '';
+    return `<div class="st-tuple-block">${raw.map((x, i) =>
+      `<div class="st-tuple-line ${i === 0 ? 'st-tuple-primary' : 'st-tuple-meta'}">${escHtml(String(x))}</div>`
+    ).join('')}</div>`;
+  }
+  return `<div class="st-tuple-block"><div class="st-tuple-line st-tuple-primary">${escHtml(String(raw))}</div></div>`;
+}
+
+function rawField(obj, ...keys) {
+  if (!obj) return '';
+  for (const k of keys) {
+    if (obj[k] !== undefined && obj[k] !== null) return obj[k];
+  }
+  return '';
+}
+
 // Shared: session selector + action bar
 function detailActions(item) {
   const sessOptions = state.sessions.map(
@@ -1992,23 +2015,23 @@ function normalizeCompanionSubMoves(tech) {
   const st = tech.subTechniques;
   if (Array.isArray(st) && st.length) {
     return st.map((s) => ({
-      name: s.name || '?',
-      desc: s.desc || s.description || '',
+      nameRaw: s.Name ?? s.name,
+      descRaw: s.Description ?? s.desc ?? s.description,
       mechanicsText: formatLoadoutMechanics(s.Mechanics || s.mechanics),
     }));
   }
   const sm = tech.SubMoves;
   if (sm && typeof sm === 'object' && !Array.isArray(sm)) {
     return Object.entries(sm).map(([key, entry]) => ({
-      name: gv(entry, 'Name') || entry?.name || key,
-      desc: gv(entry, 'Description') || entry?.description || '',
+      nameRaw: entry?.Name ?? entry?.name ?? key,
+      descRaw: entry?.Description ?? entry?.description ?? '',
       mechanicsText: formatLoadoutMechanics(entry?.Mechanics || entry?.mechanics),
     }));
   }
   if (Array.isArray(sm) && sm.length) {
     return sm.map((entry) => ({
-      name: gv(entry, 'Name') || entry?.name || '?',
-      desc: gv(entry, 'Description') || entry?.description || '',
+      nameRaw: entry?.Name ?? entry?.name ?? '?',
+      descRaw: entry?.Description ?? entry?.description ?? '',
       mechanicsText: formatLoadoutMechanics(entry?.Mechanics || entry?.mechanics),
     }));
   }
@@ -2032,24 +2055,25 @@ function formatLoadoutMechanics(m) {
 }
 
 function buildCompanionApplicationTechniqueHtml(tech) {
-  const name = gv(tech, 'Name') || tech.name || '?';
-  const school = gv(tech, 'School') || tech.school || '';
-  const parent = gv(tech, 'ParentSource') || tech.parentSource || '';
-  const desc = gv(tech, 'Description') || tech.description || '';
+  const nameRaw = tech.Name ?? tech.name;
+  const schoolRaw = tech.School ?? tech.school;
+  const parentRaw = tech.ParentSource ?? tech.parentSource;
+  const descRaw = tech.Description ?? tech.description;
   const subs = normalizeCompanionSubMoves(tech);
   const subHtml = subs.length
     ? `<div class="comp-submoves">${subs.map((s) => `
     <div class="comp-submove">
-      <span class="comp-submove-name">${escHtml(s.name)}</span>
-      ${s.desc ? `<div class="comp-submove-desc">${escHtml(s.desc)}</div>` : ''}
+      ${tupleToLinesHtml(s.nameRaw == null || s.nameRaw === '' ? '?' : s.nameRaw)}
+      ${s.descRaw != null && s.descRaw !== '' ? `<div class="comp-submove-desc">${tupleToLinesHtml(s.descRaw)}</div>` : ''}
       ${s.mechanicsText ? `<div class="comp-submove-mech">${escHtml(s.mechanicsText)}</div>` : ''}
     </div>`).join('')}</div>`
     : '';
   return `<div class="comp-ability tag-tech comp-tech-expanded">
     <span class="comp-ab-tag">技巧</span>
-    <span class="comp-ab-name">${escHtml(name)}${school ? ` <span class="comp-tech-school">(${escHtml(school)})</span>` : ''}</span>
-    ${parent ? `<div class="comp-tech-parent">基盘：${escHtml(parent)}</div>` : ''}
-    ${desc ? `<div class="comp-ab-desc">${escHtml(desc)}</div>` : ''}
+    <div class="comp-ab-name-wrap">${tupleToLinesHtml(nameRaw == null || nameRaw === '' ? '?' : nameRaw)}</div>
+    ${schoolRaw != null && schoolRaw !== '' ? `<div class="comp-tech-school-wrap">${tupleToLinesHtml(schoolRaw)}</div>` : ''}
+    ${parentRaw != null && parentRaw !== '' ? `<div class="comp-tech-parent">${tupleToLinesHtml(parentRaw)}</div>` : ''}
+    ${descRaw != null && descRaw !== '' ? `<div class="comp-ab-desc-wrap">${tupleToLinesHtml(descRaw)}</div>` : ''}
     ${subHtml}
   </div>`;
 }
@@ -2074,10 +2098,18 @@ function buildCompanionKnowledgeSection(comp) {
   const nodes = comp.KnowledgeBase?.Database?.RootNodes;
   if (!Array.isArray(nodes) || !nodes.length) return '';
   const lis = nodes.map((n) => {
-    const topic = n.topic || n.Topic || n.title || '?';
-    const content = n.content || n.Content || '';
-    return `<li><strong>${escHtml(String(topic))}</strong>${content ? ` — ${escHtml(String(content))}` : ''}</li>`;
-  }).join('');
+    if (n == null) return '';
+    // LLM 常输出纯字符串列表：["主题1", "主题2"]
+    if (typeof n === 'string' || typeof n === 'number' || typeof n === 'boolean') {
+      return `<li>${escHtml(String(n))}</li>`;
+    }
+    if (typeof n === 'object') {
+      const topic = n.topic || n.Topic || n.title || n.name || (Array.isArray(n.Name) ? n.Name[0] : n.Name) || '?';
+      const content = n.content || n.Content || n.description || '';
+      return `<li><strong>${escHtml(String(topic))}</strong>${content ? ` — ${escHtml(String(content))}` : ''}</li>`;
+    }
+    return '';
+  }).filter(Boolean).join('');
   return `<div class="dc-section-title">知识库节点</div><ul class="dc-kb-list">${lis}</ul>`;
 }
 
@@ -2137,39 +2169,54 @@ function buildCompanionCoreHtml(item) {
 
   const pools   = ds.EnergyPools || [];
   const poolsH  = pools.map((p) => {
-    const nm  = Array.isArray(p.Name)     ? p.Name[0]     : (p.Name  || '?');
+    const nmRaw = rawField(p, 'Name', 'name');
     const cur = Array.isArray(p.Value)    ? p.Value[0]    : (p.Value  ?? 0);
     const mx  = Array.isArray(p.MaxValue) ? p.MaxValue[0] : (p.MaxValue ?? 0);
-    return `<div class="comp-pool"><span class="pool-name">${escHtml(nm)}</span><span class="pool-val">${typeof cur==='number'?cur.toLocaleString():cur} / ${typeof mx==='number'?mx.toLocaleString():mx}</span></div>`;
+    const nameHtml = nmRaw !== '' && nmRaw != null
+      ? tupleToLinesHtml(nmRaw)
+      : tupleToLinesHtml(String(gv(p, 'Name') || '?'));
+    return `<div class="comp-pool"><div class="pool-name">${nameHtml}</div><span class="pool-val">${typeof cur==='number'?cur.toLocaleString():cur} / ${typeof mx==='number'?mx.toLocaleString():mx}</span></div>`;
   }).join('');
 
-  const mkAbRows = (tag, cls, arr, nameF, descF) =>
-    arr.map((ab) => `<div class="comp-ability ${cls}">
+  const mkAbRows = (tag, cls, arr, getNameRaw, getDescRaw) =>
+    arr.map((ab) => {
+      const nRaw = getNameRaw(ab);
+      const dRaw = getDescRaw(ab);
+      const nameHtml = tupleToLinesHtml(nRaw == null || nRaw === '' ? '?' : nRaw);
+      const descHtml = dRaw != null && dRaw !== '' ? tupleToLinesHtml(dRaw) : '';
+      return `<div class="comp-ability ${cls}">
       <span class="comp-ab-tag">${tag}</span>
-      <span class="comp-ab-name">${escHtml(nameF(ab))}</span>
-      ${descF(ab) ? `<div class="comp-ab-desc">${escHtml(descF(ab))}</div>` : ''}
-    </div>`).join('');
+      <div class="comp-ab-name-wrap">${nameHtml}</div>
+      ${descHtml ? `<div class="comp-ab-desc-wrap">${descHtml}</div>` : ''}
+    </div>`;
+    }).join('');
 
   const passivesH = mkAbRows('被动', 'tag-passive', lo.PassiveAbilities || [],
-    (a) => gv(a,'Name') || a.name || '?',
-    (a) => gv(a,'Description') || a.description || '');
+    (a) => rawField(a, 'Name', 'name'),
+    (a) => rawField(a, 'Description', 'description'));
   const techsH = (lo.ApplicationTechniques || []).map((t) => buildCompanionApplicationTechniqueHtml(t)).join('');
   const psH = mkAbRows('基盘', 'tag-ps', lo.PowerSources || [],
-    (a) => gv(a,'Name') || a.name || '?',
-    (a) => gv(a,'Description') || a.description || '');
+    (a) => rawField(a, 'Name', 'name'),
+    (a) => rawField(a, 'Description', 'description'));
   const eqH = mkAbRows('装备', 'tag-inv', lo.Inventory?.Equipped || [],
-    (a) => a.ItemName || a.name || '?',
-    (a) => a.Description || a.description || '');
+    (a) => rawField(a, 'ItemName', 'Itemname', 'name'),
+    (a) => rawField(a, 'Description', 'description'));
 
   const mechsH = (lo.MechanizedUnits || []).map((m) => {
-    const nm    = Array.isArray(m.UnitName) ? m.UnitName[0] : (m.UnitName || '机体');
+    const unitRaw = rawField(m, 'UnitName', 'unitName');
     const model = m.Model || '';
     const tier  = m.BaseSpecs?.Tier ?? '?';
-    const desc  = m.Description ? gv(m, 'Description') : '';
+    const descRaw = rawField(m, 'Description', 'description');
+    const titleLine = unitRaw !== '' && unitRaw != null
+      ? tupleToLinesHtml(unitRaw)
+      : tupleToLinesHtml(String(m.UnitName ?? '机体'));
+    const metaBits = [model ? String(model) : '', tier !== '?' && tier !== '' ? `${tier}★` : ''].filter(Boolean);
+    const metaLine = metaBits.length ? `<div class="comp-mech-meta">${escHtml(metaBits.join(' · '))}</div>` : '';
     return `<div class="comp-ability comp-mech-body">
       <span class="comp-ab-tag">机体</span>
-      <span class="comp-ab-name">${escHtml(nm)}${model ? ` [${escHtml(model)}]` : ''} · ${tier}★</span>
-      ${desc ? `<div class="comp-ab-desc">${escHtml(desc)}</div>` : ''}
+      <div class="comp-ab-name-wrap">${titleLine}</div>
+      ${metaLine}
+      ${descRaw !== '' && descRaw != null ? `<div class="comp-ab-desc-wrap">${tupleToLinesHtml(descRaw)}</div>` : ''}
     </div>`;
   }).join('');
 
@@ -2284,15 +2331,20 @@ function buildMechCoreHtml(item) {
 
   const compH = Object.entries(comps).map(([, c]) => {
     if (!c) return '';
-    const nm     = Array.isArray(c.Name)   ? c.Name[0]   : (c.Name   || '?');
-    const chp    = Array.isArray(c.HP)     ? c.HP[0]     : (c.HP     ?? 0);
-    const cstate = Array.isArray(c.Status) ? c.Status[0] : (c.Status || 'OK');
-    const col    = cstate === 'OK' ? '#5a9a5a' : (cstate === 'Damaged' ? '#c8a040' : '#c84040');
-    const cvis   = c.Visuals ? (Array.isArray(c.Visuals) ? c.Visuals[0] : c.Visuals) : '';
+    const nmRaw = rawField(c, 'Name');
+    const chp   = Array.isArray(c.HP) ? c.HP[0] : (c.HP ?? 0);
+    const stRaw = rawField(c, 'Status');
+    const cstate = gv(c, 'Status') || (Array.isArray(c.Status) ? c.Status[0] : c.Status) || 'OK';
+    const col   = cstate === 'OK' ? '#5a9a5a' : (cstate === 'Damaged' ? '#c8a040' : '#c84040');
+    const cvis  = c.Visuals ? (Array.isArray(c.Visuals) ? c.Visuals[0] : c.Visuals) : '';
+    const nameHtml = nmRaw !== '' && nmRaw != null ? tupleToLinesHtml(nmRaw) : tupleToLinesHtml('?');
+    const statusHtml = stRaw !== '' && stRaw != null
+      ? tupleToLinesHtml(stRaw)
+      : `<span style="color:${col}">${escHtml(String(cstate))}</span>`;
     return `<div class="mech-comp-row">
-      <span class="mech-comp-name">${escHtml(nm)}</span>
+      <div class="mech-comp-name">${nameHtml}</div>
       <span class="mech-comp-hp">HP ${fmtN(chp)}</span>
-      <span class="mech-comp-status" style="color:${col}">${escHtml(cstate)}</span>
+      <div class="mech-comp-status">${statusHtml}</div>
       ${cvis ? `<div class="mech-comp-vis">${escHtml(String(cvis))}</div>` : ''}
     </div>`;
   }).join('');
@@ -2300,30 +2352,31 @@ function buildMechCoreHtml(item) {
   const hpSlots = [['MainHand','主手'],['OffHand','副手'],['BackPack','背包'],['InternalBay','内置'],['FixedWeapons','固装']];
   const hpH = hpSlots.flatMap(([slot, label]) =>
     (hp[slot] || []).map((w) => {
-      const nm   = w.ItemName || w.name || '?';
-      const type = w.Type     || w.type || '';
-      const desc = w.Description || w.description || '';
+      const nmRaw = rawField(w, 'ItemName', 'name');
+      const typeRaw = rawField(w, 'Type', 'type');
+      const descRaw = rawField(w, 'Description', 'description');
+      const nmHtml = nmRaw !== '' && nmRaw != null ? tupleToLinesHtml(nmRaw) : tupleToLinesHtml('?');
       return `<div class="mech-wp-item">
         <div class="mech-wp-header">
           <span class="mech-wp-slot">${label}</span>
-          <span class="mech-wp-name">${escHtml(nm)}</span>
-          ${type ? `<span class="mech-wp-type">${escHtml(type)}</span>` : ''}
+          <div class="mech-wp-name mech-wp-tuple">${nmHtml}</div>
+          ${typeRaw !== '' && typeRaw != null ? `<div class="mech-wp-type mech-wp-tuple">${tupleToLinesHtml(typeRaw)}</div>` : ''}
         </div>
-        ${desc ? `<div class="mech-wp-desc">${escHtml(desc)}</div>` : ''}
+        ${descRaw !== '' && descRaw != null ? `<div class="mech-wp-desc mech-wp-tuple">${tupleToLinesHtml(descRaw)}</div>` : ''}
       </div>`;
     })
   ).join('');
 
   const ssH = (Array.isArray(ss) ? ss : []).map((sys) => {
-    const nm   = sys.Name || '?';
-    const type = sys.Type || '';
-    const desc = sys.Description || '';
+    const nmRaw = rawField(sys, 'Name');
+    const typeRaw = rawField(sys, 'Type');
+    const descRaw = rawField(sys, 'Description');
     return `<div class="mech-sys-item">
       <div class="mech-sys-header">
-        <span class="mech-sys-name">${escHtml(nm)}</span>
-        ${type ? `<span class="mech-sys-type">${escHtml(type)}</span>` : ''}
+        <div class="mech-sys-name mech-wp-tuple">${nmRaw !== '' && nmRaw != null ? tupleToLinesHtml(nmRaw) : tupleToLinesHtml('?')}</div>
+        ${typeRaw !== '' && typeRaw != null ? `<div class="mech-sys-type mech-wp-tuple">${tupleToLinesHtml(typeRaw)}</div>` : ''}
       </div>
-      ${desc ? `<div class="mech-sys-desc">${escHtml(desc)}</div>` : ''}
+      ${descRaw !== '' && descRaw != null ? `<div class="mech-sys-desc mech-wp-tuple">${tupleToLinesHtml(descRaw)}</div>` : ''}
     </div>`;
   }).join('');
 
@@ -2795,50 +2848,111 @@ function buildLoadoutCompare(item, sessionStat) {
 </div>`;
 }
 
-/** LLM `effects` 对象 → 与详情页一致的展示行（被动/物品/流派/招式等） */
+/** LLM `effects` 对象 → 与详情页一致的展示行；nameRaw/descRaw 保留 [值,标签] 数组供分行渲染 */
 function collectShopEffectRows(effects) {
   if (!effects || typeof effects !== 'object') return [];
   const effRows = [];
-  (effects.newEnergyPools || []).forEach((p) => effRows.push({ tag: '能量池', cls: 'tag-pool', name: `${p.name} (0 / ${p.max})`, desc: p.description || '' }));
-  (effects.passiveAbilities || []).forEach((a) => effRows.push({ tag: '被动', cls: 'tag-passive', name: a.name || '?', desc: a.description || '' }));
-  (effects.powerSources || []).forEach((p) => effRows.push({ tag: '基盘', cls: 'tag-ps', name: `${p.name}${p.initialRealm ? ` [${p.initialRealm}]` : ''}`, desc: p.description || '' }));
+  (effects.newEnergyPools || []).forEach((p) => {
+    const nr = rawField(p, 'name', 'Name');
+    const dr = rawField(p, 'description', 'Description');
+    const nameRaw = nr !== '' && nr != null
+      ? nr
+      : `${gv(p, 'name') || '?'} (0 / ${gv(p, 'max') ?? '?'})`;
+    effRows.push({ tag: '能量池', cls: 'tag-pool', nameRaw, descRaw: dr });
+  });
+  (effects.passiveAbilities || []).forEach((a) => effRows.push({
+    tag: '被动', cls: 'tag-passive',
+    nameRaw: rawField(a, 'name', 'Name'),
+    descRaw: rawField(a, 'description', 'Description'),
+  }));
+  (effects.powerSources || []).forEach((p) => {
+    const nr = rawField(p, 'name', 'Name');
+    const realm = gv(p, 'initialRealm');
+    const nameRaw = nr !== '' && nr != null ? nr : `${gv(p, 'name') || '?'}${realm ? ` [${realm}]` : ''}`;
+    effRows.push({
+      tag: '基盘',
+      cls: 'tag-ps',
+      nameRaw,
+      descRaw: rawField(p, 'description', 'Description'),
+    });
+  });
   (effects.applicationTechniques || []).forEach((t) => {
-    const schoolName = t.schoolName || t.name || '?';
-    effRows.push({ tag: '流派', cls: 'tag-tech', name: schoolName, desc: t.description || '' });
+    effRows.push({
+      tag: '流派',
+      cls: 'tag-tech',
+      nameRaw: rawField(t, 'schoolName', 'name', 'Name'),
+      descRaw: rawField(t, 'description', 'Description'),
+    });
     const st = t.subTechniques;
     if (Array.isArray(st) && st.length) {
       st.forEach((s) => {
-        const lvl = s.proficiencyLevel ? `[${s.proficiencyLevel}] ` : '';
-        const cost = s.costInitial && s.costInitial !== '无消耗' ? ` | 消耗：${s.costInitial}` : '';
-        const cd = s.cooldown && s.cooldown !== '无' ? ` | 冷却：${s.cooldown}` : '';
-        effRows.push({ tag: '招式', cls: 'tag-submove', name: `${lvl}${s.name || '?'}`, desc: `${s.desc || s.description || ''}${cost}${cd}` });
+        const prof = gv(s, 'proficiencyLevel') || s.proficiencyLevel;
+        const sn = rawField(s, 'name', 'Name');
+        let nameRaw = sn;
+        if (prof) {
+          const pLine = `[${prof}]`;
+          nameRaw = Array.isArray(sn) ? [pLine, ...sn] : [pLine, sn];
+        }
+        const costRaw = gv(s, 'costInitial') ?? s.costInitial;
+        const cdRaw = gv(s, 'cooldown') ?? s.cooldown;
+        const sd = rawField(s, 'desc', 'description', 'Description');
+        const descLines = [
+          sd,
+          costRaw && costRaw !== '无消耗' ? `消耗：${costRaw}` : '',
+          cdRaw && cdRaw !== '无' ? `冷却：${cdRaw}` : '',
+        ].filter(Boolean);
+        const descRaw = descLines.length <= 1 ? (descLines[0] || '') : descLines;
+        effRows.push({ tag: '招式', cls: 'tag-submove', nameRaw, descRaw });
       });
     } else {
       normalizeCompanionSubMoves(t).forEach((s) => {
-        const extra = [s.desc, s.mechanicsText].filter(Boolean).join(' · ');
-        effRows.push({ tag: '招式', cls: 'tag-submove', name: s.name, desc: extra });
+        const extra = [s.descRaw, s.mechanicsText].filter((x) => x != null && x !== '');
+        const descRaw = extra.length <= 1 ? (extra[0] || '') : extra;
+        effRows.push({ tag: '招式', cls: 'tag-submove', nameRaw: s.nameRaw, descRaw });
       });
     }
   });
-  (effects.inventoryItems || []).forEach((i) => effRows.push({ tag: '物品', cls: 'tag-inv', name: `${i.name} ×${i.quantity || 1}`, desc: i.description || '' }));
-  (effects.knowledgeNodes || []).forEach((n) => effRows.push({ tag: '知识', cls: 'tag-know', name: n.topic || '?', desc: n.content || '' }));
+  (effects.inventoryItems || []).forEach((i) => {
+    const base = rawField(i, 'name', 'Name');
+    const qn = gv(i, 'quantity') ?? i.quantity ?? 1;
+    const nameRaw = Array.isArray(base)
+      ? [...base, `×${qn != null ? qn : 1}`]
+      : `${base != null && base !== '' ? String(base) : '?'} ×${qn != null ? qn : 1}`;
+    effRows.push({
+      tag: '物品',
+      cls: 'tag-inv',
+      nameRaw,
+      descRaw: rawField(i, 'description', 'Description'),
+    });
+  });
+  (effects.knowledgeNodes || []).forEach((n) => effRows.push({
+    tag: '知识',
+    cls: 'tag-know',
+    nameRaw: rawField(n, 'topic', 'Topic'),
+    descRaw: rawField(n, 'content', 'Content'),
+  }));
   (effects.itemOperations || []).forEach((op) => {
     const head = `${op.type || '?'}${op.targetItemName ? ` → ${op.targetItemName}` : ''}`;
     const bits = [op.rationale, op.itemType].filter(Boolean);
     if (op.modifications && op.modifications.length) bits.push(`修改 ${op.modifications.length} 项`);
-    effRows.push({ tag: '物品操作', cls: 'tag-itemop', name: head, desc: bits.join(' · ') });
+    effRows.push({ tag: '物品操作', cls: 'tag-itemop', nameRaw: head, descRaw: bits.join(' · ') });
   });
   return effRows;
 }
 
 function renderShopEffectRowsHtml(effRows) {
-  return effRows.map((e) => `<div class="eff-item ${e.cls}">
+  return effRows.map((e) => {
+    const nameHtml = tupleToLinesHtml(e.nameRaw !== undefined ? e.nameRaw : e.name);
+    const descRaw = e.descRaw !== undefined ? e.descRaw : e.desc;
+    const descHtml = descRaw != null && descRaw !== '' ? tupleToLinesHtml(descRaw) : '';
+    return `<div class="eff-item ${e.cls}">
     <div class="eff-item-header">
       <span class="eff-item-tag">${e.tag}</span>
-      <span class="eff-item-name">${escHtml(e.name)}</span>
+      <div class="eff-item-name eff-item-tuple">${nameHtml}</div>
     </div>
-    ${e.desc ? `<div class="eff-item-desc">${escHtml(e.desc)}</div>` : ''}
-  </div>`).join('');
+    ${descHtml ? `<div class="eff-item-desc eff-item-tuple">${descHtml}</div>` : ''}
+  </div>`;
+  }).join('');
 }
 
 /**

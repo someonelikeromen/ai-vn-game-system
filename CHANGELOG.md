@@ -1,3 +1,53 @@
+## [v0.39.3] — 商城 UI：[值, 标签] 元组改为分行展示（2026-04-06）
+
+### 修改文件
+- `public/shop.js`
+- `public/shop.css`
+- `CHANGELOG.md`
+
+### 修改内容
+- 新增 `tupleToLinesHtml` / `rawField`：数组字段每一项单独一行（主值 + 模板键名等），**不**再合并或只取首项
+- 同伴负载（装备/被动/基盘/技巧/子招式/能量池/机体）、机体武装与特殊系统、`collectShopEffectRows` 获得内容列表均改为分行渲染
+- 样式：`.st-tuple-primary` / `.st-tuple-meta` 区分正文与键名行
+
+### 修改原因
+- 测试反馈：仅需「不合并成逗号串」不够，需与 ST 卡片一致分行阅读内部键名
+
+### 修改结果
+- `["逆生树知识残章","Item"]` 等为两行；多段数组则多行
+
+## [v0.39.2] — 商城 UI：SillyTavern 式 [值, 标签] 元组只展示值（2026-04-06）
+
+### 修改文件
+- `public/shop.js`
+- `CHANGELOG.md`
+
+### 修改内容
+- 同伴 `Loadout.Inventory.Equipped`：`ItemName` / `Description` 等使用 `gv()` 取元组首项，避免界面出现 `, Item`、`, Desc` 等内部标签
+- 机体武装 / 特殊系统：`ItemName`、`Type`、`Description`、`Name` 等同理
+- `collectShopEffectRows`：能量池、被动、基盘、流派、招式、物品、知识等字段对可能为元组的属性统一走 `gv()`
+
+### 修改原因
+- 测试反馈：装备行把 `["逆生树知识残章","Item"]` 整段 `String(数组)` 或拼接展示，末尾露出英文标签
+
+### 修改结果
+- 用户可见文案仅为业务内容，不含模板键名
+
+## [v0.39.1] — 同伴知识库 RootNodes 支持字符串数组展示（2026-04-06）
+
+### 修改文件
+- `public/shop.js`
+- `CHANGELOG.md`
+
+### 修改内容
+- `buildCompanionKnowledgeSection`：`KnowledgeBase.Database.RootNodes` 可为 **字符串数组**（与对象 `{ topic, content }` 并存），逐项渲染为列表项，不再误显示为 `?`
+
+### 修改原因
+- LLM 输出 `RootNodes: ["卡巴拉…", "邪恶之树…"]` 时原逻辑按对象取 `topic` 得到 `undefined`，退化为 `?`
+
+### 修改结果
+- 知识库节点标题与商城/生成页一致可读
+
 ## [v0.39] — 商城生成预览与同伴详情完整结构化展示（2026-04-06）
 
 ### 修改文件
