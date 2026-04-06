@@ -1041,6 +1041,30 @@ function appendItemPreview(item, index) {
   bindItemPreviewEvents(card, localItem, index);
 }
 
+/** 生成页：展示与商城详情一致的结构化面板（同伴 / 机体 / 世界坐标） */
+function buildStructuredPreviewHtml(item) {
+  if (!item?.effects) return '';
+  if (item.type === 'Companion' && (item.effects.companions || []).length) {
+    return `<div class="preview-structured-block">
+      <h3 class="preview-section-title">同伴面板（兑换写入结构）</h3>
+      <div class="preview-structured-scroll"><div class="detail-companion">${buildCompanionCoreHtml(item)}</div></div>
+    </div>`;
+  }
+  if (item.type === 'Mech' && (item.effects.mechs || []).length) {
+    return `<div class="preview-structured-block">
+      <h3 class="preview-section-title">机体面板（兑换写入结构）</h3>
+      <div class="preview-structured-scroll">${buildMechCoreHtml(item)}</div>
+    </div>`;
+  }
+  if (item.type === 'WorldTraverse' && item.effects.worldData && !item.baseAnchor) {
+    return `<div class="preview-structured-block">
+      <h3 class="preview-section-title">世界坐标（兑换写入结构）</h3>
+      <div class="preview-structured-scroll">${buildArchiveDetailSection(item.effects.worldData, item, false)}</div>
+    </div>`;
+  }
+  return '';
+}
+
 function buildItemPreviewHtml(item, index) {
   const tierStr = item.tier != null ? `${item.tier}★` : '?★';
   const priceStr = item.pricePoints != null ? `${item.pricePoints.toLocaleString()} 积分` : '?';
@@ -1077,6 +1101,8 @@ function buildItemPreviewHtml(item, index) {
       </div>`
     : '';
 
+  const structPreview = buildStructuredPreviewHtml(item);
+
   return `
     <div class="preview-card-header">
       <div class="preview-card-meta">
@@ -1092,6 +1118,7 @@ function buildItemPreviewHtml(item, index) {
     </div>
     <div class="preview-fields">${fields}</div>
     ${effPreview}
+    ${structPreview}
     <div class="preview-regen-status" style="display:none">
       <div class="gen-spinner" style="display:inline-block;width:14px;height:14px"></div>
       <span class="preview-regen-text">重新生成中…</span>
@@ -1943,8 +1970,105 @@ function evalBlock(item) {
 </div>`;
 }
 
-// ── COMPANION detail ──────────────────────────────────────────────────────────
-function buildCompanionDetailHtml(item, _sessionStat) {
+/** 从 ApplicationTechnique 条目中取出子招式（subTechniques 数组 或 SubMoves 对象/数组） */
+function normalizeCompanionSubMoves(tech) {
+  if (!tech) return [];
+  const st = tech.subTechniques;
+  if (Array.isArray(st) && st.length) {
+    return st.map((s) => ({
+      name: s.name || '?',
+      desc: s.desc || s.description || '',
+      mechanicsText: formatLoadoutMechanics(s.Mechanics || s.mechanics),
+    }));
+  }
+  const sm = tech.SubMoves;
+  if (sm && typeof sm === 'object' && !Array.isArray(sm)) {
+    return Object.entries(sm).map(([key, entry]) => ({
+      name: gv(entry, 'Name') || entry?.name || key,
+      desc: gv(entry, 'Description') || entry?.description || '',
+      mechanicsText: formatLoadoutMechanics(entry?.Mechanics || entry?.mechanics),
+    }));
+  }
+  if (Array.isArray(sm) && sm.length) {
+    return sm.map((entry) => ({
+      name: gv(entry, 'Name') || entry?.name || '?',
+      desc: gv(entry, 'Description') || entry?.description || '',
+      mechanicsText: formatLoadoutMechanics(entry?.Mechanics || entry?.mechanics),
+    }));
+  }
+  return [];
+}
+
+function formatLoadoutMechanics(m) {
+  if (!m || typeof m !== 'object') return '';
+  const parts = [];
+  if (m.Cost) {
+    const c = m.Cost;
+    const initial = Array.isArray(c.Initial) ? c.Initial[0] : c.Initial;
+    if (initial) parts.push(`消耗 ${initial}`);
+  }
+  if (m.Timing) {
+    const t = m.Timing;
+    const ct = Array.isArray(t.CastTime) ? t.CastTime[0] : t.CastTime;
+    if (ct) parts.push(`施放 ${ct}`);
+  }
+  return parts.join(' · ');
+}
+
+function buildCompanionApplicationTechniqueHtml(tech) {
+  const name = gv(tech, 'Name') || tech.name || '?';
+  const school = gv(tech, 'School') || tech.school || '';
+  const parent = gv(tech, 'ParentSource') || tech.parentSource || '';
+  const desc = gv(tech, 'Description') || tech.description || '';
+  const subs = normalizeCompanionSubMoves(tech);
+  const subHtml = subs.length
+    ? `<div class="comp-submoves">${subs.map((s) => `
+    <div class="comp-submove">
+      <span class="comp-submove-name">${escHtml(s.name)}</span>
+      ${s.desc ? `<div class="comp-submove-desc">${escHtml(s.desc)}</div>` : ''}
+      ${s.mechanicsText ? `<div class="comp-submove-mech">${escHtml(s.mechanicsText)}</div>` : ''}
+    </div>`).join('')}</div>`
+    : '';
+  return `<div class="comp-ability tag-tech comp-tech-expanded">
+    <span class="comp-ab-tag">技巧</span>
+    <span class="comp-ab-name">${escHtml(name)}${school ? ` <span class="comp-tech-school">(${escHtml(school)})</span>` : ''}</span>
+    ${parent ? `<div class="comp-tech-parent">基盘：${escHtml(parent)}</div>` : ''}
+    ${desc ? `<div class="comp-ab-desc">${escHtml(desc)}</div>` : ''}
+    ${subHtml}
+  </div>`;
+}
+
+function buildPersonalityModelSection(pm) {
+  if (!pm || typeof pm !== 'object') return '';
+  const rows = [];
+  if (Array.isArray(pm.CoreValues) && pm.CoreValues.length) {
+    rows.push(`<div class="dc-pm-row"><span class="dc-pm-k">核心价值观</span><div class="dc-pm-v">${pm.CoreValues.map((c) => `<span class="dc-trait">${escHtml(String(c))}</span>`).join('')}</div></div>`);
+  }
+  if (pm.SpeakingStyle) rows.push(`<div class="dc-pm-row"><span class="dc-pm-k">说话风格</span><span class="dc-pm-v">${escHtml(pm.SpeakingStyle)}</span></div></div>`);
+  if (pm.EmotionalBaseline) rows.push(`<div class="dc-pm-row"><span class="dc-pm-k">情绪基准</span><span class="dc-pm-v">${escHtml(pm.EmotionalBaseline)}</span></div></div>`);
+  if (pm.MotivationCore) rows.push(`<div class="dc-pm-row"><span class="dc-pm-k">核心驱动力</span><span class="dc-pm-v">${escHtml(pm.MotivationCore)}</span></div></div>`);
+  if (pm.RelationshipDynamic) rows.push(`<div class="dc-pm-row"><span class="dc-pm-k">关系模式</span><span class="dc-pm-v">${escHtml(pm.RelationshipDynamic)}</span></div></div>`);
+  if (pm.SecretOrConflict && pm.SecretOrConflict !== 'null') rows.push(`<div class="dc-pm-row"><span class="dc-pm-k">内在冲突</span><span class="dc-pm-v">${escHtml(String(pm.SecretOrConflict))}</span></div></div>`);
+  if (pm.RoleplayDirective) rows.push(`<div class="dc-pm-row dc-pm-directive"><span class="dc-pm-k">扮演要点</span><div class="dc-pm-v dc-pm-pre">${escHtml(pm.RoleplayDirective)}</div></div>`);
+  if (!rows.length) return '';
+  return `<div class="dc-section-title">扮演模型</div><div class="dc-pm-block">${rows.join('')}</div>`;
+}
+
+function buildCompanionKnowledgeSection(comp) {
+  const nodes = comp.KnowledgeBase?.Database?.RootNodes;
+  if (!Array.isArray(nodes) || !nodes.length) return '';
+  const lis = nodes.map((n) => {
+    const topic = n.topic || n.Topic || n.title || '?';
+    const content = n.content || n.Content || '';
+    return `<li><strong>${escHtml(String(topic))}</strong>${content ? ` — ${escHtml(String(content))}` : ''}</li>`;
+  }).join('');
+  return `<div class="dc-section-title">知识库节点</div><ul class="dc-kb-list">${lis}</ul>`;
+}
+
+/**
+ * 同伴结构化面板（不含三轮报告与兑换操作），供详情弹窗与生成预览共用。
+ */
+function buildCompanionCoreHtml(item) {
   const comp = (item.effects?.companions || [])[0] || {};
   const up   = comp.UserPanel || {};
   const cs   = comp.CoreSystem || {};
@@ -1960,11 +2084,29 @@ function buildCompanionDetailHtml(item, _sessionStat) {
   const alignment = gv(up.Personality, 'Alignment');
   const traits    = up.Personality?.Traits || [];
   const analysis  = gv(up.Personality, 'Analysis');
+  const pmSection = buildPersonalityModelSection(up.PersonalityModel);
 
   const normalTier = gv(cs.Tier, 'NormalTier') ?? '?';
   const burstTier  = gv(cs.Tier, 'BurstTier')  ?? '?';
   const hp         = gv(ds.HP, 'Value');
   const hpMax      = gv(ds.HP, 'MaxValue');
+
+  const cf = ds.CurrentForm;
+  let currentFormH = '';
+  if (cf && typeof cf === 'object') {
+    const fn = gv(cf, 'Name') || cf.name;
+    const fd = gv(cf, 'Description') || cf.description;
+    const fa = cf.Active;
+    const active = Array.isArray(fa) ? fa[0] : fa;
+    if (fn || fd || active !== undefined) {
+      currentFormH = `<div class="dc-current-form">
+        <span class="dc-form-label">当前形态</span>
+        ${fn ? `<span class="dc-form-name">${escHtml(String(fn))}</span>` : ''}
+        ${active ? `<span class="dc-form-active">激活</span>` : ''}
+        ${fd ? `<div class="dc-form-desc">${escHtml(String(fd))}</div>` : ''}
+      </div>`;
+    }
+  }
 
   const ATTR_KEYS  = ['STR','DUR','VIT','REC','AGI','REF','PER','MEN','SOL','CHA'];
   const attrs      = cs.Attributes || {};
@@ -1985,7 +2127,6 @@ function buildCompanionDetailHtml(item, _sessionStat) {
     return `<div class="comp-pool"><span class="pool-name">${escHtml(nm)}</span><span class="pool-val">${typeof cur==='number'?cur.toLocaleString():cur} / ${typeof mx==='number'?mx.toLocaleString():mx}</span></div>`;
   }).join('');
 
-  // Ability rows helper
   const mkAbRows = (tag, cls, arr, nameF, descF) =>
     arr.map((ab) => `<div class="comp-ability ${cls}">
       <span class="comp-ab-tag">${tag}</span>
@@ -1993,34 +2134,34 @@ function buildCompanionDetailHtml(item, _sessionStat) {
       ${descF(ab) ? `<div class="comp-ab-desc">${escHtml(descF(ab))}</div>` : ''}
     </div>`).join('');
 
-  const passivesH  = mkAbRows('被动', 'tag-passive', lo.PassiveAbilities || [],
+  const passivesH = mkAbRows('被动', 'tag-passive', lo.PassiveAbilities || [],
     (a) => gv(a,'Name') || a.name || '?',
     (a) => gv(a,'Description') || a.description || '');
-  const techsH     = mkAbRows('技巧', 'tag-tech', lo.ApplicationTechniques || [],
+  const techsH = (lo.ApplicationTechniques || []).map((t) => buildCompanionApplicationTechniqueHtml(t)).join('');
+  const psH = mkAbRows('基盘', 'tag-ps', lo.PowerSources || [],
     (a) => gv(a,'Name') || a.name || '?',
     (a) => gv(a,'Description') || a.description || '');
-  const psH        = mkAbRows('基盘', 'tag-ps', lo.PowerSources || [],
-    (a) => gv(a,'Name') || a.name || '?',
-    (a) => gv(a,'Description') || a.description || '');
-  const eqH        = mkAbRows('装备', 'tag-inv', lo.Inventory?.Equipped || [],
+  const eqH = mkAbRows('装备', 'tag-inv', lo.Inventory?.Equipped || [],
     (a) => a.ItemName || a.name || '?',
     (a) => a.Description || a.description || '');
 
-  // Mech body inside companion loadout (e.g. sentient robot)
   const mechsH = (lo.MechanizedUnits || []).map((m) => {
     const nm    = Array.isArray(m.UnitName) ? m.UnitName[0] : (m.UnitName || '机体');
     const model = m.Model || '';
     const tier  = m.BaseSpecs?.Tier ?? '?';
+    const desc  = m.Description ? gv(m, 'Description') : '';
     return `<div class="comp-ability comp-mech-body">
       <span class="comp-ab-tag">机体</span>
       <span class="comp-ab-name">${escHtml(nm)}${model ? ` [${escHtml(model)}]` : ''} · ${tier}★</span>
+      ${desc ? `<div class="comp-ab-desc">${escHtml(desc)}</div>` : ''}
     </div>`;
   }).join('');
 
   const loadoutH = psH + passivesH + techsH + eqH + mechsH;
   const medStr   = (item.requiredMedals || []).map((m) => `${m.stars}★×${m.count}`).join(' + ') || '无';
+  const kbSection = buildCompanionKnowledgeSection(comp);
 
-  return `<div class="detail-companion">
+  return `
   <div class="dc-header">
     <div class="dc-name">${escHtml(name)}</div>
     ${title    ? `<div class="dc-title">${escHtml(title)}</div>`       : ''}
@@ -2048,9 +2189,11 @@ function buildCompanionDetailHtml(item, _sessionStat) {
       ${alignment ? `<div class="dc-alignment">${escHtml(alignment)}</div>` : ''}
       ${traits.length ? `<div class="dc-traits">${traits.map((t) => `<span class="dc-trait">${escHtml(String(t))}</span>`).join('')}</div>` : ''}
       ${analysis  ? `<div class="dc-analysis">${escHtml(analysis)}</div>` : ''}` : ''}
+      ${pmSection}
       ${item.description ? `
       <div class="dc-section-title">背景</div>
       <div class="dc-desc">${escHtml(item.description)}</div>` : ''}
+      ${kbSection}
     </div>
 
     <div class="dc-stats">
@@ -2061,6 +2204,7 @@ function buildCompanionDetailHtml(item, _sessionStat) {
       </div>
       ${attrRows ? `<table class="comp-attr-table"><tbody>${attrRows}</tbody></table>` : ''}
       ${(hp !== '' || hpMax !== '') ? `<div class="comp-hp">HP <span class="hp-val">${typeof hp==='number'?hp.toLocaleString():hp}</span> / ${typeof hpMax==='number'?hpMax.toLocaleString():hpMax}</div>` : ''}
+      ${currentFormH}
       ${poolsH ? `<div class="dc-section-title">能量池</div><div class="comp-pools">${poolsH}</div>` : ''}
     </div>
   </div>
@@ -2068,15 +2212,18 @@ function buildCompanionDetailHtml(item, _sessionStat) {
   ${loadoutH ? `<div class="dc-loadout">
     <div class="dc-section-title">装备 / 能力</div>
     <div class="comp-abilities">${loadoutH}</div>
-  </div>` : ''}
+  </div>` : ''}`;
+}
 
+// ── COMPANION detail ──────────────────────────────────────────────────────────
+function buildCompanionDetailHtml(item, _sessionStat) {
+  return `<div class="detail-companion">${buildCompanionCoreHtml(item)}</div>
   ${evalBlock(item)}
-  ${detailActions(item)}
-</div>`;
+  ${detailActions(item)}`;
 }
 
 // ── MECH detail ───────────────────────────────────────────────────────────────
-function buildMechDetailHtml(item, _sessionStat) {
+function buildMechCoreHtml(item) {
   const mech = (item.effects?.mechs || [])[0] || {};
   const vp   = mech.VisualProfile || {};
   const mi   = mech.MachineIntelligence || {};
@@ -2100,6 +2247,7 @@ function buildMechDetailHtml(item, _sessionStat) {
   const aiName      = mi.Name  || '无';
   const aiType      = mi.Type  || '';
   const syncRate    = mi.SyncRate ?? '';
+  const aiPersonality = mi.Personality && typeof mi.Personality === 'string' ? mi.Personality : (mi.Personality ? String(mi.Personality) : '');
 
   const bsTier  = bs.Tier ?? '?';
   const offense = bs.Equivalence?.Offense ?? '?';
@@ -2118,21 +2266,21 @@ function buildMechDetailHtml(item, _sessionStat) {
 
   const fmtN = (v) => typeof v === 'number' ? v.toLocaleString() : String(v);
 
-  // Component bars
   const compH = Object.entries(comps).map(([, c]) => {
     if (!c) return '';
     const nm     = Array.isArray(c.Name)   ? c.Name[0]   : (c.Name   || '?');
     const chp    = Array.isArray(c.HP)     ? c.HP[0]     : (c.HP     ?? 0);
     const cstate = Array.isArray(c.Status) ? c.Status[0] : (c.Status || 'OK');
     const col    = cstate === 'OK' ? '#5a9a5a' : (cstate === 'Damaged' ? '#c8a040' : '#c84040');
+    const cvis   = c.Visuals ? (Array.isArray(c.Visuals) ? c.Visuals[0] : c.Visuals) : '';
     return `<div class="mech-comp-row">
       <span class="mech-comp-name">${escHtml(nm)}</span>
       <span class="mech-comp-hp">HP ${fmtN(chp)}</span>
       <span class="mech-comp-status" style="color:${col}">${escHtml(cstate)}</span>
+      ${cvis ? `<div class="mech-comp-vis">${escHtml(String(cvis))}</div>` : ''}
     </div>`;
   }).join('');
 
-  // Hardpoints
   const hpSlots = [['MainHand','主手'],['OffHand','副手'],['BackPack','背包'],['InternalBay','内置'],['FixedWeapons','固装']];
   const hpH = hpSlots.flatMap(([slot, label]) =>
     (hp[slot] || []).map((w) => {
@@ -2150,8 +2298,7 @@ function buildMechDetailHtml(item, _sessionStat) {
     })
   ).join('');
 
-  // Special systems
-  const ssH = ss.map((sys) => {
+  const ssH = (Array.isArray(ss) ? ss : []).map((sys) => {
     const nm   = sys.Name || '?';
     const type = sys.Type || '';
     const desc = sys.Description || '';
@@ -2194,7 +2341,8 @@ function buildMechDetailHtml(item, _sessionStat) {
       <table class="dm-spec-table">
         <tr><td>AI系统</td><td>${escHtml(aiName)}</td></tr>
         ${aiType   ? `<tr><td>类型</td><td>${escHtml(aiType)}</td></tr>` : ''}
-        ${syncRate !== '' ? `<tr><td>同步率</td><td>${syncRate}%</td></tr>` : ''}
+        ${syncRate !== '' && syncRate !== undefined ? `<tr><td>同步率</td><td>${syncRate}%</td></tr>` : ''}
+        ${aiPersonality ? `<tr><td>人格</td><td>${escHtml(aiPersonality)}</td></tr>` : ''}
       </table>` : ''}
       ${item.description ? `
       <div class="dm-section-title">描述</div>
@@ -2232,10 +2380,11 @@ function buildMechDetailHtml(item, _sessionStat) {
     <div class="dm-section-title">特殊系统</div>
     <div class="mech-systems">${ssH}</div>
   </div>` : ''}
-
-  ${evalBlock(item)}
-  ${detailActions(item)}
 </div>`;
+}
+
+function buildMechDetailHtml(item, _sessionStat) {
+  return `${buildMechCoreHtml(item)}${evalBlock(item)}${detailActions(item)}`;
 }
 
 // ── ABILITY / ITEM / KNOWLEDGE detail (all non-Companion/Mech types) ──────────

@@ -3051,6 +3051,66 @@ html.theme-light .api-indicator { color: #5878a0; }
 }
 .preview-effects-block .eff-items-list { max-height: 420px; overflow-y: auto; }
 
+/* 生成页：同伴 / 机体 / 世界坐标完整结构化预览 */
+.preview-structured-block {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.preview-structured-block .preview-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #6a8aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 12px;
+}
+.preview-structured-scroll {
+  max-height: min(70vh, 720px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.22);
+  border: 1px solid rgba(100,150,255,0.14);
+  border-radius: 12px;
+}
+.preview-structured-scroll .detail-companion,
+.preview-structured-scroll .detail-mech { margin: 0; }
+.preview-structured-scroll .detail-worldtraverse { margin: 0; }
+
+/* 同伴技巧子招式（SubMoves / subTechniques） */
+.comp-ability.comp-tech-expanded { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.comp-submoves {
+  margin-top: 10px;
+  padding-left: 12px;
+  border-left: 2px solid rgba(100,180,255,0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.comp-submove { font-size: 0.82rem; }
+.comp-submove-name { font-weight: 600; color: #8ec8ff; display: block; margin-bottom: 4px; }
+.comp-submove-desc { color: #a8b8c8; line-height: 1.55; }
+.comp-submove-mech { color: #7a9aaa; font-size: 0.78rem; margin-top: 4px; }
+.comp-tech-expanded .comp-tech-school { font-weight: 400; color: #7a9aaa; font-size: 0.85em; }
+.comp-tech-parent { font-size: 0.78rem; color: #6a8aaa; margin-top: 4px; }
+
+/* 同伴扮演模型 / 知识库 / 当前形态 */
+.dc-pm-block { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.dc-pm-row { display: flex; flex-direction: column; gap: 4px; font-size: 0.84rem; }
+.dc-pm-k { color: #6a8aaa; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.dc-pm-v { color: #b8c8d8; line-height: 1.55; }
+.dc-pm-pre { white-space: pre-wrap; }
+.dc-kb-list { margin: 8px 0 0; padding-left: 18px; color: #a8b8c8; font-size: 0.84rem; line-height: 1.55; }
+.dc-current-form { margin-top: 10px; padding: 8px 10px; background: rgba(0,40,80,0.2); border-radius: 8px; font-size: 0.82rem; }
+.dc-form-label { color: #6a8aaa; margin-right: 8px; }
+.dc-form-name { font-weight: 600; color: #8ec8ff; }
+.dc-form-active { margin-left: 8px; font-size: 0.72rem; color: #5ada8a; }
+.dc-form-desc { margin-top: 6px; color: #a0b0c0; }
+
+.mech-comp-row { flex-wrap: wrap; }
+.mech-comp-vis { width: 100%; flex-basis: 100%; font-size: 0.76rem; color: #7a8a9a; margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.04); }
+
 .preview-regen-btn {
   opacity: 0.5;
   padding: 1px 5px;

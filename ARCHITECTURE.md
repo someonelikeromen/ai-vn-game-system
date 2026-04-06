@@ -414,7 +414,7 @@ function registerAllRoutes(app, deps) {
 |---|---|
 | `index.html` / `app.js` | 主游戏界面（对话、状态栏、新建存档向导） |
 | `hub.html` / `hub.js` / `hub.css` | 控制台入口（一体化接口配置 + 页面分工导航） |
-| `shop.html` / `shop.js` | 商城界面（评估、兑换、抽卡、世界锚点；详情页双栏可读布局） |
+| `shop.html` / `shop.js` / `shop.css` | 商城界面（评估、兑换、抽卡、世界锚点；**兑换项生成**页对 Companion/Mech/WorldTraverse 展示与详情一致的结构化面板；同伴详情展开 `SubMoves`/`subTechniques`、扮演模型、知识库节点、当前形态等） |
 | `character.html` / `character.js` | 角色生成界面（档案列表接入统一骨架/空状态，高风险删除走统一确认弹窗） |
 | `preset.html` / `preset.js` | 预设编辑器（提示词开关/排序/内容编辑 + 正则规则管理；删除/离开/重载确认接入统一确认弹窗） |
 | `ui-humanized.css` | 全站统一覆盖层（字体、按钮、状态栏、弹窗可读性） |

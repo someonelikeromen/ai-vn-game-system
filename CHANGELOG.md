@@ -1,3 +1,21 @@
+## [v0.39] — 商城生成预览与同伴详情完整结构化展示（2026-04-06）
+
+### 修改文件
+- `public/shop.js`
+- `public/shop.css`
+- `ARCHITECTURE.md`
+
+### 修改内容
+- 兑换项生成页：`buildStructuredPreviewHtml` 在预览区嵌入与商城详情同源的结构化面板（`buildCompanionCoreHtml` / `buildMechCoreHtml` / `buildArchiveDetailSection`），同伴类不再仅显示文案字段与空的「获得内容」列表
+- 同伴详情与核心 HTML：抽取 `buildCompanionCoreHtml`，技巧区展开 `subTechniques` 数组与 `SubMoves` 对象子招式；补充扮演模型（PersonalityModel）、知识库 RootNodes、`DynamicStatus.CurrentForm`
+- 机体详情：抽取 `buildMechCoreHtml`；核心部件可显示部位 Visuals；机体智能表补充人格字段；`SpecialSystems` 非数组时安全归一
+
+### 修改原因
+- 生成页未遍历 `effects.companions`，用户看不到兑换写入的完整结构；商店同伴详情未渲染 LLM 常用的 `SubMoves` 嵌套与扮演扩展字段
+
+### 修改结果
+- 生成后即可预览完整同伴/机体/世界坐标面板；商店点开同伴商品可看到全部子招式与扩展字段
+
 ## [v0.38] — SystemRedeemItem 兜底验证：商城缺失物品后台补充评估（2026-03-20）
 
 ### 修改文件
