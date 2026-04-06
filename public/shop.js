@@ -1041,25 +1041,40 @@ function appendItemPreview(item, index) {
   bindItemPreviewEvents(card, localItem, index);
 }
 
-/** 生成页：展示与商城详情一致的结构化面板（同伴 / 机体 / 世界坐标） */
+/** 生成页：是否展示与商城「通用兑换项」同源的全幅 ability 面板（避免与同伴/机体/世界档案重复） */
+function previewShowsFullAbilityStructure(item) {
+  if (!item?.type) return false;
+  if (item.type === 'Companion' || item.type === 'Mech') return false;
+  if (item.type === 'WorldTraverse' && item.effects?.worldData && !item.baseAnchor) return false;
+  return true;
+}
+
+/** 生成页：展示与商城详情一致的结构化面板（同伴 / 机体 / 世界坐标 / 其余类型的通用 effects） */
 function buildStructuredPreviewHtml(item) {
-  if (!item?.effects) return '';
-  if (item.type === 'Companion' && (item.effects.companions || []).length) {
+  if (!item?.type) return '';
+  const eff = item.effects || {};
+  if (item.type === 'Companion' && (eff.companions || []).length) {
     return `<div class="preview-structured-block">
       <h3 class="preview-section-title">同伴面板（兑换写入结构）</h3>
       <div class="preview-structured-scroll"><div class="detail-companion">${buildCompanionCoreHtml(item)}</div></div>
     </div>`;
   }
-  if (item.type === 'Mech' && (item.effects.mechs || []).length) {
+  if (item.type === 'Mech' && (eff.mechs || []).length) {
     return `<div class="preview-structured-block">
       <h3 class="preview-section-title">机体面板（兑换写入结构）</h3>
       <div class="preview-structured-scroll">${buildMechCoreHtml(item)}</div>
     </div>`;
   }
-  if (item.type === 'WorldTraverse' && item.effects.worldData && !item.baseAnchor) {
+  if (item.type === 'WorldTraverse' && eff.worldData && !item.baseAnchor) {
     return `<div class="preview-structured-block">
       <h3 class="preview-section-title">世界坐标（兑换写入结构）</h3>
-      <div class="preview-structured-scroll">${buildArchiveDetailSection(item.effects.worldData, item, false)}</div>
+      <div class="preview-structured-scroll">${buildArchiveDetailSection(eff.worldData, item, false)}</div>
+    </div>`;
+  }
+  if (item.type && previewShowsFullAbilityStructure(item)) {
+    return `<div class="preview-structured-block">
+      <h3 class="preview-section-title">兑换结构（与商城详情一致）</h3>
+      <div class="preview-structured-scroll">${buildAbilityCoreHtml(item, null, { omitEval: true, omitDescription: true })}</div>
     </div>`;
   }
   return '';
@@ -1093,8 +1108,9 @@ function buildItemPreviewHtml(item, index) {
         </div>`;
     }).join('');
 
-  const effRows   = collectShopEffectRows(item.effects);
-  const effPreview = effRows.length
+  const effRows = collectShopEffectRows(item.effects || {});
+  const fullAbilityPreview = previewShowsFullAbilityStructure(item);
+  const effPreview = !fullAbilityPreview && effRows.length
     ? `<div class="preview-effects-block">
         <h3 class="preview-section-title">获得内容（兑换时写入存档的结构）</h3>
         <div class="eff-items-list">${renderShopEffectRowsHtml(effRows)}</div>
@@ -2789,15 +2805,29 @@ function collectShopEffectRows(effects) {
   (effects.applicationTechniques || []).forEach((t) => {
     const schoolName = t.schoolName || t.name || '?';
     effRows.push({ tag: '流派', cls: 'tag-tech', name: schoolName, desc: t.description || '' });
-    (t.subTechniques || []).forEach((s) => {
-      const lvl = s.proficiencyLevel ? `[${s.proficiencyLevel}] ` : '';
-      const cost = s.costInitial && s.costInitial !== '无消耗' ? ` | 消耗：${s.costInitial}` : '';
-      const cd = s.cooldown && s.cooldown !== '无' ? ` | 冷却：${s.cooldown}` : '';
-      effRows.push({ tag: '招式', cls: 'tag-submove', name: `${lvl}${s.name || '?'}`, desc: `${s.desc || s.description || ''}${cost}${cd}` });
-    });
+    const st = t.subTechniques;
+    if (Array.isArray(st) && st.length) {
+      st.forEach((s) => {
+        const lvl = s.proficiencyLevel ? `[${s.proficiencyLevel}] ` : '';
+        const cost = s.costInitial && s.costInitial !== '无消耗' ? ` | 消耗：${s.costInitial}` : '';
+        const cd = s.cooldown && s.cooldown !== '无' ? ` | 冷却：${s.cooldown}` : '';
+        effRows.push({ tag: '招式', cls: 'tag-submove', name: `${lvl}${s.name || '?'}`, desc: `${s.desc || s.description || ''}${cost}${cd}` });
+      });
+    } else {
+      normalizeCompanionSubMoves(t).forEach((s) => {
+        const extra = [s.desc, s.mechanicsText].filter(Boolean).join(' · ');
+        effRows.push({ tag: '招式', cls: 'tag-submove', name: s.name, desc: extra });
+      });
+    }
   });
   (effects.inventoryItems || []).forEach((i) => effRows.push({ tag: '物品', cls: 'tag-inv', name: `${i.name} ×${i.quantity || 1}`, desc: i.description || '' }));
   (effects.knowledgeNodes || []).forEach((n) => effRows.push({ tag: '知识', cls: 'tag-know', name: n.topic || '?', desc: n.content || '' }));
+  (effects.itemOperations || []).forEach((op) => {
+    const head = `${op.type || '?'}${op.targetItemName ? ` → ${op.targetItemName}` : ''}`;
+    const bits = [op.rationale, op.itemType].filter(Boolean);
+    if (op.modifications && op.modifications.length) bits.push(`修改 ${op.modifications.length} 项`);
+    effRows.push({ tag: '物品操作', cls: 'tag-itemop', name: head, desc: bits.join(' · ') });
+  });
   return effRows;
 }
 
@@ -2811,7 +2841,15 @@ function renderShopEffectRowsHtml(effRows) {
   </div>`).join('');
 }
 
-function buildAbilityDetailHtml(item, sessionStat) {
+/**
+ * 通用兑换项详情主体（被动/基盘/技巧/物品/知识等），与商城弹窗同源。
+ * @param {object} opts
+ * @param {boolean} [opts.omitEval] 生成预览已单独展示「三轮评估」字段时省略
+ * @param {boolean} [opts.omitDescription] 生成预览已单独展示「效果描述」时省略
+ */
+function buildAbilityCoreHtml(item, sessionStat, opts = {}) {
+  const omitEval = !!opts.omitEval;
+  const omitDescription = !!opts.omitDescription;
   const medStr  = (item.requiredMedals || []).map((m) => `${m.stars}星徽章 × ${m.count}`).join(' + ') || '无需徽章';
   const attrs   = item.effects?.attributeDeltas || {};
   const attrH   = Object.entries(attrs)
@@ -2838,10 +2876,10 @@ function buildAbilityDetailHtml(item, sessionStat) {
 
   <div class="detail-main-grid">
     <div class="detail-main-col">
-      <div class="detail-section">
+      ${!omitDescription ? `<div class="detail-section">
         <h3>描述</h3>
         <div class="detail-desc">${escHtml(item.description || '')}</div>
-      </div>
+      </div>` : ''}
       ${opsCompareH}
       ${attrH ? `<div class="detail-section">
         <h3>属性增量（应用至主角）</h3>
@@ -2855,13 +2893,14 @@ function buildAbilityDetailHtml(item, sessionStat) {
         <h3>获得内容</h3>
         <div class="eff-items-list">${effH}</div>
       </div>` : ''}
-      ${evalBlock(item)}
+      ${!omitEval ? evalBlock(item) : ''}
     </div>
   </div>
-
-  ${detailActions(item)}
-  ${detailRegenPanel()}
 </div>`;
+}
+
+function buildAbilityDetailHtml(item, sessionStat) {
+  return `${buildAbilityCoreHtml(item, sessionStat)}${detailActions(item)}${detailRegenPanel()}`;
 }
 
 // ── WORLD TRAVERSE detail ─────────────────────────────────────────────────────

@@ -7,14 +7,16 @@
 
 ### 修改内容
 - 兑换项生成页：`buildStructuredPreviewHtml` 在预览区嵌入与商城详情同源的结构化面板（`buildCompanionCoreHtml` / `buildMechCoreHtml` / `buildArchiveDetailSection`），同伴类不再仅显示文案字段与空的「获得内容」列表
+- **非同伴类型**：抽取 `buildAbilityCoreHtml`，生成页对 PassiveAbility / PowerSource / ApplicationTechnique / Inventory / Knowledge 等与商城弹窗同源的「兑换结构」全幅展示（可省略与左侧字段重复的描述/三轮报告）；`collectShopEffectRows` 补充 `SubMoves` 子招式与 `itemOperations`
 - 同伴详情与核心 HTML：抽取 `buildCompanionCoreHtml`，技巧区展开 `subTechniques` 数组与 `SubMoves` 对象子招式；补充扮演模型（PersonalityModel）、知识库 RootNodes、`DynamicStatus.CurrentForm`
 - 机体详情：抽取 `buildMechCoreHtml`；核心部件可显示部位 Visuals；机体智能表补充人格字段；`SpecialSystems` 非数组时安全归一
 
 ### 修改原因
 - 生成页未遍历 `effects.companions`，用户看不到兑换写入的完整结构；商店同伴详情未渲染 LLM 常用的 `SubMoves` 嵌套与扮演扩展字段
+- 非同伴兑换项生成后仅见扁平「获得内容」列表，与商城详情双栏不一致
 
 ### 修改结果
-- 生成后即可预览完整同伴/机体/世界坐标面板；商店点开同伴商品可看到全部子招式与扩展字段
+- 生成后即可预览完整同伴/机体/世界坐标面板；**通用兑换项**与商城详情一致展示描述/属性增量/获得内容/三轮报告（生成页去重）；商店列表 `collectShopEffectRows` 覆盖 SubMoves 与物品操作
 
 ## [v0.38] — SystemRedeemItem 兜底验证：商城缺失物品后台补充评估（2026-03-20）
 

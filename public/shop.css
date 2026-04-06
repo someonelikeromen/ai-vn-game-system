@@ -3075,7 +3075,8 @@ html.theme-light .api-indicator { color: #5878a0; }
   border-radius: 12px;
 }
 .preview-structured-scroll .detail-companion,
-.preview-structured-scroll .detail-mech { margin: 0; }
+.preview-structured-scroll .detail-mech,
+.preview-structured-scroll .detail-ability { margin: 0; }
 .preview-structured-scroll .detail-worldtraverse { margin: 0; }
 
 /* 同伴技巧子招式（SubMoves / subTechniques） */
@@ -3110,6 +3111,8 @@ html.theme-light .api-indicator { color: #5878a0; }
 
 .mech-comp-row { flex-wrap: wrap; }
 .mech-comp-vis { width: 100%; flex-basis: 100%; font-size: 0.76rem; color: #7a8a9a; margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.04); }
+
+.eff-item.tag-itemop { border-left-color: #c08060; background: rgba(192,128,96,0.06); }
 
 .preview-regen-btn {
   opacity: 0.5;
